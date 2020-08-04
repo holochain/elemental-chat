@@ -28,12 +28,13 @@ entry_defs!(vec![
 ]);
 
 fn channels_path() -> Path {
-    Path::from("channels")
+    let path = Path::from("channels");
+    path.ensure().expect("Couldn't ensure path");
+    path
 }
 
 fn _create_channel(name: ChannelName) -> WasmResult<()> {
     let path = channels_path();
-    path.ensure()?;
     let channel = Channel::new(name.into());
     commit_entry!(&channel)?;
     link_entries!(entry_hash!(&path)?, entry_hash!(&channel)?)?;
@@ -46,8 +47,8 @@ fn _create_message(input: CreateMessageInput) -> WasmResult<()> {
         content,
     } = input;
     let message = ChannelMessage::new(content);
-    let message_hash = entry_hash!(&message)?;
-    link_entries!(channel_hash, message_hash)?;
+    commit_entry!(&message)?;
+    link_entries!(channel_hash, entry_hash!(&message)?)?;
     Ok(())
 }
 
