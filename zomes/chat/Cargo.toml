@@ -1,0 +1,19 @@
+[package]
+name = "elemental-chat-zome-chat"
+version = "0.0.1"
+authors = [ "michael.dougherty@holo.host" ]
+edition = "2018"
+
+[lib]
+name = "chat"
+crate-type = [ "cdylib", "rlib" ]
+
+[dependencies]
+holo_hash = { version = "=0.0.1", path = "../../../chain/crates/holo_hash" }
+holochain_serialized_bytes = "=0.0.40"
+holochain_wasmer_guest = "=0.0.36"
+holochain_zome_types = { version = "=0.0.1", path = "../../../chain/crates/zome_types" }
+hdk3 = { path = "../../../chain/crates/hdk" }
+serde = "=1.0.104"
+test_wasm_common = { version = "=0.0.1", path = "../../../chain/crates/test_utils/wasm_common" }
+derive_more = "0.99.9"
