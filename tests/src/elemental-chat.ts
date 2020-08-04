@@ -5,8 +5,8 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 // Configure a conductor with two identical DNAs,
 // differentiated by UUID, nicknamed "alice" and "bobbo"
 const config = Config.gen({
-  alice: Config.dna("dna/element-chat.dna.gz", null),
-  bobbo: Config.dna("dna/element-chat.dna.gz", null),
+  alice: Config.dna("../elemental-chat.dna.gz", null),
+  bobbo: Config.dna("../elemental-chat.dna.gz", null),
 })
 
 module.exports = (orchestrator) => {
@@ -22,8 +22,8 @@ module.exports = (orchestrator) => {
 
     // Alice send a message
     const msg_alice = {
-        channel_hash: channel_hash,
-        content: "Hello from alice :)",
+      channel_hash: channel_hash,
+      content: "Hello from alice :)",
     };
     await conductor.call('alice', 'chat', 'create_message', msg_alice);
 
@@ -32,9 +32,9 @@ module.exports = (orchestrator) => {
 
     // Bob list the channel
     const channels = await conductor.call('bobbo', 'chat', 'list_channels', {});
-    
+
     const msgs_bobbo = await conductor.call('bobbo', 'chat', 'list_messages', channels[0]);
-    
+
     console.log('bobboResult> Messages from channel: ', msgs_bobbo);
     // Bob should see one messages
     t.equal(msgs_bobbo.length, 1)
@@ -44,8 +44,8 @@ module.exports = (orchestrator) => {
 
     // Bob send a message
     const msg_bobbo = {
-        channel_hash: channels[0],
-        content: "Hello from bobbo :)",
+      channel_hash: channels[0],
+      content: "Hello from bobbo :)",
     };
     await conductor.call('bobbo', 'chat', 'create_message', msg_bobbo);
 
@@ -54,7 +54,7 @@ module.exports = (orchestrator) => {
 
     // Alice list messages
     const msgs_alice = await conductor.call('alice', 'chat', 'list_messages', channels[0]);
-    
+
     console.log('AliceResult> Messages from channel: ', msgs_alice);
 
     // Alice should see two messages

@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "TRYORAMA_LOG_LEVEL=info HC_WASM_CACHE_PATH=\"/home/tomgowan/holochain/holochain-2020/.wasm_cache\" RUST_LOG='[{}]=error' RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
-
+    "test": "TRYORAMA_LOG_LEVEL=info RUST_LOG='[{}]=error' RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
   },
   "author": "",
   "license": "ISC",
