@@ -1,0 +1,18 @@
+{
+  "name": "demo-1",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "TRYORAMA_LOG_LEVEL=info RUST_LOG='[{}]=error' RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@holochain/tryorama": "git://github.com/Holo-Host/tryorama-2020.git",
+    "@types/node": "^14.0.14",
+    "tape": "^5.0.1",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.6"
+  }
+}
