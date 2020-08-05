@@ -7,8 +7,8 @@ mod channel_message;
 pub use channel::*;
 pub use channel_message::*;
 
-#[derive(From, Into, Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, From, Into, Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelName(String);
 
-#[derive(From, Into, Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, From, Into, Serialize, Deserialize, SerializedBytes)]
 pub struct StringContent(String);

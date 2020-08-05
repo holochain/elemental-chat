@@ -34,6 +34,7 @@ fn channels_path() -> Path {
 }
 
 fn _create_channel(name: ChannelName) -> WasmResult<()> {
+    debug!(format!("channel name {:?}", name))?;
     let path = channels_path();
     let channel = Channel::new(name.into());
     commit_entry!(&channel)?;
