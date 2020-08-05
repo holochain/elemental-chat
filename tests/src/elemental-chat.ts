@@ -9,12 +9,6 @@ const config = Config.gen({
   bobbo: Config.dna("../elemental-chat.dna.gz", null),
 })
 
-// FIXME: best guess at the correct representation of a Rust newtype in msgpack
-// ...but it's wrong. We won't know why until we see a newtype in the wild, or
-// we can build this wasm with the updated dep:
-// holochain_wasmer_guest = { version = "=0.0.37", git = "https://github.com/holochain/holochain-wasmer.git", branch = "extra-error-info" }
-const str = s => [s]
-
 module.exports = (orchestrator) => {
 
   orchestrator.registerScenario('chat away', async (s, t) => {
@@ -23,7 +17,7 @@ module.exports = (orchestrator) => {
     await conductor.spawn()
 
     // Create a channel
-    const channel = str("hello world");
+    const channel = "hello world";
     const channel_hash = await conductor.call('alice', 'chat', 'create_channel', channel);
 
     console.log("created channel.")

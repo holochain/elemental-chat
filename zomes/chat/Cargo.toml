@@ -11,8 +11,6 @@ crate-type = [ "cdylib", "rlib" ]
 [dependencies]
 holo_hash = { version = "=0.0.1", path = "../../../chain/crates/holo_hash" }
 holochain_serialized_bytes = "=0.0.40"
-# TODO: we need this, but it breaks the build
-# holochain_wasmer_guest = { version = "=0.0.37", git = "https://github.com/holochain/holochain-wasmer.git", branch = "extra-error-info" }
 holochain_wasmer_guest = "=0.0.37"
 holochain_zome_types = { version = "=0.0.1", path = "../../../chain/crates/zome_types" }
 hdk3 = { path = "../../../chain/crates/hdk" }
