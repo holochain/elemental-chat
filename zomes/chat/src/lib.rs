@@ -33,24 +33,26 @@ fn channels_path() -> Path {
     path
 }
 
-fn _create_channel(name: ChannelName) -> WasmResult<()> {
+fn _create_channel(name: ChannelName) -> WasmResult<EntryHash> {
     debug!(format!("channel name {:?}", name))?;
     let path = channels_path();
     let channel = Channel::new(name.into());
+    let channel_hash = entry_hash!(&channel)?;
     commit_entry!(&channel)?;
-    link_entries!(entry_hash!(&path)?, entry_hash!(&channel)?)?;
-    Ok(())
+    link_entries!(entry_hash!(&path)?, channel_hash.clone())?;
+    Ok(channel_hash)
 }
 
-fn _create_message(input: CreateMessageInput) -> WasmResult<()> {
+fn _create_message(input: CreateMessageInput) -> WasmResult<EntryHash> {
     let CreateMessageInput {
         channel_hash,
         content,
     } = input;
     let message = ChannelMessage::new(content);
+    let message_hash = entry_hash!(&message)?;
     commit_entry!(&message)?;
-    link_entries!(channel_hash, entry_hash!(&message)?)?;
-    Ok(())
+    link_entries!(channel_hash, message_hash.clone())?;
+    Ok(message_hash)
 }
 
 fn _list_channels(_: ()) -> WasmResult<ChannelList> {
