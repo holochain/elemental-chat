@@ -33,13 +33,18 @@ fn channels_path() -> Path {
     path
 }
 
-fn _create_channel(name: ChannelName) -> WasmResult<()> {
+fn _create_channel(name: ChannelName) -> WasmResult<EntryHash> {
     debug!(format!("channel name {:?}", name))?;
     let path = channels_path();
     let channel = Channel::new(name.into());
     commit_entry!(&channel)?;
-    link_entries!(entry_hash!(&path)?, entry_hash!(&channel)?)?;
-    Ok(())
+    let channel_hash = entry_hash!(&channel)?;
+    debug!(format!(
+        "channel hash {:?}",
+        SerializedBytes::try_from(channel_hash.clone())
+    ))?;
+    link_entries!(entry_hash!(&path)?, channel_hash.clone())?;
+    Ok(channel_hash)
 }
 
 fn _create_message(input: CreateMessageInput) -> WasmResult<()> {
@@ -78,7 +83,7 @@ fn _list_messages(channel_hash: EntryHash) -> WasmResult<ChannelMessageList> {
     Ok(messages.into())
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 struct CreateMessageInput {
     channel_hash: EntryHash,
     content: String,
@@ -88,3 +93,29 @@ map_extern!(create_channel, _create_channel);
 map_extern!(create_message, _create_message);
 map_extern!(list_channels, _list_channels);
 map_extern!(list_messages, _list_messages);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use holo_hash::{hash_type, HoloHash};
+
+    #[test]
+    fn ser() {
+        let hash = HoloHash::from_raw_bytes_and_type(
+            vec![
+                118, 162, 157, 84, 135, 189, 154, 240, 188, 86, 55, 53, 222, 211, 181, 149, 254,
+                34, 251, 198, 246, 121, 223, 51, 212, 160, 205, 73, 110, 31, 188, 67, 135, 117,
+                249, 97,
+            ],
+            hash_type::Content,
+        )
+        .into();
+        let x = dbg!(SerializedBytes::try_from(CreateMessageInput {
+            channel_hash: hash,
+            content: "Hello from alice :)".into()
+        })
+        .unwrap());
+        println!("{:?}", x.bytes());
+        let x = dbg!(CreateMessageInput::try_from(x).unwrap());
+    }
+}

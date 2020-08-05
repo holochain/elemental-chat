@@ -12,3 +12,14 @@ pub struct ChannelName(String);
 
 #[derive(Debug, From, Into, Serialize, Deserialize, SerializedBytes)]
 pub struct StringContent(String);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ser() {
+        dbg!(SerializedBytes::try_from(ChannelName("hello".into())).unwrap());
+        
+    }
+}

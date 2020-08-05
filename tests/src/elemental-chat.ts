@@ -13,7 +13,7 @@ const config = Config.gen({
 // ...but it's wrong. We won't know why until we see a newtype in the wild, or
 // we can build this wasm with the updated dep:
 // holochain_wasmer_guest = { version = "=0.0.37", git = "https://github.com/holochain/holochain-wasmer.git", branch = "extra-error-info" }
-const str = s => [s]
+const str = s => {ChannelName: s}
 
 module.exports = (orchestrator) => {
 
@@ -23,10 +23,11 @@ module.exports = (orchestrator) => {
     await conductor.spawn()
 
     // Create a channel
-    const channel = str("hello world");
+    //const channel = str("hello world");
+    const channel = "hello world";
     const channel_hash = await conductor.call('alice', 'chat', 'create_channel', channel);
 
-    console.log("created channel.")
+    console.log("created channel: ", channel_hash);
 
     // Alice send a message
     const msg_alice = {

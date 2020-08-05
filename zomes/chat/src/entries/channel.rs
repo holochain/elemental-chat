@@ -25,3 +25,14 @@ impl From<&Channel> for EntryDefId {
 
 #[derive(From, Into, Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelList(Vec<Channel>);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ser() {
+        dbg!(SerializedBytes::try_from(Channel{name: "hello".into() }).unwrap());
+        
+    }
+}
