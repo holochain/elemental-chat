@@ -23,6 +23,13 @@ impl From<&Channel> for EntryDefId {
     }
 }
 
+impl TryFrom<&Channel> for Entry {
+    type Error = SerializedBytesError;
+    fn try_from(t: &Channel) -> Result<Self, Self::Error> {
+        Ok(Entry::App(t.try_into()?))
+    }
+}
+
 #[derive(From, Into, Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelList(Vec<Channel>);
 

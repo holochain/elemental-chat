@@ -30,5 +30,12 @@ impl From<StringContent> for ChannelMessage {
     }
 }
 
+impl TryFrom<&ChannelMessage> for Entry {
+    type Error = SerializedBytesError;
+    fn try_from(t: &ChannelMessage) -> Result<Self, Self::Error> {
+        Ok(Entry::App(t.try_into()?))
+    }
+}
+
 #[derive(From, Into, Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelMessageList(Vec<ChannelMessage>);

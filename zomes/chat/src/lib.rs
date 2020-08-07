@@ -6,7 +6,7 @@ use hdk3::prelude::Path;
 use hdk3::prelude::*;
 use link::Link;
 
-holochain_wasmer_guest::holochain_externs!();
+holochain_externs!();
 
 type WasmResult<T> = Result<T, WasmError>;
 

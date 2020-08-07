@@ -9,10 +9,10 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-holochain_serialized_bytes = "=0.0.40"
+# holochain_serialized_bytes = "=0.0.40"
 # TODO: we need this, but it breaks the build
 # holochain_wasmer_guest = { version = "=0.0.37", git = "https://github.com/holochain/holochain-wasmer.git", branch = "extra-error-info" }
-holochain_wasmer_guest = "=0.0.37"
+# holochain_wasmer_guest = "=0.0.37"
 serde = "=1.0.104"
 derive_more = "0.99.9"
 # holo_hash = { version = "=0.0.1", path = "../../../chain/crates/holo_hash" }
