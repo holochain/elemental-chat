@@ -60,7 +60,7 @@ fn _list_channels(_: ()) -> WasmResult<ChannelList> {
     let links: Vec<Link> = get_links!(path_hash)?.into();
     let channels: Vec<Channel> = links
         .into_iter()
-        .map(|link| get_entry!(link.target))
+        .map(|link| get!(link.target))
         .flatten()
         .flatten()
         .map(|el| entry_from_element(el).and_then(|sb| Ok(Channel::try_from(sb)?)))
@@ -72,7 +72,7 @@ fn _list_messages(channel_hash: EntryHash) -> WasmResult<ChannelMessageList> {
     let links: Vec<Link> = get_links!(channel_hash)?.into();
     let messages: Vec<ChannelMessage> = links
         .into_iter()
-        .map(|link| get_entry!(link.target))
+        .map(|link| get!(link.target))
         .flatten()
         .flatten()
         .map(|el| entry_from_element(el).and_then(|sb| Ok(ChannelMessage::try_from(sb)?)))
