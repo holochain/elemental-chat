@@ -1,4 +1,5 @@
 import { Config } from '@holochain/tryorama'
+import * as _ from 'lodash'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
@@ -9,12 +10,6 @@ const config = Config.gen({
   bobbo: Config.dna("../elemental-chat.dna.gz", null),
 })
 
-// FIXME: best guess at the correct representation of a Rust newtype in msgpack
-// ...but it's wrong. We won't know why until we see a newtype in the wild, or
-// we can build this wasm with the updated dep:
-// holochain_wasmer_guest = { version = "=0.0.37", git = "https://github.com/holochain/holochain-wasmer.git", branch = "extra-error-info" }
-const str = s => [s]
-
 module.exports = (orchestrator) => {
 
   orchestrator.registerScenario('chat away', async (s, t) => {
@@ -23,36 +18,41 @@ module.exports = (orchestrator) => {
     await conductor.spawn()
 
     // Create a channel
-    const channel = str("hello world");
+    const channel = "hello world";
     const channel_hash = await conductor.call('alice', 'chat', 'create_channel', channel);
-
-    console.log("created channel.")
 
     // Alice send a message
     const msg_alice = {
       channel_hash: channel_hash,
       content: "Hello from alice :)",
     };
-    await conductor.call('alice', 'chat', 'create_message', msg_alice);
+    const msg_hash = await conductor.call('alice', 'chat', 'create_message', msg_alice);
 
     // wait a bit for bobbo to receive the published messages,
     await delay(1000)
 
     // Bob list the channel
-    const channels = await conductor.call('bobbo', 'chat', 'list_channels', {});
+    const channels = await conductor.call('bobbo', 'chat', 'list_channels', null);
 
-    const msgs_bobbo = await conductor.call('bobbo', 'chat', 'list_messages', channels[0]);
+    console.log('channels:', channels)
+    t.equal(channels.length, 1)
+
+    // TODO: actually get hashes from list_channels,
+    // rather than using the hash we already know about
+    const msgs_bobbo = await conductor.call('bobbo', 'chat', 'list_messages', channel_hash);
 
     console.log('bobboResult> Messages from channel: ', msgs_bobbo);
     // Bob should see one messages
     t.equal(msgs_bobbo.length, 1)
 
     // and alice sees the same thing as bobbo
-    t.deepEqual(msgs_bobbo, ["Hello from bobbo :)"])
+    t.deepEqual(msgs_bobbo, [{ message: "Hello from alice :)" }])
 
     // Bob send a message
+    // TODO: actually get hashes from list_channels,
+    // rather than using the hash we already know about
     const msg_bobbo = {
-      channel_hash: channels[0],
+      channel_hash,
       content: "Hello from bobbo :)",
     };
     await conductor.call('bobbo', 'chat', 'create_message', msg_bobbo);
@@ -60,15 +60,22 @@ module.exports = (orchestrator) => {
     // wait a bit for bobbo to receive the published messages,
     await delay(1000)
 
-    // Alice list messages
-    const msgs_alice = await conductor.call('alice', 'chat', 'list_messages', channels[0]);
+    const byMessage = x => x.message
 
+    // Alice list messages
+    // TODO: actually get hashes from list_channels,
+    // rather than using the hash we already know about
+    const msgs_alice = _.sortBy(
+      await conductor.call('alice', 'chat', 'list_messages', channel_hash),
+      byMessage
+    )
+    msgs_alice.sort(x => x.message);
     console.log('AliceResult> Messages from channel: ', msgs_alice);
 
     // Alice should see two messages
     t.equal(msgs_alice.length, 2)
 
     // and alice sees the same thing as bobbo
-    t.deepEqual(msgs_alice, ["Hello from alice :)", "Hello from bobbo :)"])
+    t.deepEqual(msgs_alice, _.sortBy([{ message: "Hello from alice :)" }, { message: "Hello from bobbo :)" }], byMessage))
   })
 }

@@ -9,10 +9,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@holochain/tryorama": "git://github.com/Holo-Host/tryorama-2020.git",
-    "@types/node": "^14.0.14",
+    "lodash": "^4.17.19",
     "tape": "^5.0.1",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.6"
+  },
+  "devDependencies": {
+    "@holochain/tryorama": "git://github.com/Holo-Host/tryorama-2020.git",
+    "@types/lodash": "^4.14.158",
+    "@types/node": "^14.0.14"
   }
 }

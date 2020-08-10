@@ -33,24 +33,26 @@ fn channels_path() -> Path {
     path
 }
 
-fn _create_channel(name: ChannelName) -> WasmResult<()> {
+fn _create_channel(name: ChannelName) -> WasmResult<EntryHash> {
     debug!(format!("channel name {:?}", name))?;
     let path = channels_path();
     let channel = Channel::new(name.into());
+    let channel_hash = entry_hash!(&channel)?;
     commit_entry!(&channel)?;
-    link_entries!(entry_hash!(&path)?, entry_hash!(&channel)?)?;
-    Ok(())
+    link_entries!(entry_hash!(&path)?, channel_hash.clone())?;
+    Ok(channel_hash)
 }
 
-fn _create_message(input: CreateMessageInput) -> WasmResult<()> {
+fn _create_message(input: CreateMessageInput) -> WasmResult<EntryHash> {
     let CreateMessageInput {
         channel_hash,
         content,
     } = input;
     let message = ChannelMessage::new(content);
+    let message_hash = entry_hash!(&message)?;
     commit_entry!(&message)?;
-    link_entries!(channel_hash, entry_hash!(&message)?)?;
-    Ok(())
+    link_entries!(channel_hash, message_hash.clone())?;
+    Ok(message_hash)
 }
 
 fn _list_channels(_: ()) -> WasmResult<ChannelList> {
@@ -58,7 +60,7 @@ fn _list_channels(_: ()) -> WasmResult<ChannelList> {
     let links: Vec<Link> = get_links!(path_hash)?.into();
     let channels: Vec<Channel> = links
         .into_iter()
-        .map(|link| get_entry!(link.target))
+        .map(|link| get!(link.target))
         .flatten()
         .flatten()
         .map(|el| entry_from_element(el).and_then(|sb| Ok(Channel::try_from(sb)?)))
@@ -70,7 +72,7 @@ fn _list_messages(channel_hash: EntryHash) -> WasmResult<ChannelMessageList> {
     let links: Vec<Link> = get_links!(channel_hash)?.into();
     let messages: Vec<ChannelMessage> = links
         .into_iter()
-        .map(|link| get_entry!(link.target))
+        .map(|link| get!(link.target))
         .flatten()
         .flatten()
         .map(|el| entry_from_element(el).and_then(|sb| Ok(ChannelMessage::try_from(sb)?)))
