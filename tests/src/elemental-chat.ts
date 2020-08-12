@@ -29,7 +29,7 @@ module.exports = (orchestrator) => {
     const msg_hash = await conductor.call('alice', 'chat', 'create_message', msg_alice);
 
     // wait a bit for bobbo to receive the published messages,
-    await delay(1000)
+    await delay(10)
 
     // Bob list the channel
     const channels = await conductor.call('bobbo', 'chat', 'list_channels', null);
@@ -37,8 +37,6 @@ module.exports = (orchestrator) => {
     console.log('channels:', channels)
     t.equal(channels.length, 1)
 
-    // TODO: actually get hashes from list_channels,
-    // rather than using the hash we already know about
     const msgs_bobbo = await conductor.call('bobbo', 'chat', 'list_messages', channel_hash);
 
     console.log('bobboResult> Messages from channel: ', msgs_bobbo);
@@ -49,8 +47,6 @@ module.exports = (orchestrator) => {
     t.deepEqual(msgs_bobbo, [{ message: "Hello from alice :)" }])
 
     // Bob send a message
-    // TODO: actually get hashes from list_channels,
-    // rather than using the hash we already know about
     const msg_bobbo = {
       channel_hash,
       content: "Hello from bobbo :)",
@@ -58,13 +54,11 @@ module.exports = (orchestrator) => {
     await conductor.call('bobbo', 'chat', 'create_message', msg_bobbo);
 
     // wait a bit for bobbo to receive the published messages,
-    await delay(1000)
+    await delay(10)
 
     const byMessage = x => x.message
 
     // Alice list messages
-    // TODO: actually get hashes from list_channels,
-    // rather than using the hash we already know about
     const msgs_alice = _.sortBy(
       await conductor.call('alice', 'chat', 'list_messages', channel_hash),
       byMessage

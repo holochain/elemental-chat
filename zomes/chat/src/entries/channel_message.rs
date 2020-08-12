@@ -7,22 +7,10 @@ pub struct ChannelMessage {
     message: String,
 }
 
-impl ChannelMessage {
-    pub fn entry_def() -> EntryDef {
-        EntryDef {
-            id: "ChannelMessage".into(),
-            crdt_type: CrdtType,
-            required_validations: RequiredValidations::default(),
-            visibility: EntryVisibility::Public,
-        }
-    }
-}
-
-impl From<&ChannelMessage> for EntryDefId {
-    fn from(_: &ChannelMessage) -> Self {
-        ChannelMessage::entry_def().id
-    }
-}
+entry_def!(ChannelMessage EntryDef {
+    id: "ChannelMessage".into(),
+    ..Default::default()
+});
 
 impl From<StringContent> for ChannelMessage {
     fn from(content: StringContent) -> Self {
