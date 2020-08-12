@@ -8,6 +8,13 @@ use link::Link;
 
 type WasmResult<T> = Result<T, WasmError>;
 
+#[derive(Serialize, Deserialize, SerializedBytes)]
+struct CreateMessageInput {
+    channel_hash: EntryHash,
+    content: String,
+}
+
+
 fn error<T>(reason: &str) -> WasmResult<T> {
     Err(WasmError::Zome(reason.into()))
 }
@@ -76,12 +83,6 @@ fn _list_messages(channel_hash: EntryHash) -> WasmResult<ChannelMessageList> {
         .map(|el| entry_from_element(el).and_then(|sb| Ok(ChannelMessage::try_from(sb)?)))
         .collect::<WasmResult<_>>()?;
     Ok(messages.into())
-}
-
-#[derive(Serialize, Deserialize, SerializedBytes)]
-struct CreateMessageInput {
-    channel_hash: EntryHash,
-    content: String,
 }
 
 map_extern!(create_channel, _create_channel);
