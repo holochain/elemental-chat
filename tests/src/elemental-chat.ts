@@ -18,9 +18,8 @@ module.exports = (orchestrator) => {
     await conductor.spawn()
 
     // Create a channel
-    const channel = "hello world";
-    const channel_hash = await conductor.call('alice', 'chat', 'create_channel', channel);
-
+    const channel_hash = await conductor.call('alice', 'chat', 'create_channel', { path: "Channels", uuid: "86444476-4e5d-4321-b87c-8885057a20b6", content: "Test Channel"});
+    console.log(channel_hash);
     // Alice send a message
     const msg_alice = {
       channel_hash: channel_hash,

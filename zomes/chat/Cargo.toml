@@ -1,7 +1,7 @@
 [package]
-name = "elemental-chat-zome-chat"
+name = "elemental-chat"
 version = "0.0.1"
-authors = [ "michael.dougherty@holo.host" ]
+authors = [ "michael.dougherty@holo.host", "philip.beadle@holo.host", "david.meister@holo.host" ]
 edition = "2018"
 
 [lib]
@@ -17,3 +17,4 @@ hdk3 = { path = "../../../holochain/crates/hdk" }
 serde = "=1.0.104"
 test_wasm_common = { version = "=0.0.1", path = "../../../holochain/crates/test_utils/wasm_common" }
 derive_more = "0.99.9"
+thiserror = "1.0.20"

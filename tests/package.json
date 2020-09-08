@@ -15,7 +15,7 @@
     "typescript": "^3.9.6"
   },
   "devDependencies": {
-    "@holochain/tryorama": "git://github.com/Holo-Host/tryorama-2020.git",
+    "@holochain/tryorama": "git://github.com/Holo-Host/tryorama-rsm.git",
     "@types/lodash": "^4.14.158",
     "@types/node": "^14.0.14"
   }
