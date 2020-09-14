@@ -1,0 +1,10 @@
+{
+  "name": "elemental-chat",
+  "uuid": "",
+  "properties": null,
+  "zomes": {
+    "chat": {
+      "wasm_path": "../target/wasm32-unknown-unknown/release/chat.wasm"
+    }
+  }
+}
