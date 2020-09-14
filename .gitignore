@@ -1,4 +1,6 @@
 Cargo.lock
 target/
+debug/
+.rustc_info.json
 *.dna.gz
 .cargo
