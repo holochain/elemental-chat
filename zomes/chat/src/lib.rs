@@ -39,7 +39,7 @@ fn list_messages(list_messages_input: ListMessagesInput) -> ChatResult<ListMessa
 
 #[hdk_extern]
 fn what(_: ()) -> ChatResult<MessageInput> {
-    let eh = entry_hash!(ChannelEntry {
+    let eh = hash_entry!(ChannelEntry {
         uuid: "".into(),
         content: "".into()
     })?;

@@ -12,16 +12,16 @@ use super::{ChannelEntry, ListChannels, ListChannelsInput};
 pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<Channel> {
     let path = Path::from(channel_input.path);
     path.ensure()?;
-    let header_hash = commit_entry!(&channel_input.channel)?;
+    let header_hash = create_entry!(&channel_input.channel)?;
     let header = get_local_header(&header_hash)?
         .ok_or(ChatError::MissingLocalHeader)?
         .into_content();
-    let entry_hash = header
+    let hash_entry = header
         .entry_hash()
         .ok_or(ChatError::WrongHeaderType)?
         .clone();
-    let channel = Channel::new(header, channel_input.channel, entry_hash.clone());
-    link_entries!(path.hash()?, entry_hash)?;
+    let channel = Channel::new(header, channel_input.channel, hash_entry.clone());
+    create_link!(path.hash()?, hash_entry)?;
     Ok(channel)
 }
 
@@ -48,18 +48,18 @@ pub(crate) fn list_channels(list_channels_input: ListChannelsInput) -> ChatResul
                         .into_iter()
                         .next()
                         .expect("Why is there no headers?");
-                    let entry_hash = header
+                    let hash_entry = header
                         .entry_hash()
                         .expect("why is there no entry hash?")
                         .clone();
-                    Channel::new(header, channel_entry, entry_hash)
+                    Channel::new(header, channel_entry, hash_entry)
                 } else {
                     loop {
                         // updates.sort_by_key(|eu| eu.timestamp);
                         // updates
                         //     .first()
                         //     .expect("you said you weren't empty")
-                        //     .entry_hash;
+                        //     .hash_entry;
                         break;
                     }
                     todo!("follow update chain choosing latest update")

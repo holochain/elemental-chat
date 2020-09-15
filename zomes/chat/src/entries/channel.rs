@@ -29,17 +29,17 @@ pub struct ListChannels{
 pub struct Channel {
     uuid: String,
     content: String,
-    entry_hash: EntryHash,
+    hash_entry: EntryHash,
     holochain_created_by: AgentPubKey,
     holochain_created_at: Timestamp,
 }
 
 impl Channel {
-    pub fn new(header: Header, channel_entry: ChannelEntry, entry_hash: EntryHash) -> Self {
+    pub fn new(header: Header, channel_entry: ChannelEntry, hash_entry: EntryHash) -> Self {
         Channel { 
             uuid: channel_entry.uuid,
             content: channel_entry.content,
-            entry_hash,
+            hash_entry,
             holochain_created_by: header.author().to_owned(),
             holochain_created_at: header.timestamp().to_owned(),
         }

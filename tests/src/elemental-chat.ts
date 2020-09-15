@@ -51,9 +51,9 @@ module.exports = (orchestrator) => {
     const channel_list = await conductor.call('alice', 'chat', 'list_channels', { path: "Channels" });
     console.log(channel_list);
     
-    const msg_list = await conductor.call('alice', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash });
+    const msg_list = await conductor.call('alice', 'chat', 'list_messages', { channel_hash_entry: channel.entryHash });
     console.log(msg_list);
-    const b_msg_list = await conductor.call('bobbo', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash });
+    const b_msg_list = await conductor.call('bobbo', 'chat', 'list_messages', { channel_hash_entry: channel.entryHash });
     console.log(b_msg_list);
     // // wait a bit for bobbo to receive the published messages,
     // await delay(10)

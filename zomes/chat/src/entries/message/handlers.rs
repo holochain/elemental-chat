@@ -11,17 +11,17 @@ use metadata::EntryDetails;
 use super::{ListMessages, ListMessagesInput, MessageEntry, ReplyTo};
 
 pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<Message> {
-    let header_hash = commit_entry!(&message_input.message)?;
+    let header_hash = create_entry!(&message_input.message)?;
     let header = get_local_header(&header_hash)?
         .ok_or(ChatError::MissingLocalHeader)?
         .into_content();
-    let entry_hash = header
+    let hash_entry = header
         .entry_hash()
         .ok_or(ChatError::WrongHeaderType)?
         .clone();
-    let message = Message::new(header, message_input.message, entry_hash.clone());
-    let reply_to_entry_hash = match message_input.reply_to {
-        ReplyTo::Channel(channel_entry_hash) => match get_details!(channel_entry_hash.clone())? {
+    let message = Message::new(header, message_input.message, hash_entry.clone());
+    let reply_to_hash_entry = match message_input.reply_to {
+        ReplyTo::Channel(channel_hash_entry) => match get_details!(channel_hash_entry.clone())? {
             Some(Details::Entry(EntryDetails {
                 deletes,
                 mut updates,
@@ -31,7 +31,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<Message>
                     return Err(ChatError::ChannelDeleted);
                 }
                 if updates.is_empty() {
-                    channel_entry_hash.clone()
+                    channel_hash_entry.clone()
                 } else {
                     updates.sort_by_key(|eu| eu.timestamp);
                     updates
@@ -43,22 +43,22 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<Message>
             }
             _ => panic!("Can't get the channel"),
         },
-        ReplyTo::Message(entry_hash) => entry_hash,
+        ReplyTo::Message(hash_entry) => hash_entry,
     };
-    link_entries!(reply_to_entry_hash, entry_hash)?;
+    create_link!(reply_to_hash_entry, hash_entry)?;
     Ok(message)
 }
 
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
-    let channel_entry_hash = list_message_input.channel_entry_hash;
+    let channel_hash_entry = list_message_input.channel_hash_entry;
     let mut processed = vec![];
     let mut pending = vec![];
     let mut now = vec![];
-    let links = get_links!(channel_entry_hash)?.into_inner();
+    let links = get_links!(channel_hash_entry)?.into_inner();
     now.extend(get_messages(links)?);
     loop {
         for msg in now {
-            let links = get_links!(msg.entry_hash.clone())?.into_inner();
+            let links = get_links!(msg.hash_entry.clone())?.into_inner();
             pending.extend(get_messages(links)?);
             processed.push(msg);
         }
@@ -89,11 +89,11 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<Message>> {
                         .into_iter()
                         .next()
                         .expect("Why is there no headers?");
-                    let entry_hash = header
+                    let hash_entry = header
                         .entry_hash()
                         .expect("why is there no entry hash?")
                         .clone();
-                    Message::new(header, message_entry, entry_hash)
+                    Message::new(header, message_entry, hash_entry)
                 } else {
                     todo!("Return all updates but wrapped in an Update enum")
                 }

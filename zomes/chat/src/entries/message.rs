@@ -23,7 +23,7 @@ pub struct MessageInput {
 
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesInput {
-    channel_entry_hash: EntryHash,
+    channel_hash_entry: EntryHash,
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes)]
@@ -35,17 +35,17 @@ pub struct ListMessages {
 pub struct Message {
     uuid: String,
     content: String,
-    entry_hash: EntryHash,
+    hash_entry: EntryHash,
     holochain_created_by: AgentPubKey,
     holochain_created_at: Timestamp,
 }
 
 impl Message {
-    pub fn new(header: Header, message_entry: MessageEntry, entry_hash: EntryHash) -> Self {
+    pub fn new(header: Header, message_entry: MessageEntry, hash_entry: EntryHash) -> Self {
         Message {
             uuid: message_entry.uuid,
             content: message_entry.content,
-            entry_hash,
+            hash_entry,
             holochain_created_by: header.author().to_owned(),
             holochain_created_at: header.timestamp().to_owned(),
         }
