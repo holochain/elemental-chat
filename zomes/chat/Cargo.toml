@@ -9,12 +9,7 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-holo_hash = { version = "=0.0.1", path = "../../../holochain/crates/holo_hash" }
-holochain_serialized_bytes = "=0.0.41"
-holochain_wasmer_guest = "=0.0.40"
-holochain_zome_types = { version = "=0.0.1", path = "../../../holochain/crates/zome_types" }
 hdk3 = { path = "../../../holochain/crates/hdk" }
 serde = "=1.0.104"
-test_wasm_common = { version = "=0.0.1", path = "../../../holochain/crates/test_utils/wasm_common" }
 derive_more = "0.99.9"
 thiserror = "1.0.20"
