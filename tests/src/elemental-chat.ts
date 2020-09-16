@@ -23,80 +23,82 @@ module.exports = (orchestrator) => {
     const channel = await conductor.call('alice', 'chat', 'create_channel', { path: "Channels", channel: { uuid: channel_uuid, content: "Test Channel" } });
     console.log(channel);
 
-    // Alice send a message
-    const msg_alice = {
-      uuid: uuidv4(),
-      content: "Hello from alice :)",
-    };
-    const msg_input = {
-      reply_to: { Channel: channel.entryHash },
-      message: msg_alice,
-    }
-    console.log(msg_input);
-    const msg = await conductor.call('alice', 'chat', 'create_message', msg_input);
-    console.log(msg);
+    var sends: any[] = [];
+    var recvs: any[] = [];
+    function just_msg(m) { return m.message }
 
-    const msg_alice_2 = {
-      uuid: uuidv4(),
-      content: "Is anybody out there?",
-    };
-    const msg_input_2 = {
-      reply_to: { Message: msg.entryHash },
-      message: msg_alice_2,
-    }
-    console.log(msg_input_2);
-    const msg_2 = await conductor.call('alice', 'chat', 'create_message', msg_input_2);
-    console.log(msg_2);
+    // Alice send a message
+    sends.push({
+      reply_to: { Channel: null },
+      channel_entry_hash: channel.entryHash,
+      message: {
+        uuid: uuidv4(),
+        content: "Hello from alice :)",
+      }
+    });
+    console.log(sends[0]);
+    recvs.push(await conductor.call('alice', 'chat', 'create_message', sends[0]));
+    console.log(recvs[0]);
+    t.deepEqual(sends[0].message, recvs[0].message);
+
+    // Alice sends another message
+    sends.push({
+      reply_to: { Message: recvs[0].entryHash },
+      channel_entry_hash: channel.entryHash,
+      message: {
+        uuid: uuidv4(),
+        content: "Is anybody out there?",
+      }
+    });
+    console.log(sends[1]);
+    recvs.push(await conductor.call('alice', 'chat', 'create_message', sends[1]));
+    console.log(recvs[1]);
+    t.deepEqual(sends[1].message, recvs[1].message);
 
     const channel_list = await conductor.call('alice', 'chat', 'list_channels', { path: "Channels" });
     console.log(channel_list);
-    
-    const msg_list = await conductor.call('alice', 'chat', 'list_messages', { channel_hash_entry: channel.entryHash });
-    console.log(msg_list);
-    const b_msg_list = await conductor.call('bobbo', 'chat', 'list_messages', { channel_hash_entry: channel.entryHash });
-    console.log(b_msg_list);
-    // // wait a bit for bobbo to receive the published messages,
-    // await delay(10)
 
-    // // Bob list the channel
-    // const channels = await conductor.call('bobbo', 'chat', 'list_channels', null);
+    // Alice lists the messages
+    var msgs: any[] = [];
+    msgs.push(await conductor.call('alice', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash }));
+    console.log(_.map(msgs[0].messages, just_msg));
+    t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
+    // Bobbo lists the messages
+    msgs.push(await conductor.call('bobbo', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash }));
+    console.log(_.map(msgs[1].messages, just_msg));
+    t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
 
-    // console.log('channels:', channels)
-    // t.equal(channels.length, 1)
+    // Bobbo and Alice both reply to the same message
+    sends.push({
+      reply_to: { Message: recvs[1].entryHash },
+      channel_entry_hash: channel.entryHash,
+      message: {
+        uuid: uuidv4(),
+        content: "I'm here",
+      }
+    });
+    sends.push({
+      reply_to: { Message: recvs[1].entryHash },
+      channel_entry_hash: channel.entryHash,
+      message: {
+        uuid: uuidv4(),
+        content: "Anybody?",
+      }
+    });
+    recvs.push(await conductor.call('bobbo', 'chat', 'create_message', sends[2]));
+    console.log(recvs[2]);
+    t.deepEqual(sends[2].message, recvs[2].message);
+    recvs.push(await conductor.call('alice', 'chat', 'create_message', sends[3]));
+    console.log(recvs[3]);
+    t.deepEqual(sends[3].message, recvs[3].message);
 
-    // const msgs_bobbo = await conductor.call('bobbo', 'chat', 'list_messages', channel_hash);
-
-    // console.log('bobboResult> Messages from channel: ', msgs_bobbo);
-    // // Bob should see one messages
-    // t.equal(msgs_bobbo.length, 1)
-
-    // // and alice sees the same thing as bobbo
-    // t.deepEqual(msgs_bobbo, [{ message: "Hello from alice :)" }])
-
-    // // Bob send a message
-    // const msg_bobbo = {
-    //   channel_hash,
-    //   content: "Hello from bobbo :)",
-    // };
-    // await conductor.call('bobbo', 'chat', 'create_message', msg_bobbo);
-
-    // // wait a bit for bobbo to receive the published messages,
-    // await delay(10)
-
-    // const byMessage = x => x.message
-
-    // // Alice list messages
-    // const msgs_alice = _.sortBy(
-    //   await conductor.call('alice', 'chat', 'list_messages', channel_hash),
-    //   byMessage
-    // )
-    // msgs_alice.sort(x => x.message);
-    // console.log('AliceResult> Messages from channel: ', msgs_alice);
-
-    // // Alice should see two messages
-    // t.equal(msgs_alice.length, 2)
-
-    // // and alice sees the same thing as bobbo
-    // t.deepEqual(msgs_alice, _.sortBy([{ message: "Hello from alice :)" }, { message: "Hello from bobbo :)" }], byMessage))
+    // Alice lists the messages
+    msgs.push(await conductor.call('alice', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash }));
+    console.log(_.map(msgs[2].messages, just_msg));
+    t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[2].messages, just_msg));
+    // Bobbo lists the messages
+    msgs.push(await conductor.call('bobbo', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash }));
+    console.log(_.map(msgs[3].messages, just_msg));
+    t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
 }

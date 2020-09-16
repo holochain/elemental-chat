@@ -1,12 +1,12 @@
 mod entries;
 
-use channel::{Channel, ChannelInput, ListChannelsInput, ListChannels};
+use channel::{Channel, ChannelInput, ListChannels, ListChannelsInput};
 use entries::channel::ChannelEntry;
 use entries::{channel, message, message::MessageEntry};
 use error::ChatResult;
 use hdk3::prelude::Path;
 use hdk3::prelude::*;
-use message::{Message, MessageInput, ReplyTo, ListMessagesInput, ListMessages};
+use message::{ListMessages, ListMessagesInput, Message, MessageInput, ReplyTo};
 
 mod error;
 mod utils;
@@ -43,13 +43,14 @@ fn what(_: ()) -> ChatResult<MessageInput> {
         uuid: "".into(),
         content: "".into()
     })?;
-    let rt = ReplyTo::Channel(eh);
+    let rt = ReplyTo::Channel;
     let me = MessageEntry {
         uuid: "".into(),
         content: "".into(),
     };
     let mi = MessageInput {
         reply_to: rt,
+        channel_entry_hash: eh,
         message: me,
     };
     Ok(mi)
