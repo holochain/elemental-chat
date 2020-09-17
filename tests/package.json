@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cargo build --release --target wasm32-unknown-unknown && dna-util -c ../elemental-chat.dna.workdir && TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
+    "test": "CARGO_TARGET=../target cargo build --release --target wasm32-unknown-unknown && dna-util -c ../elemental-chat.dna.workdir && TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
   },
   "author": "",
   "license": "ISC",

@@ -107,8 +107,8 @@ module.exports = (orchestrator) => {
 // Get a basic date object for right now
 function today() {
   var today = new Date();
-  var dd: String = String(today.getDate());
-  var mm: String = String(today.getMonth() + 1); //January is 0!
-  var yyyy: String = String(today.getFullYear());
+  var dd: String = String(today.getUTCDate());
+  var mm: String = String(today.getUTCMonth() + 1); //January is 0!
+  var yyyy: String = String(today.getUTCFullYear());
   return { year: yyyy, month: mm, day: dd }
 }
