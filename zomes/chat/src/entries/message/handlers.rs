@@ -5,18 +5,19 @@ use crate::{
     error::ChatResult,
     message::{Message, MessageInput},
     utils::get_local_header,
+    utils::to_date,
 };
 use hdk3::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
 
-use super::{ListMessages, ListMessagesInput, MessageEntry, ReplyKey, ReplyTo};
+use super::{Date, ListMessages, ListMessagesInput, MessageData, Parent, ParentKey};
 
 /// Create a new message
-pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<Message> {
+pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
     let MessageInput {
-        reply_to,
-        channel_entry_hash,
+        parent,
+        channel,
         message,
     } = message_input;
 
@@ -25,27 +26,42 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<Message>
 
     // Get the local header and create the message type for the UI
     let header = get_local_header(&header_hash)?.ok_or(ChatError::MissingLocalHeader)?;
-    let hash_entry = header
-        .entry_hash()
-        .ok_or(ChatError::WrongHeaderType)?
-        .clone();
-    let message = Message::new(header, message, hash_entry.clone());
+    let message = MessageData::new(header, message)?;
+
+    // Get the channel hash
+    let path: Path = channel.clone().into();
+    let path = add_current_time_path(path)?;
+    path.ensure()?;
+
+    let channel_entry_hash = path.hash()?;
 
     // Get the hash of what this message is replying to
-    let reply_to_hash_entry = match reply_to {
-        ReplyTo::Message(hash_entry) => hash_entry,
-        ReplyTo::Channel => channel_entry_hash.clone(),
+    let parent_hash_entry = match parent {
+        Parent::Message(hash_entry) => hash_entry,
+        Parent::First => channel_entry_hash.clone(),
     };
 
     // Turn the reply to and timestamp into a link tag
-    let tag = ReplyKey::new(reply_to_hash_entry, message.created_at);
-    create_link!(channel_entry_hash, hash_entry, LinkTag::from(tag))?;
+    let tag = ParentKey::new(parent_hash_entry, message.created_at);
+    create_link!(
+        channel_entry_hash,
+        message.entry_hash.clone(),
+        LinkTag::from(tag)
+    )?;
     Ok(message)
 }
 
 /// List all the messages on this channel
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
-    let channel_entry_hash = list_message_input.channel_entry_hash;
+    let ListMessagesInput { channel, date } = list_message_input;
+
+    // Get the channel hash
+    let path: Path = channel.clone().into();
+    let path = add_time_path(path, date)?;
+    path.ensure()?;
+
+    let channel_entry_hash = path.hash()?;
+
     // Get the message links on this channel
     let links = get_links!(channel_entry_hash.clone())?.into_inner();
     let len = links.len();
@@ -62,20 +78,20 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     // Store links as HashMap reply to EntryHash -> Link
     let hash_to_link: BTreeMap<_, _> = links
         .into_iter()
-        .map(|link| (ReplyKey::from(link.tag.clone()), link))
+        .map(|link| (ParentKey::from(link.tag.clone()), link))
         .collect();
 
     // Create a sorted vec by following the "reply hash" -> Link -> target
     // starting from the channel entry hash
     let mut sorted_messages = Vec::with_capacity(len);
-    let key: ReplyKey = channel_entry_hash.into();
+    let key: ParentKey = channel_entry_hash.into();
     let mut keys = VecDeque::new();
     keys.push_back(key);
     while let Some(key) = keys.pop_front() {
         // Get all the messages at this "reply to" and sort them by time
         let sorted_by_time: BTreeMap<_, _> = hash_to_link
             .range(key.clone()..)
-            .take_while(|(k, _)| k.reply_to_hash == key.reply_to_hash)
+            .take_while(|(k, _)| k.parent_hash == key.parent_hash)
             .map(|(k, v)| (k.timestamp, v))
             .collect();
         // Extend our sorted messages by these replies sorted by time
@@ -93,7 +109,7 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
 }
 
 // Turn all the link targets into the actual message
-fn get_messages(links: Vec<Link>) -> ChatResult<Vec<Message>> {
+fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
     let mut messages = Vec::with_capacity(links.len());
 
     // for every link get details on the target and create the message
@@ -104,24 +120,15 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<Message>> {
         let message = match get_details!(target)? {
             Some(Details::Entry(EntryDetails { entry, headers, .. })) => {
                 // Turn the entry into a MessageEntry
-                let message_entry: MessageEntry = entry.try_into()?;
+                let message: Message = entry.try_into()?;
                 let header = match headers.into_iter().next() {
                     Some(h) => h,
                     // Ignoring missing messages
                     None => continue,
                 };
-                // Get the entry hash
-                let hash_entry = header
-                    .entry_hash()
-                    .ok_or_else(|| {
-                        ChatError::DataFormatError(
-                            "The message is missing an entry type on the header",
-                        )
-                    })?
-                    .clone();
 
                 // Create the message type for the UI
-                Message::new(header, message_entry, hash_entry)
+                MessageData::new(header, message)?
             }
             // Message is missing. This could be an error but we are
             // going to ignore it.
@@ -130,4 +137,27 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<Message>> {
         messages.push(message);
     }
     Ok(messages)
+}
+
+fn add_time_path(path: Path, date: Date) -> ChatResult<Path> {
+    let Date { year, month, day } = date;
+    let mut components: Vec<_> = path.into();
+    debug!(format!("{}{}{}", year, month, day))?;
+    components.push(year.to_string().into());
+    components.push(month.to_string().into());
+    components.push(day.to_string().into());
+    Ok(components.into())
+}
+
+fn add_current_time_path(path: Path) -> ChatResult<Path> {
+    use chrono::Datelike;
+    let mut components: Vec<_> = path.into();
+    let year = to_date(sys_time!()?).year().to_string();
+    let month = to_date(sys_time!()?).month().to_string();
+    let day = to_date(sys_time!()?).day().to_string();
+    debug!(format!("{}{}{}", year, month, day))?;
+    components.push(year.into());
+    components.push(month.into());
+    components.push(day.into());
+    Ok(components.into())
 }

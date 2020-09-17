@@ -11,5 +11,6 @@ crate-type = [ "cdylib", "rlib" ]
 [dependencies]
 hdk3 = { path = "../../../holochain/crates/hdk" }
 serde = "=1.0.104"
+chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99.9"
 thiserror = "1.0.20"

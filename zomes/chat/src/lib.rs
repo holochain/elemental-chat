@@ -1,29 +1,27 @@
-mod entries;
-
-use channel::{Channel, ChannelInput, ListChannels, ListChannelsInput};
-use entries::channel::ChannelEntry;
-use entries::{channel, message, message::MessageEntry};
+use channel::{ChannelData, ChannelInfo, ChannelInput, ListChannels, ListChannelsInput};
+use entries::{channel, message};
 use error::ChatResult;
 use hdk3::prelude::Path;
 use hdk3::prelude::*;
-use message::{ListMessages, ListMessagesInput, Message, MessageInput, ReplyTo};
+use message::{ListMessages, ListMessagesInput, Message, MessageData, MessageInput};
 
+mod entries;
 mod error;
 mod utils;
 
 entry_defs![
     Path::entry_def(),
-    MessageEntry::entry_def(),
-    ChannelEntry::entry_def()
+    Message::entry_def(),
+    ChannelInfo::entry_def()
 ];
 
 #[hdk_extern]
-fn create_channel(channel_input: ChannelInput) -> ChatResult<Channel> {
+fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelData> {
     channel::handlers::create_channel(channel_input)
 }
 
 #[hdk_extern]
-fn create_message(message_input: MessageInput) -> ChatResult<Message> {
+fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
     message::handlers::create_message(message_input)
 }
 
@@ -37,21 +35,21 @@ fn list_messages(list_messages_input: ListMessagesInput) -> ChatResult<ListMessa
     message::handlers::list_messages(list_messages_input)
 }
 
-#[hdk_extern]
-fn what(_: ()) -> ChatResult<MessageInput> {
-    let eh = hash_entry!(ChannelEntry {
-        uuid: "".into(),
-        content: "".into()
-    })?;
-    let rt = ReplyTo::Channel;
-    let me = MessageEntry {
-        uuid: "".into(),
-        content: "".into(),
-    };
-    let mi = MessageInput {
-        reply_to: rt,
-        channel_entry_hash: eh,
-        message: me,
-    };
-    Ok(mi)
-}
+// #[hdk_extern]
+// fn what(_: ()) -> ChatResult<MessageInput> {
+//     let eh = hash_entry!(ChannelEntry {
+//         uuid: "".into(),
+//         content: "".into()
+//     })?;
+//     let rt = Parent::Channel;
+//     let me = MessageEntry {
+//         uuid: "".into(),
+//         content: "".into(),
+//     };
+//     let mi = MessageInput {
+//         parent: rt,
+//         channel_entry_hash: eh,
+//         message: me,
+//     };
+//     Ok(mi)
+// }

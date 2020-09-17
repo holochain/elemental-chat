@@ -20,7 +20,7 @@ module.exports = (orchestrator) => {
 
     // Create a channel
     const channel_uuid = uuidv4();
-    const channel = await conductor.call('alice', 'chat', 'create_channel', { path: "Channels", channel: { uuid: channel_uuid, content: "Test Channel" } });
+    const channel = await conductor.call('alice', 'chat', 'create_channel', { name: "Test Channel", channel: { category: "General", id: channel_uuid } });
     console.log(channel);
 
     var sends: any[] = [];
@@ -29,8 +29,8 @@ module.exports = (orchestrator) => {
 
     // Alice send a message
     sends.push({
-      reply_to: { Channel: null },
-      channel_entry_hash: channel.entryHash,
+      parent: { First: null },
+      channel: channel.channel,
       message: {
         uuid: uuidv4(),
         content: "Hello from alice :)",
@@ -43,8 +43,8 @@ module.exports = (orchestrator) => {
 
     // Alice sends another message
     sends.push({
-      reply_to: { Message: recvs[0].entryHash },
-      channel_entry_hash: channel.entryHash,
+      parent: { Message: recvs[0].entryHash },
+      channel: channel.channel,
       message: {
         uuid: uuidv4(),
         content: "Is anybody out there?",
@@ -55,31 +55,32 @@ module.exports = (orchestrator) => {
     console.log(recvs[1]);
     t.deepEqual(sends[1].message, recvs[1].message);
 
-    const channel_list = await conductor.call('alice', 'chat', 'list_channels', { path: "Channels" });
+    const channel_list = await conductor.call('alice', 'chat', 'list_channels', { category: "General" });
     console.log(channel_list);
 
     // Alice lists the messages
     var msgs: any[] = [];
-    msgs.push(await conductor.call('alice', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash }));
+    console.log(today());
+    msgs.push(await conductor.call('alice', 'chat', 'list_messages', { channel: channel.channel, date: today() }));
     console.log(_.map(msgs[0].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
     // Bobbo lists the messages
-    msgs.push(await conductor.call('bobbo', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash }));
+    msgs.push(await conductor.call('bobbo', 'chat', 'list_messages', { channel: channel.channel, date: today() }));
     console.log(_.map(msgs[1].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
 
     // Bobbo and Alice both reply to the same message
     sends.push({
-      reply_to: { Message: recvs[1].entryHash },
-      channel_entry_hash: channel.entryHash,
+      parent: { Message: recvs[1].entryHash },
+      channel: channel.channel,
       message: {
         uuid: uuidv4(),
         content: "I'm here",
       }
     });
     sends.push({
-      reply_to: { Message: recvs[1].entryHash },
-      channel_entry_hash: channel.entryHash,
+      parent: { Message: recvs[1].entryHash },
+      channel: channel.channel,
       message: {
         uuid: uuidv4(),
         content: "Anybody?",
@@ -93,12 +94,21 @@ module.exports = (orchestrator) => {
     t.deepEqual(sends[3].message, recvs[3].message);
 
     // Alice lists the messages
-    msgs.push(await conductor.call('alice', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash }));
+    msgs.push(await conductor.call('alice', 'chat', 'list_messages', { channel: channel.channel, date: today() }));
     console.log(_.map(msgs[2].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[2].messages, just_msg));
     // Bobbo lists the messages
-    msgs.push(await conductor.call('bobbo', 'chat', 'list_messages', { channel_entry_hash: channel.entryHash }));
+    msgs.push(await conductor.call('bobbo', 'chat', 'list_messages', { channel: channel.channel, date: today() }));
     console.log(_.map(msgs[3].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
+}
+
+
+function today() {
+  var today = new Date();
+  var dd: String = String(today.getDate());
+  var mm: String = String(today.getMonth() + 1); //January is 0!
+  var yyyy: String = String(today.getFullYear());
+  return { year: yyyy, month: mm, day: dd }
 }
