@@ -104,7 +104,7 @@ module.exports = (orchestrator) => {
   })
 }
 
-
+// Get a basic date object for right now
 function today() {
   var today = new Date();
   var dd: String = String(today.getDate());

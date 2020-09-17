@@ -3,6 +3,8 @@ use hdk3::{hash_path::path::Component, prelude::*};
 pub mod handlers;
 
 /// The actual channel data that is saved into the DHT
+/// This is the actual name of the channel that
+/// can change.
 #[hdk_entry(id = "channel_info")]
 pub struct ChannelInfo {
     pub name: String,
@@ -17,6 +19,8 @@ pub struct ChannelInput {
     channel: Channel,
 }
 
+/// A channel is consists of the category it belongs to
+/// and a unique id
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 pub struct Channel {
     category: String,
@@ -63,11 +67,14 @@ impl TryFrom<&Path> for Channel {
     }
 }
 
+/// A easy way to create the channel info tag
 pub(crate) struct ChannelInfoTag;
 
 impl ChannelInfoTag {
     const TAG: &'static [u8; 4] = b"info";
+
+    /// Create the tag
     pub(crate) fn tag() -> LinkTag {
-        LinkTag::new(Self::TAG.clone())
+        LinkTag::new(*Self::TAG)
     }
 }

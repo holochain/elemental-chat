@@ -34,22 +34,3 @@ fn list_channels(list_channels_input: ListChannelsInput) -> ChatResult<ListChann
 fn list_messages(list_messages_input: ListMessagesInput) -> ChatResult<ListMessages> {
     message::handlers::list_messages(list_messages_input)
 }
-
-// #[hdk_extern]
-// fn what(_: ()) -> ChatResult<MessageInput> {
-//     let eh = hash_entry!(ChannelEntry {
-//         uuid: "".into(),
-//         content: "".into()
-//     })?;
-//     let rt = Parent::Channel;
-//     let me = MessageEntry {
-//         uuid: "".into(),
-//         content: "".into(),
-//     };
-//     let mi = MessageInput {
-//         parent: rt,
-//         channel_entry_hash: eh,
-//         message: me,
-//     };
-//     Ok(mi)
-// }

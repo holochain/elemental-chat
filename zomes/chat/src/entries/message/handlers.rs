@@ -29,13 +29,18 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let message = MessageData::new(header, message)?;
 
     // Get the channel hash
-    let path: Path = channel.clone().into();
+    let path: Path = channel.into();
+
+    // Add the current time components
     let path = add_current_time_path(path)?;
+
+    // Ensure the path exists
     path.ensure()?;
 
+    // The actual hash we are going to hang this message on
     let channel_entry_hash = path.hash()?;
 
-    // Get the hash of what this message is replying to
+    // Get the hash of the parent of this message
     let parent_hash_entry = match parent {
         Parent::Message(hash_entry) => hash_entry,
         Parent::First => channel_entry_hash.clone(),
@@ -56,10 +61,15 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     let ListMessagesInput { channel, date } = list_message_input;
 
     // Get the channel hash
-    let path: Path = channel.clone().into();
+    let path: Path = channel.into();
+
+    // Add the time components
     let path = add_time_path(path, date)?;
+
+    // Ensure the path exists
     path.ensure()?;
 
+    // Get the actual hash we are going to pull the messages from
     let channel_entry_hash = path.hash()?;
 
     // Get the message links on this channel
@@ -139,23 +149,37 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
     Ok(messages)
 }
 
+/// Add the time from the Date type to this path
 fn add_time_path(path: Path, date: Date) -> ChatResult<Path> {
     let Date { year, month, day } = date;
     let mut components: Vec<_> = path.into();
-    debug!(format!("{}{}{}", year, month, day))?;
-    components.push(year.to_string().into());
-    components.push(month.to_string().into());
-    components.push(day.to_string().into());
+
+    // Add each part of the date as a component
+    // so our path will be `category:channel_id:year:month:day`.
+    // For example `General:3289hdf9823h92:2020:09:17` might be a
+    // path for all the messages on the 17th of September.
+
+    components.push(year.into());
+    components.push(month.into());
+    components.push(day.into());
     Ok(components.into())
 }
 
+/// Add the current date to the path.
+/// This works the same as the above but uses current
+/// system time. Note that system time is unreliable but
+/// so this would require more thought in a production app.
 fn add_current_time_path(path: Path) -> ChatResult<Path> {
     use chrono::Datelike;
     let mut components: Vec<_> = path.into();
-    let year = to_date(sys_time!()?).year().to_string();
-    let month = to_date(sys_time!()?).month().to_string();
-    let day = to_date(sys_time!()?).day().to_string();
-    debug!(format!("{}{}{}", year, month, day))?;
+
+    // Get the current times and turn them to dates;
+    let now = to_date(sys_time!()?);
+    let year = now.year().to_string();
+    let month = now.month().to_string();
+    let day = now.day().to_string();
+
+    // Add the date parts as components to the path
     components.push(year.into());
     components.push(month.into());
     components.push(day.into());

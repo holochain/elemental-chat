@@ -12,9 +12,9 @@ pub struct Message {
     pub content: String,
 }
 
-/// Who this message replies to.
-/// Either the first message so the channel
-/// or another parent message.
+/// This allows the app to properly order messages.
+/// This message is either the first message of the time block
+/// or has another parent message.
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub enum Parent {
     First,
@@ -46,6 +46,7 @@ pub struct ListMessagesInput {
     date: Date,
 }
 
+/// This is date you want to get messages for
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct Date {
     /// Year '2001'
