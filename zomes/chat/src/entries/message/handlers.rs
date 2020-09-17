@@ -11,12 +11,12 @@ use hdk3::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
 
-use super::{Date, ListMessages, ListMessagesInput, MessageData, Parent, ParentKey};
+use super::{Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData};
 
 /// Create a new message
 pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
     let MessageInput {
-        parent,
+        last_seen,
         channel,
         message,
     } = message_input;
@@ -40,14 +40,14 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     // The actual hash we are going to hang this message on
     let channel_entry_hash = path.hash()?;
 
-    // Get the hash of the parent of this message
-    let parent_hash_entry = match parent {
-        Parent::Message(hash_entry) => hash_entry,
-        Parent::First => channel_entry_hash.clone(),
+    // Get the hash of the last_seen of this message
+    let parent_hash_entry = match last_seen {
+        LastSeen::Message(hash_entry) => hash_entry,
+        LastSeen::First => channel_entry_hash.clone(),
     };
 
     // Turn the reply to and timestamp into a link tag
-    let tag = ParentKey::new(parent_hash_entry, message.created_at);
+    let tag = LastSeenKey::new(parent_hash_entry, message.created_at);
     create_link!(
         channel_entry_hash,
         message.entry_hash.clone(),
@@ -77,7 +77,7 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     let len = links.len();
 
     // Our goal here is to sort the messages by who they replied to
-    // and messages that replied to the same parent are ordered by time.
+    // and messages that replied to the same last_seen are ordered by time.
 
     // We can use the link tag to see who the message replied to and
     // the target will be the hash that child messages will have replied too.
@@ -88,13 +88,13 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     // Store links as HashMap reply to EntryHash -> Link
     let hash_to_link: BTreeMap<_, _> = links
         .into_iter()
-        .map(|link| (ParentKey::from(link.tag.clone()), link))
+        .map(|link| (LastSeenKey::from(link.tag.clone()), link))
         .collect();
 
     // Create a sorted vec by following the "reply hash" -> Link -> target
     // starting from the channel entry hash
     let mut sorted_messages = Vec::with_capacity(len);
-    let key: ParentKey = channel_entry_hash.into();
+    let key: LastSeenKey = channel_entry_hash.into();
     let mut keys = VecDeque::new();
     keys.push_back(key);
     while let Some(key) = keys.pop_front() {

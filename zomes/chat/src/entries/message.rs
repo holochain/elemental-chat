@@ -14,9 +14,9 @@ pub struct Message {
 
 /// This allows the app to properly order messages.
 /// This message is either the first message of the time block
-/// or has another parent message.
+/// or has another message that was observed at the time of sending.
 #[derive(Serialize, Deserialize, SerializedBytes)]
-pub enum Parent {
+pub enum LastSeen {
     First,
     Message(EntryHash),
 }
@@ -24,7 +24,7 @@ pub enum Parent {
 /// Input to the create message call
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct MessageInput {
-    pub parent: Parent,
+    pub last_seen: LastSeen,
     pub channel: Channel,
     pub message: Message,
 }
@@ -81,12 +81,12 @@ impl MessageData {
 /// This key allows us to sort the messages by who they reply to
 /// then by time
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes, Ord, PartialOrd, Eq, PartialEq)]
-struct ParentKey {
+struct LastSeenKey {
     parent_hash: EntryHash,
     timestamp: Option<Timestamp>,
 }
 
-impl ParentKey {
+impl LastSeenKey {
     pub fn new(parent_hash: EntryHash, timestamp: Timestamp) -> Self {
         Self {
             parent_hash,
@@ -95,7 +95,7 @@ impl ParentKey {
     }
 }
 
-impl From<EntryHash> for ParentKey {
+impl From<EntryHash> for LastSeenKey {
     fn from(parent_hash: EntryHash) -> Self {
         Self {
             parent_hash,
@@ -104,15 +104,15 @@ impl From<EntryHash> for ParentKey {
     }
 }
 
-impl From<ParentKey> for LinkTag {
-    fn from(key: ParentKey) -> Self {
+impl From<LastSeenKey> for LinkTag {
+    fn from(key: LastSeenKey) -> Self {
         Self::new(UnsafeBytes::from(
             SerializedBytes::try_from(key).expect("This serialization should never fail"),
         ))
     }
 }
 
-impl From<LinkTag> for ParentKey {
+impl From<LinkTag> for LastSeenKey {
     fn from(t: LinkTag) -> Self {
         Self::try_from(SerializedBytes::from(UnsafeBytes::from(t.0)))
             .expect("This serialization should never fail")

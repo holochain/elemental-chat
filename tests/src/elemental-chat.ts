@@ -29,7 +29,7 @@ module.exports = (orchestrator) => {
 
     // Alice send a message
     sends.push({
-      parent: { First: null },
+      last_seen: { First: null },
       channel: channel.channel,
       message: {
         uuid: uuidv4(),
@@ -43,7 +43,7 @@ module.exports = (orchestrator) => {
 
     // Alice sends another message
     sends.push({
-      parent: { Message: recvs[0].entryHash },
+      last_seen: { Message: recvs[0].entryHash },
       channel: channel.channel,
       message: {
         uuid: uuidv4(),
@@ -71,7 +71,7 @@ module.exports = (orchestrator) => {
 
     // Bobbo and Alice both reply to the same message
     sends.push({
-      parent: { Message: recvs[1].entryHash },
+      last_seen: { Message: recvs[1].entryHash },
       channel: channel.channel,
       message: {
         uuid: uuidv4(),
@@ -79,7 +79,7 @@ module.exports = (orchestrator) => {
       }
     });
     sends.push({
-      parent: { Message: recvs[1].entryHash },
+      last_seen: { Message: recvs[1].entryHash },
       channel: channel.channel,
       message: {
         uuid: uuidv4(),
