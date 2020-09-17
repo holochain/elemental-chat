@@ -37,13 +37,13 @@ pub struct ChannelData {
 
 /// Input to the list channels call
 #[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct ListChannelsInput {
+pub struct ChannelListInput {
     category: String,
 }
 
 /// The channels returned from list messages
 #[derive(Serialize, Deserialize, SerializedBytes, derive_more::From)]
-pub struct ListChannels {
+pub struct ChannelList {
     channels: Vec<ChannelData>,
 }
 

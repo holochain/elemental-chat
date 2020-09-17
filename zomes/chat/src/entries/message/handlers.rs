@@ -128,10 +128,12 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
         // allow the UI to follow the CRUD tree to find which message
         // to actually display.
         let message = match get_details!(target)? {
-            Some(Details::Entry(EntryDetails { entry, headers, .. })) => {
+            Some(Details::Entry(EntryDetails {
+                entry, mut headers, ..
+            })) => {
                 // Turn the entry into a MessageEntry
                 let message: Message = entry.try_into()?;
-                let header = match headers.into_iter().next() {
+                let header = match headers.pop() {
                     Some(h) => h,
                     // Ignoring missing messages
                     None => continue,

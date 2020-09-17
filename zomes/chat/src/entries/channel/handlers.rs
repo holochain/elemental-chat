@@ -6,7 +6,7 @@ use crate::{
 use hdk3::prelude::*;
 use link::Link;
 
-use super::{ChannelData, ChannelInfo, ChannelInfoTag, ListChannels, ListChannelsInput};
+use super::{ChannelData, ChannelInfo, ChannelInfoTag, ChannelList, ChannelListInput};
 
 /// Create a new channel
 /// This effectively just stores channel info on the
@@ -38,7 +38,7 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     Ok(ChannelData::new(channel, info))
 }
 
-pub(crate) fn list_channels(list_channels_input: ListChannelsInput) -> ChatResult<ListChannels> {
+pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {
     // Get the category path
     let path = Path::from(list_channels_input.category);
 

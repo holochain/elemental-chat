@@ -1,4 +1,4 @@
-use channel::{ChannelData, ChannelInfo, ChannelInput, ListChannels, ListChannelsInput};
+use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
 use entries::{channel, message};
 use error::ChatResult;
 use hdk3::prelude::Path;
@@ -26,7 +26,7 @@ fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
 }
 
 #[hdk_extern]
-fn list_channels(list_channels_input: ListChannelsInput) -> ChatResult<ListChannels> {
+fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {
     channel::handlers::list_channels(list_channels_input)
 }
 
