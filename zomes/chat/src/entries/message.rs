@@ -12,20 +12,17 @@ pub struct Message {
     pub content: String,
 }
 
-/// This allows the app to properly order messages.
-/// This message is either the first message of the time block
-/// or has another message that was observed at the time of sending.
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub enum LastSeen {
-    First,
-    Message(EntryHash),
-}
 
 /// Input to the create message call
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct MessageInput {
-    pub last_seen: LastSeen,
+    /// By specifying the hash of the last message seen at the time of
+    /// committing this message, it allows the app to order messages as best
+    /// as it can. If this is the first message in the channel, this is None.
+    pub last_message_seen: Option<EntryHash>,
+    /// The channel which this message belongs to
     pub channel: Channel,
+    /// The message to commit
     pub message: Message,
 }
 

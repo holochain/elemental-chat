@@ -11,12 +11,12 @@ use hdk3::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
 
-use super::{Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData};
+use super::{Date, LastSeenKey, ListMessages, ListMessagesInput, MessageData};
 
 /// Create a new message
 pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
     let MessageInput {
-        last_seen,
+        last_message_seen,
         channel,
         message,
     } = message_input;
@@ -40,10 +40,10 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     // The actual hash we are going to hang this message on
     let channel_entry_hash = path.hash()?;
 
-    // Get the hash of the last_seen of this message
-    let parent_hash_entry = match last_seen {
-        LastSeen::Message(hash_entry) => hash_entry,
-        LastSeen::First => channel_entry_hash.clone(),
+    // Get the hash of the last_message_seen of this message
+    let parent_hash_entry = match last_message_seen {
+        Some(hash_entry) => hash_entry,
+        None => channel_entry_hash.clone(),
     };
 
     // Turn the reply to and timestamp into a link tag
@@ -77,7 +77,7 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     let len = links.len();
 
     // Our goal here is to sort the messages by who they replied to
-    // and messages that replied to the same last_seen are ordered by time.
+    // and messages that replied to the same last_message_seen are ordered by time.
 
     // We can use the link tag to see who the message replied to and
     // the target will be the hash that child messages will have replied too.
