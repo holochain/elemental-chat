@@ -15,10 +15,8 @@ The most basic of all possible chat apps.
 
 - Build the Holochain tools
   - Clone the repo: `git clone https://github.com/holochain/holochain && cd ./holochain`
-  - Ensure correct version of rust tool-chain via nix: `nix-shell`
-    - You can also install rust from [https://rustup.rs/](https://rustup.rs/) if you don't want to use nix-shell
-  - Install conductor binary: `cargo install --path crates/holochain`
-  - Install dna-util binary: `cargo install --path crates/dna_util`
+  - Activate the needed rust environment and holochain installation scripts nix: `nix-shell`
+  - Install the holochain and dna-util binaries: `hc-install`
 - Build the elemental-chat DNA (assumes you are still in the nix shell for correct rust/cargo versions from step above):
   - Clone this repo: `git clone https://github.com/holochain/elemental-chat && cd ./elemental-chat`
   - Build the wasm: `CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown`
