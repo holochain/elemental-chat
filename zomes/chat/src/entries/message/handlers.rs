@@ -140,6 +140,7 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
                 };
 
                 // Create the message type for the UI
+                let header = header.into_header_and_signature().0.into_content();
                 MessageData::new(header, message)?
             }
             // Message is missing. This could be an error but we are

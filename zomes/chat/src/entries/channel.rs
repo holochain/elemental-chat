@@ -6,6 +6,7 @@ pub mod handlers;
 /// This is the actual name of the channel that
 /// can change.
 #[hdk_entry(id = "channel_info")]
+#[derive(Debug)]
 pub struct ChannelInfo {
     pub name: String,
     pub created_by: AgentPubKey,
@@ -24,11 +25,11 @@ pub struct ChannelInput {
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 pub struct Channel {
     category: String,
-    id: String,
+    uuid: String,
 }
 
 /// The message type that goes to the UI
-#[derive(Serialize, Deserialize, SerializedBytes, derive_more::Constructor)]
+#[derive(Serialize, Deserialize, SerializedBytes, derive_more::Constructor, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelData {
     pub channel: Channel,
@@ -49,7 +50,7 @@ pub struct ChannelList {
 
 impl From<Channel> for Path {
     fn from(c: Channel) -> Self {
-        let path = vec![Component::from(c.category), Component::from(c.id)];
+        let path = vec![Component::from(c.category), Component::from(c.uuid)];
         Path::from(path)
     }
 }
@@ -61,7 +62,7 @@ impl TryFrom<&Path> for Channel {
         let path: &Vec<_> = p.as_ref();
         let channel = Channel {
             category: String::try_from(&path[0])?,
-            id: String::try_from(&path[1])?,
+            uuid: String::try_from(&path[1])?,
         };
         Ok(channel)
     }

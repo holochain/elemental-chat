@@ -20,7 +20,7 @@ module.exports = (orchestrator) => {
 
     // Create a channel
     const channel_uuid = uuidv4();
-    const channel = await conductor.call('alice', 'chat', 'create_channel', { name: "Test Channel", channel: { category: "General", id: channel_uuid } });
+    const channel = await conductor.call('alice', 'chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
     console.log(channel);
 
     var sends: any[] = [];
