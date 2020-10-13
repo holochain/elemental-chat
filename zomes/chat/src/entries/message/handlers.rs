@@ -133,15 +133,14 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
             })) => {
                 // Turn the entry into a MessageEntry
                 let message: Message = entry.try_into()?;
-                let header = match headers.pop() {
+                let signed_header = match headers.pop() {
                     Some(h) => h,
                     // Ignoring missing messages
                     None => continue,
                 };
 
                 // Create the message type for the UI
-                let header = header.into_header_and_signature().0.into_content();
-                MessageData::new(header, message)?
+                MessageData::new(signed_header.header().clone(), message)?
             }
             // Message is missing. This could be an error but we are
             // going to ignore it.
