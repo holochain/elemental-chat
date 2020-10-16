@@ -2,11 +2,26 @@ use crate::{
     channel::{Channel, ChannelInput},
     error::ChatResult,
     utils::to_timestamp,
+    signal_ui,
+    SignalPayload,
 };
 use hdk3::prelude::*;
 use link::Link;
 
+
+
 use super::{ChannelData, ChannelInfo, ChannelInfoTag, ChannelList, ChannelListInput};
+
+////////////////////////////////////////
+fn notify_new_channel(channel: ChannelData) -> ChatResult<()> {
+    // currently the message sends to all connected agents
+    // once have channels with members, emit if agent is only a member
+
+    // QUESTION: do we need to call_remote list_channels for members other than ourselves??
+    // or will others connect to same socket port?
+
+    signal_ui(SignalPayload::ChannelData(channel))
+}
 
 /// Create a new channel
 /// This effectively just stores channel info on the
@@ -33,6 +48,9 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
 
     // link the channel info to the path
     create_link!(path.hash()?, info_hash, ChannelInfoTag::tag())?;
+
+    // emit signal alterting all connected uis about new channel
+    notify_new_channel(ChannelData::new(channel.clone(), info.clone()))?;
 
     // Return the channel and the info for the UI
     Ok(ChannelData::new(channel, info))

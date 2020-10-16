@@ -6,12 +6,26 @@ use crate::{
     message::{Message, MessageInput},
     utils::get_local_header,
     utils::to_date,
+    signal_ui,
+    SignalPayload,
 };
 use hdk3::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
 
-use super::{Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData};
+use super::{Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData};
+
+////////////////////////////////////////
+fn notify_new_message(message: SignalMessageData) -> ChatResult<()> {
+    // currently the message sends to all connected
+    // once have channels with members, emit if agent is only memebers
+
+    // QUESTION: do we need to call_remote list_channels for members other than ourselves??
+    // or will others connect to same socket port?
+
+    signal_ui(SignalPayload::SignalMessageData(message))
+}
+////////////////////////////////////////
 
 /// Create a new message
 pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
@@ -29,7 +43,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let message = MessageData::new(header, message)?;
 
     // Get the channel hash
-    let path: Path = channel.into();
+    let path: Path = channel.clone().into();
 
     // Add the current time components
     let path = add_current_time_path(path)?;
@@ -53,6 +67,10 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
         message.entry_hash.clone(),
         LinkTag::from(tag)
     )?;
+
+    // emit signal alterting all connected uis about new message
+    notify_new_message(SignalMessageData::new(message.clone(), channel))?;
+
     Ok(message)
 }
 

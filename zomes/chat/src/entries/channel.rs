@@ -6,7 +6,7 @@ pub mod handlers;
 /// This is the actual name of the channel that
 /// can change.
 #[hdk_entry(id = "channel_info")]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ChannelInfo {
     pub name: String,
     pub created_by: AgentPubKey,
