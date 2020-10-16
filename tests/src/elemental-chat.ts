@@ -12,6 +12,9 @@ const config = Config.gen({
 })
 
 module.exports = (orchestrator) => {
+  // This is placeholder for signals test; awaiting implementation of signals testing in tryorama. 
+  // Issue: https://github.com/holochain/tryorama/issues/40
+  orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
 
   orchestrator.registerScenario('chat away', async (s, t) => {
     // spawn the conductor process
