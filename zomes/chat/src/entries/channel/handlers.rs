@@ -8,12 +8,7 @@ use crate::{
 use hdk3::prelude::*;
 use link::Link;
 
-
-
 use super::{ChannelData, ChannelInfo, ChannelInfoTag, ChannelList, ChannelListInput};
-fn notify_new_channel(channel: ChannelData) -> ChatResult<()> {
-    signal_ui(SignalPayload::ChannelData(channel))
-}
 
 /// Create a new channel
 /// This effectively just stores channel info on the
@@ -42,7 +37,7 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     create_link!(path.hash()?, info_hash, ChannelInfoTag::tag())?;
 
     // emit signal alterting all connected uis about new channel
-    notify_new_channel(ChannelData::new(channel.clone(), info.clone()))?;
+    signal_ui(SignalPayload::ChannelData(ChannelData::new(channel.clone(), info.clone())))?;
 
     // Return the channel and the info for the UI
     Ok(ChannelData::new(channel, info))

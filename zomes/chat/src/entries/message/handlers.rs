@@ -14,9 +14,6 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData};
-fn notify_new_message(message: SignalMessageData) -> ChatResult<()> {
-    signal_ui(SignalPayload::SignalMessageData(message))
-}
 
 /// Create a new message
 pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
@@ -60,7 +57,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     )?;
 
     // emit signal alterting all connected uis about new message
-    notify_new_message(SignalMessageData::new(message.clone(), channel))?;
+    signal_ui(SignalPayload::SignalMessageData(SignalMessageData::new(message.clone(), channel)))?;
     
     // Return the message for the UI
     Ok(message)
