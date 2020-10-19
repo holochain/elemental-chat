@@ -14,18 +14,9 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData};
-
-////////////////////////////////////////
 fn notify_new_message(message: SignalMessageData) -> ChatResult<()> {
-    // currently the message sends to all connected
-    // once have channels with members, emit if agent is only memebers
-
-    // QUESTION: do we need to call_remote list_channels for members other than ourselves??
-    // or will others connect to same socket port?
-
     signal_ui(SignalPayload::SignalMessageData(message))
 }
-////////////////////////////////////////
 
 /// Create a new message
 pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
@@ -70,7 +61,8 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
 
     // emit signal alterting all connected uis about new message
     notify_new_message(SignalMessageData::new(message.clone(), channel))?;
-
+    
+    // Return the message for the UI
     Ok(message)
 }
 

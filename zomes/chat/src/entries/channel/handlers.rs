@@ -11,15 +11,7 @@ use link::Link;
 
 
 use super::{ChannelData, ChannelInfo, ChannelInfoTag, ChannelList, ChannelListInput};
-
-////////////////////////////////////////
 fn notify_new_channel(channel: ChannelData) -> ChatResult<()> {
-    // currently the message sends to all connected agents
-    // once have channels with members, emit if agent is only a member
-
-    // QUESTION: do we need to call_remote list_channels for members other than ourselves??
-    // or will others connect to same socket port?
-
     signal_ui(SignalPayload::ChannelData(channel))
 }
 
