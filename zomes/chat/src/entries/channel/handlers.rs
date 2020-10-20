@@ -1,8 +1,8 @@
 use crate::{
     channel::{Channel, ChannelInput},
     error::ChatResult,
-    utils::to_timestamp,
     signal_ui,
+    utils::to_timestamp,
     SignalPayload,
 };
 use hdk3::prelude::*;
@@ -37,7 +37,10 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     create_link!(path.hash()?, info_hash, ChannelInfoTag::tag())?;
 
     // emit signal alterting all connected uis about new channel
-    signal_ui(SignalPayload::ChannelData(ChannelData::new(channel.clone(), info.clone())))?;
+    signal_ui(SignalPayload::ChannelData(ChannelData::new(
+        channel.clone(),
+        info.clone(),
+    )))?;
 
     // Return the channel and the info for the UI
     Ok(ChannelData::new(channel, info))

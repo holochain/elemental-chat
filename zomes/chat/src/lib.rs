@@ -3,7 +3,9 @@ use entries::{channel, message};
 use error::ChatResult;
 use hdk3::prelude::Path;
 use hdk3::prelude::*;
-use message::{ListMessages, ListMessagesInput, Message, SignalMessageData, MessageData, MessageInput};
+use message::{
+    ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SignalMessageData,
+};
 
 mod entries;
 mod error;
@@ -15,8 +17,8 @@ pub const NEW_CHANNEL_SIGNAL_TYPE: &str = "new_channel";
 
 #[derive(Serialize, Deserialize, SerializedBytes)]
 enum SignalPayload {
-	SignalMessageData(SignalMessageData),
-	ChannelData(ChannelData),
+    SignalMessageData(SignalMessageData),
+    ChannelData(ChannelData),
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes)]
@@ -25,19 +27,19 @@ struct SignalDetails {
     pub signal_payload: SignalPayload,
 }
 
- pub (crate) fn signal_ui(signal: SignalPayload) -> ChatResult<()> {
+pub(crate) fn signal_ui(signal: SignalPayload) -> ChatResult<()> {
     let signal_payload = match signal {
         SignalPayload::SignalMessageData(_) => SignalDetails {
-				signal_name: "message".to_string(),
-				signal_payload: signal
-		},
+            signal_name: "message".to_string(),
+            signal_payload: signal,
+        },
         SignalPayload::ChannelData(_) => SignalDetails {
-				signal_name: "channel".to_string(),
-				signal_payload: signal
-		}
+            signal_name: "channel".to_string(),
+            signal_payload: signal,
+        },
     };
     let payload: SerializedBytes = SerializedBytes::try_from(signal_payload).unwrap();
-	Ok(emit_signal!(payload)?)
+    Ok(emit_signal!(payload)?)
 }
 
 entry_defs![

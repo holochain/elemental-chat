@@ -48,7 +48,7 @@ pub struct SignalMessageData {
     entry_hash: EntryHash,
     created_by: AgentPubKey,
     created_at: Timestamp,
-    channel: Channel
+    channel: Channel,
 }
 
 /// Input to the list messages call
@@ -92,13 +92,18 @@ impl MessageData {
 
 impl SignalMessageData {
     pub fn new(message_data: MessageData, channel: Channel) -> Self {
-        let MessageData { message, entry_hash, created_by, created_at } = message_data;
+        let MessageData {
+            message,
+            entry_hash,
+            created_by,
+            created_at,
+        } = message_data;
         Self {
             message,
             entry_hash,
             created_by,
             created_at,
-            channel
+            channel,
         }
     }
 }
