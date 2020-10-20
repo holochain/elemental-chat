@@ -1,9 +1,12 @@
 use hdk3::prelude::*;
+use std::convert::Infallible;
 
 #[derive(thiserror::Error, Debug)]
 pub enum ChatError {
     #[error(transparent)]
     Serialization(#[from] SerializedBytesError),
+    #[error(transparent)]
+    Infallible(#[from] Infallible),
     #[error(transparent)]
     EntryError(#[from] EntryError),
     #[error(transparent)]

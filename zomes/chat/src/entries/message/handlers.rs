@@ -4,14 +4,18 @@ use crate::{
     error::ChatError,
     error::ChatResult,
     message::{Message, MessageInput},
+    signal_ui,
     utils::get_local_header,
     utils::to_date,
+    SignalPayload,
 };
 use hdk3::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
 
-use super::{Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData};
+use super::{
+    Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData,
+};
 
 /// Create a new message
 pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
@@ -29,7 +33,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let message = MessageData::new(header, message)?;
 
     // Get the channel hash
-    let path: Path = channel.into();
+    let path: Path = channel.clone().into();
 
     // Add the current time components
     let path = add_current_time_path(path)?;
@@ -53,6 +57,14 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
         message.entry_hash.clone(),
         LinkTag::from(tag)
     )?;
+
+    // emit signal alterting all connected uis about new message
+    signal_ui(SignalPayload::SignalMessageData(SignalMessageData::new(
+        message.clone(),
+        channel,
+    )))?;
+
+    // Return the message for the UI
     Ok(message)
 }
 

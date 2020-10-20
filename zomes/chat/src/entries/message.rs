@@ -7,6 +7,7 @@ pub mod handlers;
 
 /// The actual message data that is saved into the DHT
 #[hdk_entry(id = "message")]
+#[derive(Clone)]
 pub struct Message {
     pub uuid: String,
     pub content: String,
@@ -30,13 +31,24 @@ pub struct MessageInput {
 }
 
 /// The message type that goes to the UI
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Serialize, Deserialize, Clone, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageData {
     message: Message,
     entry_hash: EntryHash,
     created_by: AgentPubKey,
     created_at: Timestamp,
+}
+
+/// The message type that goes to the UI via emit_signal
+#[derive(Serialize, Deserialize, SerializedBytes)]
+#[serde(rename_all = "camelCase")]
+pub struct SignalMessageData {
+    message: Message,
+    entry_hash: EntryHash,
+    created_by: AgentPubKey,
+    created_at: Timestamp,
+    channel: Channel,
 }
 
 /// Input to the list messages call
@@ -75,6 +87,24 @@ impl MessageData {
             created_by: header.author().to_owned(),
             created_at: header.timestamp().to_owned(),
         })
+    }
+}
+
+impl SignalMessageData {
+    pub fn new(message_data: MessageData, channel: Channel) -> Self {
+        let MessageData {
+            message,
+            entry_hash,
+            created_by,
+            created_at,
+        } = message_data;
+        Self {
+            message,
+            entry_hash,
+            created_by,
+            created_at,
+            channel,
+        }
     }
 }
 
