@@ -56,6 +56,8 @@ export const behaviorRunner = async (s, t, config) => {
         msgs[i] = await sendingConductor.call(sendingCellNick, 'chat', 'create_message', msg)
     }
 
+    console.log(`Getting messages (should be ${messages})`)
+
     const messagesReceived = await sendingConductor.call(receivingCellNick, 'chat', 'list_messages', { channel, date: today() })
 
     console.log(messagesReceived.messages.length)
