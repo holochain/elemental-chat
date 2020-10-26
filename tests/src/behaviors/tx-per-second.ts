@@ -18,7 +18,47 @@ function prettyCellID(id) {
     return JSON.stringify(id[1].hash)
 }
 
-export const behaviorRunner = async (s, t, config) => {
+const trial = async (period, allPlayers, cellChannels, messagesToSend) => {
+    const sendingConductor = allPlayers["0"]
+    const sendingCellNick = "0"
+    const senderId= "0:0"
+    const receivingCellNick = "1"
+
+    const channel= { category: 'General', uuid: cellChannels[senderId] }
+
+    var msgs: any[] = [];
+//    const msDelayBetweenMessage = period/messagesToSend
+    const start = Date.now()
+    for (let i =0; i < messagesToSend; i++) {
+        const msg = {
+            last_seen: { First: null },
+            channel,
+            message: {
+                uuid: uuidv4(),
+                content: `message ${i}`,
+            }
+        }
+        console.log(`sending message ${i}`)
+        msgs[i] = await sendingConductor.call(sendingCellNick, 'chat', 'create_message', msg)
+        if (Date.now() - start > period) {
+            i = i+1
+            console.log(`Couldn't send all messages in period, sent ${i}`)
+            return i
+        }
+        // console.log(`waiting ${msDelayBetweenMessage}ms`)
+        // await delay(msDelayBetweenMessage-20)
+    }
+
+    console.log(`Getting messages (should be ${messagesToSend})`)
+
+    const messagesReceived = await sendingConductor.call(receivingCellNick, 'chat', 'list_messages', { channel, date: today() })
+
+    console.log(`Receiver got ${messagesReceived.messages.length} messages`)
+
+    return messagesReceived.messages.length
+}
+
+export const behaviorRunner = async (s, t, config, period, txCount) => {
     t.comment(`Preparing playground: initializing conductors and spawning`)
     const conductorConfigsArray = await batchOfConfigs(config.isRemote, config.conductors, config.instances)
     const allPlayers = await s.players(conductorConfigsArray, true)
@@ -36,33 +76,12 @@ export const behaviorRunner = async (s, t, config) => {
             cellChannels[`${i}:${j}`]= channel_uuid
         }
     }
-    const sendingConductor = allPlayers["0"]
-    const sendingCellNick = "0"
-    const senderId= "0:0"
-    const channel= { category: 'General', uuid: cellChannels[senderId] }
-    const receivingCellNick = "1"
-
-    var msgs: any[] = [];
-    const messages = 200
-    for (let i =0; i < messages; i++) {
-        const msg = {
-            last_seen: { First: null },
-            channel,
-            message: {
-                uuid: uuidv4(),
-                content: `message ${i}`,
-            }
-        }
-        msgs[i] = await sendingConductor.call(sendingCellNick, 'chat', 'create_message', msg)
+    const actual = await trial(period, allPlayers, cellChannels, txCount)
+    for (const i in allPlayers) {
+        const conductor = allPlayers[i]
+        conductor.kill()
     }
-
-    console.log(`Getting messages (should be ${messages})`)
-
-    const messagesReceived = await sendingConductor.call(receivingCellNick, 'chat', 'list_messages', { channel, date: today() })
-
-    console.log(messagesReceived.messages.length)
-
-    return spawnedAgents
+    return actual
 }
 /*
 module.exports = (orchestrator) => {
