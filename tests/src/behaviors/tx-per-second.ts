@@ -1,26 +1,95 @@
-import { Config } from '@holochain/tryorama'
+import { Player } from '@holochain/tryorama'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
+import { batcher as batchOfConfigs } from './config'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
-// Configure a conductor with two identical DNAs,
-// differentiated by UUID, nicknamed "alice" and "bobbo"
-const config = Config.gen({
-  alice: Config.dna("../elemental-chat.dna.gz", null),
-  bobbo: Config.dna("../elemental-chat.dna.gz", null),
-})
+type Players = Array<Player>
 
+export const defaultConfig = {
+    nodes: 1, // Number of machines
+    conductors: 1, // Conductors per machine
+    instances: 2, // Instances per conductor
+    endpoints: null, // Array of endpoints for Trycp
+}
+
+function prettyCellID(id) {
+    return JSON.stringify(id[1].hash)
+}
+
+const trial = async (period, allPlayers, cellChannels, messagesToSend) => {
+    const sendingConductor = allPlayers["0"]
+    const sendingCellNick = "0"
+    const senderId= "0:0"
+    const receivingCellNick = "1"
+
+    const channel= { category: 'General', uuid: cellChannels[senderId] }
+
+    var msgs: any[] = [];
+//    const msDelayBetweenMessage = period/messagesToSend
+    const start = Date.now()
+    for (let i =0; i < messagesToSend; i++) {
+        const msg = {
+            last_seen: { First: null },
+            channel,
+            message: {
+                uuid: uuidv4(),
+                content: `message ${i}`,
+            }
+        }
+        console.log(`sending message ${i}`)
+        msgs[i] = await sendingConductor.call(sendingCellNick, 'chat', 'create_message', msg)
+        if (Date.now() - start > period) {
+            i = i+1
+            console.log(`Couldn't send all messages in period, sent ${i}`)
+            return i
+        }
+        // console.log(`waiting ${msDelayBetweenMessage}ms`)
+        // await delay(msDelayBetweenMessage-20)
+    }
+
+    console.log(`Getting messages (should be ${messagesToSend})`)
+
+    const messagesReceived = await sendingConductor.call(receivingCellNick, 'chat', 'list_messages', { channel, date: today() })
+
+    console.log(`Receiver got ${messagesReceived.messages.length} messages`)
+
+    return messagesReceived.messages.length
+}
+
+export const behaviorRunner = async (s, t, config, period, txCount) => {
+    t.comment(`Preparing playground: initializing conductors and spawning`)
+    const conductorConfigsArray = await batchOfConfigs(config.isRemote, config.conductors, config.instances)
+    const allPlayers = await s.players(conductorConfigsArray, true)
+    let spawnedAgents = 0
+    let cellChannels = {}
+    for (const i in allPlayers) {
+        console.log(`Spawned conductor ${i} with cells:`)
+        for (const j in allPlayers[i]._cellIds) {
+            const conductor = allPlayers[i]
+            console.log(`   ${prettyCellID(conductor._cellIds[j])}`)
+            spawnedAgents++
+            const channel_uuid = uuidv4();
+            const channel = await conductor.call(j, 'chat', 'create_channel', { name: `${i}:${j}'s Test Channel`, channel: { category: "General", uuid: channel_uuid } });
+            console.log(channel);
+            cellChannels[`${i}:${j}`]= channel_uuid
+        }
+    }
+    const actual = await trial(period, allPlayers, cellChannels, txCount)
+    for (const i in allPlayers) {
+        const conductor = allPlayers[i]
+        conductor.kill()
+    }
+    return actual
+}
+/*
 module.exports = (orchestrator) => {
-  // This is placeholder for signals test; awaiting implementation of signals testing in tryorama.
-  // Issue: https://github.com/holochain/tryorama/issues/40
-  orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
-
-  orchestrator.registerScenario('chat away', async (s, t) => {
+  orchestrator.registerScenario('fish', async (s, t) => {
     // spawn the conductor process
     const { conductor } = await s.players({ conductor: config })
     await conductor.spawn()
-
+return
     // Create a channel
     const channel_uuid = uuidv4();
     const channel = await conductor.call('alice', 'chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
@@ -44,7 +113,7 @@ module.exports = (orchestrator) => {
     console.log(recvs[0]);
     t.deepEqual(sends[0].message, recvs[0].message);
 
-    // Alice sends another message
+    // Alice sends another messag
     sends.push({
       last_seen: { Message: recvs[0].entryHash },
       channel: channel.channel,
@@ -106,7 +175,7 @@ module.exports = (orchestrator) => {
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
 }
-
+*/
 // Get a basic date object for right now
 function today() {
   var today = new Date();
