@@ -38,8 +38,7 @@ pub(crate) fn signal_ui(signal: SignalPayload) -> ChatResult<()> {
             signal_payload: signal,
         },
     };
-    let payload: SerializedBytes = SerializedBytes::try_from(signal_payload).unwrap();
-    Ok(emit_signal!(payload)?)
+    Ok(emit_signal(&signal_payload)?)
 }
 
 entry_defs![

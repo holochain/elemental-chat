@@ -26,7 +26,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     } = message_input;
 
     // Commit the message
-    let header_hash = create_entry!(&message)?;
+    let header_hash = create_entry(&message)?;
 
     // Get the local header and create the message type for the UI
     let header = get_local_header(&header_hash)?.ok_or(ChatError::MissingLocalHeader)?;
@@ -52,10 +52,10 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
 
     // Turn the reply to and timestamp into a link tag
     let tag = LastSeenKey::new(parent_hash_entry, message.created_at);
-    create_link!(
+    create_link(
         channel_entry_hash,
         message.entry_hash.clone(),
-        LinkTag::from(tag)
+        LinkTag::from(tag),
     )?;
 
     // emit signal alterting all connected uis about new message
@@ -85,7 +85,7 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     let channel_entry_hash = path.hash()?;
 
     // Get the message links on this channel
-    let links = get_links!(channel_entry_hash.clone())?.into_inner();
+    let links = get_links(channel_entry_hash.clone(), None)?.into_inner();
     let len = links.len();
 
     // Our goal here is to sort the messages by who they replied to
@@ -139,7 +139,7 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
         // Get details because we are going to return the original message and
         // allow the UI to follow the CRUD tree to find which message
         // to actually display.
-        let message = match get_details!(target)? {
+        let message = match get_details(target, GetOptions)? {
             Some(Details::Entry(EntryDetails {
                 entry, mut headers, ..
             })) => {
@@ -188,7 +188,7 @@ fn add_current_time_path(path: Path) -> ChatResult<Path> {
     let mut components: Vec<_> = path.into();
 
     // Get the current times and turn them to dates;
-    let now = to_date(sys_time!()?);
+    let now = to_date(sys_time()?);
     let year = now.year().to_string();
     let month = now.month().to_string();
     let day = now.day().to_string();

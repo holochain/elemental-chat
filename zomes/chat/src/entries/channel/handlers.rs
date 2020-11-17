@@ -23,18 +23,18 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     // Create the channel info
     let info = ChannelInfo {
         // This agent
-        created_by: agent_info!()?.agent_initial_pubkey,
+        created_by: agent_info()?.agent_initial_pubkey,
         // Right now
-        created_at: to_timestamp(sys_time!()?),
+        created_at: to_timestamp(sys_time()?),
         name,
     };
 
     // Commit the channel info
-    create_entry!(&info)?;
-    let info_hash = hash_entry!(&info)?;
+    create_entry(&info)?;
+    let info_hash = hash_entry(&info)?;
 
     // link the channel info to the path
-    create_link!(path.hash()?, info_hash, ChannelInfoTag::tag())?;
+    create_link(path.hash()?, info_hash, ChannelInfoTag::tag())?;
 
     // emit signal alterting all connected uis about new channel
     signal_ui(SignalPayload::ChannelData(ChannelData::new(
@@ -66,7 +66,8 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
         let channel = Channel::try_from(&channel_path)?;
 
         // Get any channel info links on this channel
-        let channel_info = get_links!(channel_path.hash()?, ChannelInfoTag::tag())?.into_inner();
+        let channel_info =
+            get_links(channel_path.hash()?, Some(ChannelInfoTag::tag()))?.into_inner();
 
         // Find the latest
         let latest_info = channel_info
@@ -89,7 +90,7 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
         };
 
         // Get the actual channel info entry
-        if let Some(element) = get!(latest_info.target)? {
+        if let Some(element) = get(latest_info.target, GetOptions)? {
             if let Some(info) = element.into_inner().1.to_app_option()? {
                 // Construct the channel data from the channel and info
                 channels.push(ChannelData { channel, info });
