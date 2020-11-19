@@ -47,7 +47,6 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
 }
 
 pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {
-    debug!("list_channels")?;
     // Get the category path
     let path = Path::from(list_channels_input.category);
 
@@ -97,8 +96,6 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
             }
         }
     }
-    debug!("list_channels")?;
-    debug!("{:?}", channels)?;
     // Return all the channels data to the UI
     Ok(channels.into())
 }
