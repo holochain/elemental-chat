@@ -48,6 +48,21 @@ entry_defs![
 ];
 
 #[hdk_extern]
+fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    // grant unrestricted access to accept_cap_claim so other agents can send us claims
+    let mut functions: GrantedFunctions = HashSet::new();
+    functions.insert((zome_info()?.zome_name, "new_message_signal".into()));
+    create_cap_grant(CapGrantEntry {
+        tag: "".into(),
+        // empty access converts to unrestricted
+        access: ().into(),
+        functions,
+    })?;
+
+    Ok(InitCallbackResult::Pass)
+}
+
+#[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelData> {
     channel::handlers::create_channel(channel_input)
 }
@@ -59,7 +74,7 @@ fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
 
 #[hdk_extern]
 fn signal_users_on_channel(message_data: SignalMessageData) -> ChatResult<()> {
-    channel::handlers::signal_users_on_channel(message_data)
+    message::handlers::signal_users_on_channel(message_data)
 }
 
 #[hdk_extern]
