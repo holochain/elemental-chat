@@ -9,6 +9,8 @@ pub enum ChatError {
     Infallible(#[from] Infallible),
     #[error(transparent)]
     EntryError(#[from] EntryError),
+    #[error("Failed to convert an agent link tag to an agent pub key")]
+    AgentTag,
     #[error(transparent)]
     Wasm(#[from] WasmError),
     #[error(transparent)]

@@ -58,12 +58,6 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
         LinkTag::from(tag),
     )?;
 
-    // emit signal alterting all connected uis about new message
-    signal_ui(SignalPayload::SignalMessageData(SignalMessageData::new(
-        message.clone(),
-        channel,
-    )))?;
-
     // Return the message for the UI
     Ok(message)
 }
@@ -128,6 +122,11 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     }
     let sorted_messages = get_messages(sorted_messages)?;
     Ok(sorted_messages.into())
+}
+
+pub(crate) fn new_message_signal(message: SignalMessageData) -> ChatResult<()> {
+    // emit signal alerting all connected uis about new message
+    signal_ui(SignalPayload::SignalMessageData(message))
 }
 
 // Turn all the link targets into the actual message

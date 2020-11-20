@@ -58,6 +58,16 @@ fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
 }
 
 #[hdk_extern]
+fn signal_users_on_channel(message_data: SignalMessageData) -> ChatResult<()> {
+    channel::handlers::signal_users_on_channel(message_data)
+}
+
+#[hdk_extern]
+fn new_message_signal(message_input: SignalMessageData) -> ChatResult<()> {
+    message::handlers::new_message_signal(message_input)
+}
+
+#[hdk_extern]
 fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {
     channel::handlers::list_channels(list_channels_input)
 }
