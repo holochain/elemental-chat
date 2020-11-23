@@ -96,7 +96,6 @@ module.exports = (orchestrator) => {
     console.log(_.map(msgs[0].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
     // Bobbo lists the messages
-    await delay( 1000 )
     msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, date: today() }));
     console.log('bobbo.list_messages: '+_.map(msgs[1].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
