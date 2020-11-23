@@ -1,9 +1,9 @@
 #
-# Test and build Elemental Chat Project
+# Test and build elemental-chat DNA Project
 #
 # This Makefile is primarily instructional; you can simply enter the Nix environment for
-# holochain-rust development (supplied by holonix;) via `nix-shell` and run
-# `make test` directly, or build a target directly, eg. `nix-build -A elemental-chat
+# holochain development (supplied by holo-nixpkgs; see nixpkgs.nix) via `nix-shell` and run
+# `make test` directly, or build a target directly eg. `nix-build -A elemental-chat`.
 #
 SHELL		= bash
 DNANAME		= elemental-chat
@@ -21,12 +21,10 @@ nix-%:
 # Internal targets; require a Nix environment in order to be deterministic.
 # - Uses the version of `dna-util`, `holochain` on the system PATH.
 # - Normally called from within a Nix environment, eg. run `nix-shell`
-.PHONY:		rebuild install build build-cargo build-dna
+.PHONY:		rebuild install build
 rebuild:	clean build
 
 install:	build
-
-build:	build-cargo build-dna
 
 build:		$(DNA)
 
@@ -42,7 +40,7 @@ $(WASM): FORCE
 	@RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown
 
-.PHONY: test test-all test-unit test-e2e test-dna test-dna-debug test-stress test-sim2h test-node
+.PHONY: test test-all test-unit test-e2e
 test-all:	test
 
 test:		test-unit test-e2e # test-stress # re-enable when Stress tests end reliably
@@ -51,17 +49,14 @@ test-unit:
 	RUST_BACKTRACE=1 cargo test \
 	    -- --nocapture
 
+# test-dna, test-dna-standard ==> npm run test:standard
 test-dna:	$(DNA) FORCE
-	@echo "Starting Scenario tests in $$(pwd)..."; \
-	    cd tests && ( [ -d  node_modules ] || npm install ) && npm test
+	@echo "Starting Scenario tests in $$(pwd)..."
+	cd tests && ( [ -d  node_modules ] || npm install ) && npm run test
 
-test-dna-debug:
-	@echo "Starting Scenario tests in $$(pwd)..."; \
-	    cd tests && ( [ -d  node_modules ] || npm install ) && npm run test:standard
-
-test-behavior:
-	@echo "Starting Scenario tests in $$(pwd)..."; \
-	    cd tests && ( [ -d  node_modules ] || npm install ) && npm run test:behavior
+test-dna-%:	$(DNA) FORCE
+	@echo "Starting '$*' Scenario tests in $$(pwd)..."
+	cd tests && ( [ -d  node_modules ] || npm install ) && npm run test:$*
 
 test-e2e:	test-dna
 
@@ -70,7 +65,7 @@ test-e2e:	test-dna
 .PHONY: clean
 clean:
 	rm -rf \
-	    tests/node_modules \
-	    .cargo \
-	    target \
-	    $(DNA)
+	   tests/node_modules \
+	   .cargo \
+	   target \
+	   $(DNA)

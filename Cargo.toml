@@ -8,3 +8,7 @@ opt-level = "z"
 
 [profile.release]
 opt-level = "z"
+
+[patch.crates-io]
+# gossip3 branch, 2020-12-07
+hdk3 = {git = "https://github.com/holochain/holochain", rev = "6db4d3e84a565d75b3576a2d1490ca7c84990543", package = "hdk3"}
