@@ -34,6 +34,63 @@ module.exports = (orchestrator) => {
 
   orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
 
+  orchestrator.registerScenario.only('multi-chunk', async (s, t) => {
+    const [conductor] = await s.players([conductorConfig])
+    const [
+      [alice_chat_happ],
+    ] = await conductor.installAgentsHapps(installation)
+    const [alice_chat] = alice_chat_happ.cells
+
+    const channel_uuid = uuidv4();
+    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
+    console.log(channel);
+
+    let channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
+    t.deepEqual(channel, channel_list.channels[0]);
+    t.equal(channel_list.channels[0].latestChunk, 0);
+
+    var sends: any[] = [];
+    var recvs: any[] = [];
+
+    // Alice send a message in two different chunks
+    sends.push({
+      last_seen: { First: null },
+      channel: channel.channel,
+      chunk: 0,
+      message: {
+        uuid: uuidv4(),
+        content: "message in chunk 0",
+      }
+    });
+
+    recvs.push(await alice_chat.call('chat', 'create_message', sends[0]));
+    sends.push({
+      last_seen: { First: null },
+      channel: channel.channel,
+      chunk: 32,
+      message: {
+        uuid: uuidv4(),
+        content: "message in chunk 32",
+      }
+    });
+    recvs.push(await alice_chat.call('chat', 'create_message', sends[1]));
+    t.deepEqual(sends[0].message, recvs[0].message);
+
+    // list messages should return messages from the correct chunk
+    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 })
+    t.deepEqual(msgs.messages[0].message, sends[0].message)
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 1 })
+    t.equal(msgs.messages.length, 0)
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 32 })
+    t.deepEqual(msgs.messages[0].message, sends[1].message)
+
+    // list channels should have the latest chunk
+    channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
+    t.equal(channel_list.channels[0].latestChunk, 32);
+
+
+  })
+
   orchestrator.registerScenario('chat away', async (s, t) => {
     // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
     // note that the first argument to players is just an array conductor configs that that will
