@@ -40,10 +40,11 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     signal_ui(SignalPayload::ChannelData(ChannelData::new(
         channel.clone(),
         info.clone(),
+        0
     )))?;
 
     // Return the channel and the info for the UI
-    Ok(ChannelData::new(channel, info))
+    Ok(ChannelData::new(channel, info, 0))
 }
 
 pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {
@@ -92,7 +93,7 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
         if let Some(element) = get(latest_info.target, GetOptions)? {
             if let Some(info) = element.into_inner().1.to_app_option()? {
                 // Construct the channel data from the channel and info
-                channels.push(ChannelData { channel, info });
+                channels.push(ChannelData { channel, info, latest_chunk: 0 });
             }
         }
     }

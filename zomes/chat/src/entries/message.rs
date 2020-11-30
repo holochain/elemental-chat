@@ -28,6 +28,7 @@ pub struct MessageInput {
     pub last_seen: LastSeen,
     pub channel: Channel,
     pub message: Message,
+    pub chunk: u32,
 }
 
 /// The message type that goes to the UI
@@ -55,19 +56,9 @@ pub struct SignalMessageData {
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesInput {
     channel: Channel,
-    date: Date,
+    chunk: u32,
 }
 
-/// This is date you want to get messages for
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct Date {
-    /// Year '2001'
-    pub year: String,
-    /// Month '01'
-    pub month: String,
-    /// Day '12'
-    pub day: String,
-}
 
 /// The messages returned from list messages
 #[derive(Serialize, Deserialize, SerializedBytes, derive_more::From)]

@@ -34,6 +34,7 @@ pub struct Channel {
 pub struct ChannelData {
     pub channel: Channel,
     pub info: ChannelInfo,
+    pub latest_chunk: u32,
 }
 
 /// Input to the list channels call

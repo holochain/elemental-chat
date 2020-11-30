@@ -6,7 +6,6 @@ use crate::{
     message::{Message, MessageInput},
     signal_ui,
     utils::get_local_header,
-    utils::to_date,
     SignalPayload,
 };
 use hdk3::prelude::*;
@@ -14,7 +13,7 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{
-    Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData,
+    LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData,
 };
 
 /// Create a new message
@@ -23,6 +22,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
         last_seen,
         channel,
         message,
+        chunk,
     } = message_input;
 
     // Commit the message
@@ -36,7 +36,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let path: Path = channel.clone().into();
 
     // Add the current time components
-    let path = add_current_time_path(path)?;
+    let path = add_chunk_path(path, chunk)?;
 
     // Ensure the path exists
     path.ensure()?;
@@ -58,7 +58,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
         LinkTag::from(tag),
     )?;
 
-    // emit signal alterting all connected uis about new message
+    // emit signal alerting all connected uis about new message
     signal_ui(SignalPayload::SignalMessageData(SignalMessageData::new(
         message.clone(),
         channel,
@@ -70,13 +70,13 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
 
 /// List all the messages on this channel
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
-    let ListMessagesInput { channel, date } = list_message_input;
+    let ListMessagesInput { channel, chunk } = list_message_input;
 
     // Get the channel hash
     let path: Path = channel.into();
 
-    // Add the time components
-    let path = add_time_path(path, date)?;
+    // Add the chunk component
+    let path = add_chunk_path(path, chunk)?;
 
     // Ensure the path exists
     path.ensure()?;
@@ -163,39 +163,10 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
     Ok(messages)
 }
 
-/// Add the time from the Date type to this path
-fn add_time_path(path: Path, date: Date) -> ChatResult<Path> {
-    let Date { year, month, day } = date;
+/// Add the chunk index from the Date type to this path
+fn add_chunk_path(path: Path, chunk: u32) -> ChatResult<Path> {
     let mut components: Vec<_> = path.into();
 
-    // Add each part of the date as a component
-    // so our path will be `category:channel_id:year:month:day`.
-    // For example `General:3289hdf9823h92:2020:09:17` might be a
-    // path for all the messages on the 17th of September.
-
-    components.push(year.into());
-    components.push(month.into());
-    components.push(day.into());
-    Ok(components.into())
-}
-
-/// Add the current date to the path.
-/// This works the same as the above but uses current
-/// system time. Note that system time is unreliable but
-/// so this would require more thought in a production app.
-fn add_current_time_path(path: Path) -> ChatResult<Path> {
-    use chrono::Datelike;
-    let mut components: Vec<_> = path.into();
-
-    // Get the current times and turn them to dates;
-    let now = to_date(sys_time()?);
-    let year = now.year().to_string();
-    let month = now.month().to_string();
-    let day = now.day().to_string();
-
-    // Add the date parts as components to the path
-    components.push(year.into());
-    components.push(month.into());
-    components.push(day.into());
+    components.push(format!("{}",chunk).into());
     Ok(components.into())
 }

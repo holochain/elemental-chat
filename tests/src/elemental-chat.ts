@@ -62,6 +62,7 @@ module.exports = (orchestrator) => {
     sends.push({
       last_seen: { First: null },
       channel: channel.channel,
+      chunk: 0,
       message: {
         uuid: uuidv4(),
         content: "Hello from alice :)",
@@ -76,6 +77,7 @@ module.exports = (orchestrator) => {
     sends.push({
       last_seen: { Message: recvs[0].entryHash },
       channel: channel.channel,
+      chunk: 0,
       message: {
         uuid: uuidv4(),
         content: "Is anybody out there?",
@@ -91,13 +93,12 @@ module.exports = (orchestrator) => {
 
     // Alice lists the messages
     var msgs: any[] = [];
-    console.log(today());
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, date: today() }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
     console.log(_.map(msgs[0].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
     // Bobbo lists the messages
     await delay( 1000 )
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, date: today() }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
     console.log('bobbo.list_messages: '+_.map(msgs[1].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
 
@@ -105,6 +106,7 @@ module.exports = (orchestrator) => {
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
       channel: channel.channel,
+      chunk: 0,
       message: {
         uuid: uuidv4(),
         content: "I'm here",
@@ -113,6 +115,7 @@ module.exports = (orchestrator) => {
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
       channel: channel.channel,
+      chunk: 0,
       message: {
         uuid: uuidv4(),
         content: "Anybody?",
@@ -126,21 +129,12 @@ module.exports = (orchestrator) => {
     t.deepEqual(sends[3].message, recvs[3].message);
 
     // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, date: today() }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
     console.log(_.map(msgs[2].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[2].messages, just_msg));
     // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, date: today() }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
     console.log(_.map(msgs[3].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
-}
-
-// Get a basic date object for right now
-function today() {
-  var today = new Date();
-  var dd: String = String(today.getUTCDate());
-  var mm: String = String(today.getUTCMonth() + 1); //January is 0!
-  var yyyy: String = String(today.getUTCFullYear());
-  return { year: yyyy, month: mm, day: dd }
 }
