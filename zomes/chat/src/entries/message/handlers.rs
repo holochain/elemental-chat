@@ -181,7 +181,7 @@ fn add_chunk_path(path: Path, chunk: u32) -> ChatResult<Path> {
 pub(crate) fn signal_users_on_channel(signal_message_data: SignalMessageData) -> ChatResult<()> {
     let me = agent_info()?.agent_latest_pubkey;
 
-    let path: Path = signal_message_data.channel.chatters_path();
+    let path: Path = signal_message_data.channel_data.channel.chatters_path();
     let hour_path = add_current_hour_path(path.clone())?;
     hour_path.ensure()?;
     signal_hour(hour_path, signal_message_data.clone(), me.clone())?;
@@ -225,7 +225,12 @@ fn add_chatter(path: Path) -> ChatResult<()> {
     debug!(format!("checking chatters"));
     if my_chatter.is_empty() {
         debug!(format!("adding chatters"));
-        create_link(hour_path.hash()?, agent.into(), agent_tag)?;
+        create_link(hour_path.hash()?, agent.into(), agent_tag.clone())?;
+        let hour_path = add_current_hour_minus_n_path(path, 1)?;
+        hour_path.ensure()?;
+        for link in get_links(hour_path.hash()?, Some(agent_tag.clone()))?.into_inner() {
+            delete_link(link.create_link_hash)?;
+        }
     }
 
     Ok(())

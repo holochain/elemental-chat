@@ -1,7 +1,7 @@
 use crate::{error::ChatError, error::ChatResult, timestamp::Timestamp};
 use hdk3::prelude::*;
 
-use super::channel::Channel;
+use super::channel::{Channel, ChannelData};
 
 pub mod handlers;
 
@@ -46,7 +46,7 @@ pub struct MessageData {
 #[serde(rename_all = "camelCase")]
 pub struct SignalMessageData {
     pub message_data: MessageData,
-    pub channel: Channel,
+    pub channel_data: ChannelData,
 }
 
 /// Input to the list messages call
@@ -55,7 +55,6 @@ pub struct ListMessagesInput {
     channel: Channel,
     chunk: u32,
 }
-
 
 /// The messages returned from list messages
 #[derive(Serialize, Deserialize, SerializedBytes, derive_more::From)]
@@ -79,10 +78,10 @@ impl MessageData {
 }
 
 impl SignalMessageData {
-    pub fn new(message_data: MessageData, channel: Channel) -> Self {
+    pub fn new(message_data: MessageData, channel_data: ChannelData) -> Self {
         Self {
             message_data,
-            channel,
+            channel_data,
         }
     }
 }
