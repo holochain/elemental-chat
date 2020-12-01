@@ -29,3 +29,11 @@ pub(crate) fn get_local_header(header_hash: &HeaderHash) -> ChatResult<Option<He
 pub(crate) fn to_timestamp(duration: Duration) -> Timestamp {
     Timestamp(duration.as_secs() as i64, duration.subsec_nanos())
 }
+
+/// Turns a unix timestamp into a Date
+pub(crate) fn to_date(duration: Duration) -> chrono::DateTime<chrono::Utc> {
+    use chrono::{DateTime, NaiveDateTime, Utc};
+    let s = duration.as_secs() as i64;
+    let n = duration.subsec_nanos();
+    DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(s, n), Utc)
+}
