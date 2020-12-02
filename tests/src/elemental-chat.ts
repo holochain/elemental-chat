@@ -34,6 +34,63 @@ module.exports = (orchestrator) => {
 
   orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
 
+  orchestrator.registerScenario.only('multi-chunk', async (s, t) => {
+    const [conductor] = await s.players([conductorConfig])
+    const [
+      [alice_chat_happ],
+    ] = await conductor.installAgentsHapps(installation)
+    const [alice_chat] = alice_chat_happ.cells
+
+    const channel_uuid = uuidv4();
+    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
+    console.log(channel);
+
+    let channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
+    t.deepEqual(channel, channel_list.channels[0]);
+    t.equal(channel_list.channels[0].latestChunk, 0);
+
+    var sends: any[] = [];
+    var recvs: any[] = [];
+
+    // Alice send a message in two different chunks
+    sends.push({
+      last_seen: { First: null },
+      channel: channel.channel,
+      chunk: 0,
+      message: {
+        uuid: uuidv4(),
+        content: "message in chunk 0",
+      }
+    });
+
+    recvs.push(await alice_chat.call('chat', 'create_message', sends[0]));
+    sends.push({
+      last_seen: { First: null },
+      channel: channel.channel,
+      chunk: 32,
+      message: {
+        uuid: uuidv4(),
+        content: "message in chunk 32",
+      }
+    });
+    recvs.push(await alice_chat.call('chat', 'create_message', sends[1]));
+    t.deepEqual(sends[0].message, recvs[0].message);
+
+    // list messages should return messages from the correct chunk
+    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 })
+    t.deepEqual(msgs.messages[0].message, sends[0].message)
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 1 })
+    t.equal(msgs.messages.length, 0)
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 32 })
+    t.deepEqual(msgs.messages[0].message, sends[1].message)
+
+    // list channels should have the latest chunk
+    channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
+    t.equal(channel_list.channels[0].latestChunk, 32);
+
+
+  })
+
   orchestrator.registerScenario('chat away', async (s, t) => {
     // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
     // note that the first argument to players is just an array conductor configs that that will
@@ -62,6 +119,7 @@ module.exports = (orchestrator) => {
     sends.push({
       last_seen: { First: null },
       channel: channel.channel,
+      chunk: 0,
       message: {
         uuid: uuidv4(),
         content: "Hello from alice :)",
@@ -76,6 +134,7 @@ module.exports = (orchestrator) => {
     sends.push({
       last_seen: { Message: recvs[0].entryHash },
       channel: channel.channel,
+      chunk: 0,
       message: {
         uuid: uuidv4(),
         content: "Is anybody out there?",
@@ -91,13 +150,12 @@ module.exports = (orchestrator) => {
 
     // Alice lists the messages
     var msgs: any[] = [];
-    console.log(today());
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, date: today() }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
     console.log(_.map(msgs[0].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
     // Bobbo lists the messages
     await delay( 1000 )
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, date: today() }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
     console.log('bobbo.list_messages: '+_.map(msgs[1].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
 
@@ -105,6 +163,7 @@ module.exports = (orchestrator) => {
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
       channel: channel.channel,
+      chunk: 0,
       message: {
         uuid: uuidv4(),
         content: "I'm here",
@@ -113,6 +172,7 @@ module.exports = (orchestrator) => {
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
       channel: channel.channel,
+      chunk: 0,
       message: {
         uuid: uuidv4(),
         content: "Anybody?",
@@ -126,21 +186,12 @@ module.exports = (orchestrator) => {
     t.deepEqual(sends[3].message, recvs[3].message);
 
     // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, date: today() }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
     console.log(_.map(msgs[2].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[2].messages, just_msg));
     // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, date: today() }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
     console.log(_.map(msgs[3].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
-}
-
-// Get a basic date object for right now
-function today() {
-  var today = new Date();
-  var dd: String = String(today.getUTCDate());
-  var mm: String = String(today.getUTCMonth() + 1); //January is 0!
-  var yyyy: String = String(today.getUTCFullYear());
-  return { year: yyyy, month: mm, day: dd }
 }

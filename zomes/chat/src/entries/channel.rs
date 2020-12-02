@@ -28,12 +28,21 @@ pub struct Channel {
     uuid: String,
 }
 
+impl Channel {
+    pub fn chatters_path(&self) -> Path {
+        let mut components: Vec<Component> = Path::from(self.clone()).into();
+        components.push("chatters".into());
+        components.into()
+    }
+}
+
 /// The message type that goes to the UI
-#[derive(Serialize, Deserialize, SerializedBytes, derive_more::Constructor, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, derive_more::Constructor, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelData {
     pub channel: Channel,
     pub info: ChannelInfo,
+    pub latest_chunk: u32,
 }
 
 /// Input to the list channels call

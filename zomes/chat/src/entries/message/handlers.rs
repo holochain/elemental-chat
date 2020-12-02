@@ -5,8 +5,7 @@ use crate::{
     error::ChatResult,
     message::{Message, MessageInput},
     signal_ui,
-    utils::get_local_header,
-    utils::to_date,
+    utils::{get_local_header, to_date},
     SignalPayload,
 };
 use hdk3::prelude::*;
@@ -14,7 +13,7 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{
-    Date, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData,
+    LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData,
 };
 
 /// Create a new message
@@ -23,6 +22,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
         last_seen,
         channel,
         message,
+        chunk,
     } = message_input;
 
     // Commit the message
@@ -36,7 +36,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let path: Path = channel.clone().into();
 
     // Add the current time components
-    let path = add_current_time_path(path)?;
+    let path = add_chunk_path(path, chunk)?;
 
     // Ensure the path exists
     path.ensure()?;
@@ -58,25 +58,23 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
         LinkTag::from(tag),
     )?;
 
-    // emit signal alterting all connected uis about new message
-    signal_ui(SignalPayload::SignalMessageData(SignalMessageData::new(
-        message.clone(),
-        channel,
-    )))?;
-
     // Return the message for the UI
     Ok(message)
 }
 
 /// List all the messages on this channel
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
-    let ListMessagesInput { channel, date } = list_message_input;
+    let ListMessagesInput { channel, chunk } = list_message_input;
+
+    // Check if our agent key is active on this path and
+    // add it if it's not
+    add_chatter(channel.chatters_path())?;
 
     // Get the channel hash
     let path: Path = channel.into();
 
-    // Add the time components
-    let path = add_time_path(path, date)?;
+    // Add the chunk component
+    let path = add_chunk_path(path, chunk)?;
 
     // Ensure the path exists
     path.ensure()?;
@@ -119,6 +117,7 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
         // Extend our sorted messages by these replies sorted by time
         // so we get messages sorted by the hash they replied to then sorted by time
         sorted_messages.extend(sorted_by_time.iter().map(|(_, v)| (*v).clone()));
+
         // Now we need to update the key to the next keys
         keys.extend(
             sorted_by_time
@@ -130,6 +129,15 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     Ok(sorted_messages.into())
 }
 
+pub(crate) fn new_message_signal(message: SignalMessageData) -> ChatResult<()> {
+    debug!(format!(
+        "Received message: {:?}",
+        message.message_data.message.content
+    ));
+    // emit signal alerting all connected uis about new message
+    signal_ui(SignalPayload::SignalMessageData(message))
+}
+
 // Turn all the link targets into the actual message
 fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
     let mut messages = Vec::with_capacity(links.len());
@@ -139,7 +147,7 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
         // Get details because we are going to return the original message and
         // allow the UI to follow the CRUD tree to find which message
         // to actually display.
-        let message = match get_details(target, GetOptions)? {
+        let message = match get_details(target, Default::default())? {
             Some(Details::Entry(EntryDetails {
                 entry, mut headers, ..
             })) => {
@@ -163,39 +171,115 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
     Ok(messages)
 }
 
-/// Add the time from the Date type to this path
-fn add_time_path(path: Path, date: Date) -> ChatResult<Path> {
-    let Date { year, month, day } = date;
+/// Add the chunk index from the Date type to this path
+fn add_chunk_path(path: Path, chunk: u32) -> ChatResult<Path> {
     let mut components: Vec<_> = path.into();
 
-    // Add each part of the date as a component
-    // so our path will be `category:channel_id:year:month:day`.
-    // For example `General:3289hdf9823h92:2020:09:17` might be a
-    // path for all the messages on the 17th of September.
-
-    components.push(year.into());
-    components.push(month.into());
-    components.push(day.into());
+    components.push(format!("{}", chunk).into());
     Ok(components.into())
 }
 
-/// Add the current date to the path.
-/// This works the same as the above but uses current
-/// system time. Note that system time is unreliable but
-/// so this would require more thought in a production app.
-fn add_current_time_path(path: Path) -> ChatResult<Path> {
-    use chrono::Datelike;
+pub(crate) fn signal_users_on_channel(signal_message_data: SignalMessageData) -> ChatResult<()> {
+    let me = agent_info()?.agent_latest_pubkey;
+
+    let path: Path = signal_message_data.channel_data.channel.chatters_path();
+    let hour_path = add_current_hour_path(path.clone())?;
+    hour_path.ensure()?;
+    signal_hour(hour_path, signal_message_data.clone(), me.clone())?;
+    let hour_path = add_current_hour_minus_n_path(path, 1)?;
+    hour_path.ensure()?;
+    signal_hour(hour_path, signal_message_data, me)?;
+    Ok(())
+}
+
+fn signal_hour(
+    hour_path: Path,
+    signal_message_data: SignalMessageData,
+    me: AgentPubKey,
+) -> ChatResult<()> {
+    let chatters = get_links(hour_path.hash()?, None)?.into_inner();
+    debug!(format!("num online chatters {}", chatters.len()));
+    for tag in chatters.into_iter().map(|l| l.tag) {
+        let agent = tag_to_agent(tag)?;
+        if agent == me {
+            continue;
+        }
+        debug!(format!("Signaling {:?}", agent));
+        call_remote(
+            agent,
+            "chat".to_string().into(),
+            "new_message_signal".to_string().into(),
+            None,
+            &signal_message_data,
+        )?;
+    }
+    Ok(())
+}
+
+fn add_chatter(path: Path) -> ChatResult<()> {
+    let agent = agent_info()?.agent_latest_pubkey;
+    let agent_tag = agent_to_tag(&agent);
+
+    let hour_path = add_current_hour_path(path.clone())?;
+    hour_path.ensure()?;
+    let my_chatter = get_links(hour_path.hash()?, Some(agent_tag.clone()))?.into_inner();
+    debug!(format!("checking chatters"));
+    if my_chatter.is_empty() {
+        debug!(format!("adding chatters"));
+        create_link(hour_path.hash()?, agent.into(), agent_tag.clone())?;
+        let hour_path = add_current_hour_minus_n_path(path, 1)?;
+        hour_path.ensure()?;
+        for link in get_links(hour_path.hash()?, Some(agent_tag.clone()))?.into_inner() {
+            delete_link(link.create_link_hash)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn agent_to_tag(agent: &AgentPubKey) -> LinkTag {
+    let agent_tag: &[u8] = agent.as_ref();
+    LinkTag::new(agent_tag)
+}
+
+fn tag_to_agent(tag: LinkTag) -> ChatResult<AgentPubKey> {
+    Ok(AgentPubKey::from_raw_39(tag.0).map_err(|_| ChatError::AgentTag)?)
+}
+
+fn add_current_hour_path(path: Path) -> ChatResult<Path> {
+    add_current_hour_path_inner(path, None)
+}
+
+fn add_current_hour_minus_n_path(path: Path, sub: u64) -> ChatResult<Path> {
+    add_current_hour_path_inner(path, Some(sub))
+}
+
+fn add_current_hour_path_inner(path: Path, sub: Option<u64>) -> ChatResult<Path> {
+    use chrono::{Datelike, Timelike};
     let mut components: Vec<_> = path.into();
 
     // Get the current times and turn them to dates;
-    let now = to_date(sys_time()?);
+    let mut now = to_date(sys_time()?);
+    if let Some(sub) = sub {
+        now = date_minus_hours(now, sub);
+    }
     let year = now.year().to_string();
     let month = now.month().to_string();
     let day = now.day().to_string();
+    let hour = now.hour().to_string();
 
     // Add the date parts as components to the path
     components.push(year.into());
     components.push(month.into());
     components.push(day.into());
+    components.push(hour.into());
     Ok(components.into())
+}
+
+fn date_minus_hours(
+    date: chrono::DateTime<chrono::Utc>,
+    hours: u64,
+) -> chrono::DateTime<chrono::Utc> {
+    let hours = chrono::Duration::hours(hours as i64);
+    date - hours
 }

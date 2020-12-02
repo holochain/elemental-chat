@@ -1,9 +1,7 @@
 use crate::{
     channel::{Channel, ChannelInput},
     error::ChatResult,
-    signal_ui,
     utils::to_timestamp,
-    SignalPayload,
 };
 use hdk3::prelude::*;
 use link::Link;
@@ -36,14 +34,8 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     // link the channel info to the path
     create_link(path.hash()?, info_hash, ChannelInfoTag::tag())?;
 
-    // emit signal alterting all connected uis about new channel
-    signal_ui(SignalPayload::ChannelData(ChannelData::new(
-        channel.clone(),
-        info.clone(),
-    )))?;
-
     // Return the channel and the info for the UI
-    Ok(ChannelData::new(channel, info))
+    Ok(ChannelData::new(channel, info, 0))
 }
 
 pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {
@@ -88,11 +80,32 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
             None => continue,
         };
 
+        // find the latest chunk
+        let path: Path = channel.clone().into();
+        let links = path.children()?.into_inner();
+        let mut chunk: u32 = 0;
+        for link in links.into_iter() {
+            let chunk_path = Path::try_from(&link.tag)?;
+            let chunks: Vec<_> = chunk_path.into();
+            if let Some(c) = chunks
+                .last()
+                .and_then(|c| String::try_from(c).ok()?.parse::<u32>().ok())
+            {
+                if c > chunk {
+                    chunk = c;
+                }
+            }
+        }
+
         // Get the actual channel info entry
-        if let Some(element) = get(latest_info.target, GetOptions)? {
+        if let Some(element) = get(latest_info.target, Default::default())? {
             if let Some(info) = element.into_inner().1.to_app_option()? {
                 // Construct the channel data from the channel and info
-                channels.push(ChannelData { channel, info });
+                channels.push(ChannelData {
+                    channel,
+                    info,
+                    latest_chunk: chunk,
+                });
             }
         }
     }

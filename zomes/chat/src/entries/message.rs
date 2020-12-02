@@ -1,13 +1,13 @@
 use crate::{error::ChatError, error::ChatResult, timestamp::Timestamp};
 use hdk3::prelude::*;
 
-use super::channel::Channel;
+use super::channel::{Channel, ChannelData};
 
 pub mod handlers;
 
 /// The actual message data that is saved into the DHT
 #[hdk_entry(id = "message")]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Message {
     pub uuid: String,
     pub content: String,
@@ -28,10 +28,11 @@ pub struct MessageInput {
     pub last_seen: LastSeen,
     pub channel: Channel,
     pub message: Message,
+    pub chunk: u32,
 }
 
 /// The message type that goes to the UI
-#[derive(Serialize, Deserialize, Clone, SerializedBytes)]
+#[derive(Serialize, Deserialize, Clone, Debug, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageData {
     message: Message,
@@ -41,32 +42,18 @@ pub struct MessageData {
 }
 
 /// The message type that goes to the UI via emit_signal
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SignalMessageData {
-    message: Message,
-    entry_hash: EntryHash,
-    created_by: AgentPubKey,
-    created_at: Timestamp,
-    channel: Channel,
+    pub message_data: MessageData,
+    pub channel_data: ChannelData,
 }
 
 /// Input to the list messages call
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesInput {
     channel: Channel,
-    date: Date,
-}
-
-/// This is date you want to get messages for
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct Date {
-    /// Year '2001'
-    pub year: String,
-    /// Month '01'
-    pub month: String,
-    /// Day '12'
-    pub day: String,
+    chunk: u32,
 }
 
 /// The messages returned from list messages
@@ -91,19 +78,10 @@ impl MessageData {
 }
 
 impl SignalMessageData {
-    pub fn new(message_data: MessageData, channel: Channel) -> Self {
-        let MessageData {
-            message,
-            entry_hash,
-            created_by,
-            created_at,
-        } = message_data;
+    pub fn new(message_data: MessageData, channel_data: ChannelData) -> Self {
         Self {
-            message,
-            entry_hash,
-            created_by,
-            created_at,
-            channel,
+            message_data,
+            channel_data,
         }
     }
 }
