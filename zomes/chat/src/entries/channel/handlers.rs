@@ -86,8 +86,11 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
         let mut chunk: u32 = 0;
         for link in links.into_iter() {
             let chunk_path = Path::try_from(&link.tag)?;
-            let chunks : Vec<_> = chunk_path.into();
-            if let Some(c) = chunks.last().and_then(|c| String::try_from(c).ok()?.parse::<u32>().ok()) {
+            let chunks: Vec<_> = chunk_path.into();
+            if let Some(c) = chunks
+                .last()
+                .and_then(|c| String::try_from(c).ok()?.parse::<u32>().ok())
+            {
                 if c > chunk {
                     chunk = c;
                 }
@@ -95,10 +98,14 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
         }
 
         // Get the actual channel info entry
-        if let Some(element) = get(latest_info.target, GetOptions)? {
+        if let Some(element) = get(latest_info.target, Default::default())? {
             if let Some(info) = element.into_inner().1.to_app_option()? {
                 // Construct the channel data from the channel and info
-                channels.push(ChannelData { channel, info, latest_chunk: chunk });
+                channels.push(ChannelData {
+                    channel,
+                    info,
+                    latest_chunk: chunk,
+                });
             }
         }
     }

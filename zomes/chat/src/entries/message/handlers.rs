@@ -117,6 +117,7 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
         // Extend our sorted messages by these replies sorted by time
         // so we get messages sorted by the hash they replied to then sorted by time
         sorted_messages.extend(sorted_by_time.iter().map(|(_, v)| (*v).clone()));
+
         // Now we need to update the key to the next keys
         keys.extend(
             sorted_by_time
@@ -146,7 +147,7 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
         // Get details because we are going to return the original message and
         // allow the UI to follow the CRUD tree to find which message
         // to actually display.
-        let message = match get_details(target, GetOptions)? {
+        let message = match get_details(target, Default::default())? {
             Some(Details::Entry(EntryDetails {
                 entry, mut headers, ..
             })) => {

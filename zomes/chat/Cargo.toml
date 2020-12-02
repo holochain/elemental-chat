@@ -1,6 +1,6 @@
 [package]
 name = "elemental-chat"
-version = "0.0.1-alpha1"
+version = "0.0.1-alpha2"
 authors = [ "michael.dougherty@holo.host", "philip.beadle@holo.host", "david.meister@holo.host, tom.gowan@holo.host" ]
 edition = "2018"
 
@@ -9,8 +9,7 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-# hdk3 = { git = "https://github.com/holochain/holochain.git", rev = "2dfe85db10a5d9ba3ee25ff33f4bedb1a28f875f" }
-hdk3 = { git = "https://github.com/holochain/holochain.git", branch = "develop" }
+hdk3 = { git = "https://github.com/holochain/holochain.git", rev = "a3365e4a6760494e04f69c9e4487a77a351dbc18" }
 serde = "=1.0.104"
 chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99.9"
