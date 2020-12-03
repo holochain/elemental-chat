@@ -68,23 +68,30 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     // add it if it's not
     add_chatter(channel.chatters_path())?;
 
-    // Get the channel hash
-    let path: Path = channel.into();
+    let mut links: Vec<Link> = Vec::new();
+    let mut counter = chunk.start;
+    loop {
+        // Get the channel hash
+        let path: Path = channel.clone().into();
 
-    // Add the chunk component
-    let path = add_chunk_path(path, chunk)?;
+        // Add the chunk component
+        let path = add_chunk_path(path, counter)?;
 
-    // Ensure the path exists
-    path.ensure()?;
+        // Ensure the path exists
+        path.ensure()?;
 
-    // Get the actual hash we are going to pull the messages from
-    let channel_entry_hash = path.hash()?;
+        // Get the actual hash we are going to pull the messages from
+        let channel_entry_hash = path.hash()?;
 
-    // Get the message links on this channel
-    let mut links = get_links(channel_entry_hash.clone(), None)?.into_inner();
+        // Get the message links on this channel
+        links.append(&mut get_links(channel_entry_hash.clone(), None)?.into_inner());
+        if counter == chunk.end {
+            break;
+        }
+        counter += 1
+    }
 
     links.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
-
     let sorted_messages = get_messages(links)?;
     Ok(sorted_messages.into())
 }
