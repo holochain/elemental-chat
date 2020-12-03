@@ -1,5 +1,3 @@
-use std::collections::{BTreeMap, VecDeque};
-
 use crate::{
     error::ChatError,
     error::ChatResult,
@@ -83,49 +81,11 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     let channel_entry_hash = path.hash()?;
 
     // Get the message links on this channel
-    let links = get_links(channel_entry_hash.clone(), None)?.into_inner();
-    let len = links.len();
+    let mut links = get_links(channel_entry_hash.clone(), None)?.into_inner();
 
-    // Our goal here is to sort the messages by who they replied to
-    // and messages that replied to the same last_seen are ordered by time.
+    links.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
 
-    // We can use the link tag to see who the message replied to and
-    // the target will be the hash that child messages will have replied too.
-
-    // This approach allows us to do one get_links call instead of a get_links
-    // for each message.
-
-    // Store links as HashMap reply to EntryHash -> Link
-    let hash_to_link: BTreeMap<_, _> = links
-        .into_iter()
-        .map(|link| (LastSeenKey::from(link.tag.clone()), link))
-        .collect();
-
-    // Create a sorted vec by following the "reply hash" -> Link -> target
-    // starting from the channel entry hash
-    let mut sorted_messages = Vec::with_capacity(len);
-    let key: LastSeenKey = channel_entry_hash.into();
-    let mut keys = VecDeque::new();
-    keys.push_back(key);
-    while let Some(key) = keys.pop_front() {
-        // Get all the messages at this "reply to" and sort them by time
-        let sorted_by_time: BTreeMap<_, _> = hash_to_link
-            .range(key.clone()..)
-            .take_while(|(k, _)| k.parent_hash == key.parent_hash)
-            .map(|(k, v)| (k.timestamp, v))
-            .collect();
-        // Extend our sorted messages by these replies sorted by time
-        // so we get messages sorted by the hash they replied to then sorted by time
-        sorted_messages.extend(sorted_by_time.iter().map(|(_, v)| (*v).clone()));
-
-        // Now we need to update the key to the next keys
-        keys.extend(
-            sorted_by_time
-                .into_iter()
-                .map(|(_, v)| v.target.clone().into()),
-        );
-    }
-    let sorted_messages = get_messages(sorted_messages)?;
+    let sorted_messages = get_messages(links)?;
     Ok(sorted_messages.into())
 }
 
@@ -206,7 +166,7 @@ fn signal_hour(
         }
         debug!(format!("Signaling {:?}", agent));
         // ignore any errors coming back from call_remotes
-        let _ : HdkResult<()> = call_remote(
+        let _: HdkResult<()> = call_remote(
             agent,
             "chat".to_string().into(),
             "new_message_signal".to_string().into(),
