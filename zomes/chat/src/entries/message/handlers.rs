@@ -205,13 +205,14 @@ fn signal_hour(
             continue;
         }
         debug!(format!("Signaling {:?}", agent));
-        call_remote(
+        // ignore any errors coming back from call_remotes
+        let _ : HdkResult<()> = call_remote(
             agent,
             "chat".to_string().into(),
             "new_message_signal".to_string().into(),
             None,
             &signal_message_data,
-        )?;
+        );
     }
     Ok(())
 }
