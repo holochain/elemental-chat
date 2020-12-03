@@ -53,7 +53,12 @@ pub struct SignalMessageData {
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesInput {
     channel: Channel,
-    chunk: u32,
+    chunk: Chunk,
+}
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct Chunk {
+    start: u32,
+    end: u32,
 }
 
 /// The messages returned from list messages

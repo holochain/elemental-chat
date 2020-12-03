@@ -77,12 +77,14 @@ module.exports = (orchestrator) => {
     t.deepEqual(sends[0].message, recvs[0].message);
 
     // list messages should return messages from the correct chunk
-    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 })
+    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
     t.deepEqual(msgs.messages[0].message, sends[0].message)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 1 })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:1, end: 1} })
     t.equal(msgs.messages.length, 0)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 32 })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:32, end: 32} })
     t.deepEqual(msgs.messages[0].message, sends[1].message)
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 32} })
+    t.deepEqual(msgs.messages.length, 2)
 
     // list channels should have the latest chunk
     channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
