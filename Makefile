@@ -1,5 +1,5 @@
 #
-# Test and build Holo-Hosting-app Project
+# Test and build Elemental Chat Project
 #
 # This Makefile is primarily instructional; you can simply enter the Nix environment for
 # holochain-rust development (supplied by holonix;) via `nix-shell` and run
