@@ -9,24 +9,34 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 // Read the docs for more on configuration.
 const conductorConfig = Config.gen()
 
+import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from '@holochain/tryorama'
+const network = {
+  bootstrap_service: "https://bootstrap.holo.host",
+  transport_pool: [{
+    type: TransportConfigType.Proxy,
+    sub_transport: {type: TransportConfigType.Quic},
+    proxy_config: {
+      type: ProxyConfigType.RemoteProxyClient,
+      proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/proxy.holochain.org/p/5778/--",
+    }
+  }],
+}
+
+const networkedConductorConfig = Config.gen({network})
+
+
 // Construct proper paths for your DNAs
 const chatDna = path.join(__dirname, "../../elemental-chat.dna.gz")
 
 // create an InstallAgentsHapps array with your DNAs to tell tryorama what
 // to install into the conductor.
-const installation: InstallAgentsHapps = [
-    // agent 0
-    [
-	// happ 0
-	[chatDna]
-    ],
-    // agent 1
-    [
-	// happ 0
-	[chatDna]
-    ],
+const installation1agent: InstallAgentsHapps = [
+    [[chatDna]],
 ]
-
+const installation2agent: InstallAgentsHapps = [
+  [[chatDna]],
+  [[chatDna]],
+]
 
 module.exports = (orchestrator) => {
   // This is placeholder for signals test; awaiting implementation of signals testing in tryorama.
@@ -34,11 +44,11 @@ module.exports = (orchestrator) => {
 
   orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
 
-  orchestrator.registerScenario.only('multi-chunk', async (s, t) => {
+  orchestrator.registerScenario('multi-chunk', async (s, t) => {
     const [conductor] = await s.players([conductorConfig])
     const [
       [alice_chat_happ],
-    ] = await conductor.installAgentsHapps(installation)
+    ] = await conductor.installAgentsHapps(installation1agent)
     const [alice_chat] = alice_chat_happ.cells
 
     const channel_uuid = uuidv4();
@@ -104,7 +114,7 @@ module.exports = (orchestrator) => {
     const [
 	[alice_chat_happ],
 	[bobbo_chat_happ],
-    ] = await a_and_b_conductor.installAgentsHapps(installation)
+    ] = await a_and_b_conductor.installAgentsHapps(installation2agent)
     const [alice_chat] = alice_chat_happ.cells
     const [bobbo_chat] = bobbo_chat_happ.cells
 
@@ -152,12 +162,12 @@ module.exports = (orchestrator) => {
 
     // Alice lists the messages
     var msgs: any[] = [];
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[0].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
     // Bobbo lists the messages
     await delay( 1000 )
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
     console.log('bobbo.list_messages: '+_.map(msgs[1].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
 
@@ -188,12 +198,124 @@ module.exports = (orchestrator) => {
     t.deepEqual(sends[3].message, recvs[3].message);
 
     // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[2].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[2].messages, just_msg));
     // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: 0 }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[3].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
+
+  orchestrator.registerScenario.only('transient nodes', async (s, t) => {
+    const [alice, bob, carol] = await s.players([networkedConductorConfig, networkedConductorConfig, networkedConductorConfig], false)
+    await alice.startup()
+    await bob.startup()
+
+    const [[alice_chat_happ]] = await alice.installAgentsHapps(installation1agent)
+    const [[bob_chat_happ]] = await bob.installAgentsHapps(installation1agent)
+    const [alice_chat] = alice_chat_happ.cells
+    const [bob_chat] = bob_chat_happ.cells
+
+
+    // Create a channel
+    const channel_uuid = uuidv4();
+    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
+
+    const msg1 = {
+      last_seen: { First: null },
+      channel: channel.channel,
+      chunk: 0,
+      message: {
+        uuid: uuidv4(),
+        content: "Hello from alice :)",
+      }
+    }
+    const r1 = await alice_chat.call('chat', 'create_message', msg1);
+    t.deepEqual(r1.message, msg1.message);
+
+    var retries = 10
+    while (true) {
+      const r2 = await bob_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
+      t.ok(r2)
+      if (r2.messages.length == 1) {
+        break;
+      }
+      else {
+        retries -= 1;
+        if (retries == 0) {
+          t.equal(r2.messages.length,1)
+          break;
+        }
+      }
+      console.log(`retry ${retries}`);
+      await delay( 1000 )
+    }
+
+    await alice.shutdown()
+    await carol.startup()
+    const [[carol_chat_happ]] = await carol.installAgentsHapps(installation1agent)
+    const [carol_chat] = carol_chat_happ.cells
+
+
+    retries = 5
+    while (true) {
+      const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
+      console.log("Carol list message:", r2)
+      t.ok(r2)
+      if (r2.messages.length == 1) {
+        break;
+      }
+      else {
+        retries -= 1;
+        if (retries == 0) {
+          console.log("bailing after 10 retries")
+         // t.equal(r2.messages.length,1)
+          break;
+        }
+      }
+      console.log(`retry ${retries}`);
+      await delay( 1000 )
+    }
+
+
+    // This above loop SHOULD work because carol should get the message via bob, but it doesn't
+    // So we try starting up alice and getting the message gossiped that way, but that also
+    // doesn't work!
+    await alice.startup()
+
+    retries = 10
+    while (true) {
+      const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
+      console.log("Carol list message:", r2)
+      t.ok(r2)
+      if (r2.messages.length == 1) {
+        break;
+      }
+      else {
+        retries -= 1;
+        if (retries == 0) {
+          t.equal(r2.messages.length,1)
+          break;
+        }
+      }
+      console.log(`retry ${retries}`);
+      await delay( 1000 )
+    }
+
+
+/*
+    // You can create players with unspawned conductors by passing in false as the second param:
+    const [carol] = await s.players([conductorConfig], false)
+
+    // and then start the conductor for them explicitly with:
+    await carol.startup()
+
+    // and install a single happ
+    const carol_blog_happ = await carol.installHapp([dnaBlog])
+    // or a happ with a previously generated key
+*/
+  })
+
+
 }
