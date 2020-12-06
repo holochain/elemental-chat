@@ -103,7 +103,7 @@ module.exports = (orchestrator) => {
 
   })
 
-  orchestrator.registerScenario.skip('chat away', async (s, t) => {
+  orchestrator.registerScenario('chat away', async (s, t) => {
     // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
     // note that the first argument to players is just an array conductor configs that that will
     // be used to spin up the conductor processes which are returned in a matching array.
@@ -156,7 +156,6 @@ module.exports = (orchestrator) => {
     recvs.push(await alice_chat.call('chat', 'create_message', sends[1]));
     console.log(recvs[1]);
     t.deepEqual(sends[1].message, recvs[1].message);
-    await delay(2000) // TODO add consistency instead
 
     const channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
     console.log(channel_list);
@@ -197,7 +196,7 @@ module.exports = (orchestrator) => {
     recvs.push(await alice_chat.call('chat', 'create_message', sends[3]));
     console.log(recvs[3]);
     t.deepEqual(sends[3].message, recvs[3].message);
-    await delay(2000)
+    await delay(4000)
     // Alice lists the messages
     msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[2].messages, just_msg));
