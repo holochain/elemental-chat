@@ -22,7 +22,7 @@ const network = {
   }],
 }
 
-const networkedConductorConfig = Config.gen({network})
+const networkedConductorConfig = Config.gen(/*{network}*/)
 
 
 // Construct proper paths for your DNAs
@@ -217,6 +217,7 @@ module.exports = (orchestrator) => {
     const [alice_chat] = alice_chat_happ.cells
     const [bob_chat] = bob_chat_happ.cells
 
+    await s.shareAllNodes([alice,bob]);
 
     // Create a channel
     const channel_uuid = uuidv4();
@@ -257,8 +258,9 @@ module.exports = (orchestrator) => {
     const [[carol_chat_happ]] = await carol.installAgentsHapps(installation1agent)
     const [carol_chat] = carol_chat_happ.cells
 
+    await s.shareAllNodes([carol, bob]);
 
-    retries = 5
+    retries = 10
     while (true) {
       const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
       console.log("Carol list message:", r2)
@@ -270,7 +272,7 @@ module.exports = (orchestrator) => {
         retries -= 1;
         if (retries == 0) {
           console.log("bailing after 10 retries")
-         // t.equal(r2.messages.length,1)
+          t.equal(r2.messages.length,1)
           break;
         }
       }

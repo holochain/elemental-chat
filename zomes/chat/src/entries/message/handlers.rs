@@ -114,7 +114,7 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
         // Get details because we are going to return the original message and
         // allow the UI to follow the CRUD tree to find which message
         // to actually display.
-        let message = match get_details(target, Default::default())? {
+        let message = match get_details(target, GetOptions::content())? {
             Some(Details::Entry(EntryDetails {
                 entry, mut headers, ..
             })) => {
