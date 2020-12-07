@@ -87,13 +87,13 @@ module.exports = (orchestrator) => {
     t.deepEqual(sends[0].message, recvs[0].message);
 
     // list messages should return messages from the correct chunk
-    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
+    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
     t.deepEqual(msgs.messages[0].message, sends[0].message)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:1, end: 1} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:1, end: 1} })
     t.equal(msgs.messages.length, 0)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:32, end: 32} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:32, end: 32} })
     t.deepEqual(msgs.messages[0].message, sends[1].message)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 32} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 32} })
     t.deepEqual(msgs.messages.length, 2)
 
     // list channels should have the latest chunk
@@ -162,12 +162,12 @@ module.exports = (orchestrator) => {
 
     // Alice lists the messages
     var msgs: any[] = [];
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[0].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
     // Bobbo lists the messages
     await delay(2000) // TODO add consistency instead
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log('bobbo.list_messages: '+_.map(msgs[1].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
 
@@ -198,11 +198,11 @@ module.exports = (orchestrator) => {
     t.deepEqual(sends[3].message, recvs[3].message);
     await delay(4000)
     // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[2].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[2].messages, just_msg));
     // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[3].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
@@ -250,7 +250,7 @@ const doTransientNodes = async (s, t, local) => {
 
   var retries = 10
   while (true) {
-    const r2 = await bob_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
+    const r2 = await bob_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
     t.ok(r2)
     if (r2.messages.length == 1) {
       break;
@@ -277,7 +277,7 @@ const doTransientNodes = async (s, t, local) => {
 
   retries = 10
   while (true) {
-    const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
+    const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
     console.log("Carol list message:", r2)
     t.ok(r2)
     if (r2.messages.length == 1) {
@@ -303,7 +303,7 @@ const doTransientNodes = async (s, t, local) => {
 
     retries = 10
     while (true) {
-      const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
+      const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
       console.log("Carol list message:", r2)
       t.ok(r2)
       if (r2.messages.length == 1) {
