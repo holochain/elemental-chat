@@ -11,7 +11,14 @@ The most basic of all possible chat apps.
 
 ## Running the Tests
 
-### Prerequisites
+
+### Setup
+There are two contexts for running tests:
+
+1. against an arbitrary version of Holochain, or
+2. against the version of holochain currently being used by hpos.
+
+For the latter case simply enter `nix-shell` and the correct version of holochain will be there.  For the former case you need to:
 
 - Build the Holochain tools
   - Clone the repo: `git clone https://github.com/holochain/holochain && cd ./holochain`
@@ -22,7 +29,13 @@ The most basic of all possible chat apps.
   - Build the wasm: `CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown`
   - Assemble the DNA: `dna-util -c elemental-chat.dna.workdir`
 
-## Running
+### Running
+
+``` bash
+make test
+```
+
+or
 
 ```bash
 cd elemental-chat/tests
