@@ -248,8 +248,12 @@ const doTransientNodes = async (s, t, local) => {
   const r1 = await alice_chat.call('chat', 'create_message', msg1);
   t.deepEqual(r1.message, msg1.message);
 
+
+  console.log("checking to see if bob can see the message")
   var retries = 10
   while (true) {
+    const channel_list = await bob_chat.call('chat', 'list_channels', { category: "General" });
+    console.log("BOB CHANNELS", channel_list.channels);
     const r2 = await bob_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
     t.ok(r2)
     if (r2.messages.length == 1) {
@@ -275,8 +279,12 @@ const doTransientNodes = async (s, t, local) => {
     await s.shareAllNodes([carol, bob]);
   }
 
-  retries = 10
+  console.log("******************************************************************")
+  console.log("checking to see if carol can see the message via bob")
+  retries = 20
   while (true) {
+    const channel_list = await carol_chat.call('chat', 'list_channels', { category: "General" });
+    console.log("CAROL CHANNELS", channel_list.channels);
     const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
     console.log("Carol list message:", r2)
     t.ok(r2)
@@ -301,8 +309,12 @@ const doTransientNodes = async (s, t, local) => {
     // doesn't work!
     await alice.startup()
 
+  console.log("******************************************************************")
+  console.log("checking to see if carol can see the message via alice after back on")
     retries = 10
     while (true) {
+      const channel_list = await carol_chat.call('chat', 'list_channels', { category: "General" });
+      console.log("CAROL CHANNELS", channel_list.channels);
       const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
       console.log("Carol list message:", r2)
       t.ok(r2)
