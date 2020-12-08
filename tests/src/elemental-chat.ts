@@ -211,7 +211,7 @@ module.exports = (orchestrator) => {
     await doTransientNodes(s, t, true)
   })
 
-  orchestrator.registerScenario('transient nodes-proxied', async (s, t) => {
+  orchestrator.registerScenario.only('transient nodes-proxied', async (s, t) => {
     await doTransientNodes(s, t, false)
   })
 }
