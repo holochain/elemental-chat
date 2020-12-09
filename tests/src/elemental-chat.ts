@@ -210,7 +210,7 @@ module.exports = (orchestrator) => {
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
 
-  orchestrator.registerScenario('transient nodes-local', async (s, t) => {
+  orchestrator.registerScenario.only('transient nodes-local', async (s, t) => {
     await doTransientNodes(s, t, true)
   })
 
