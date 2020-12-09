@@ -210,11 +210,11 @@ module.exports = (orchestrator) => {
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
 
-  orchestrator.registerScenario.only('transient nodes-local', async (s, t) => {
+  orchestrator.registerScenario('transient nodes-local', async (s, t) => {
     await doTransientNodes(s, t, true)
   })
 
-  orchestrator.registerScenario('transient nodes-proxied', async (s, t) => {
+  orchestrator.registerScenario.only('transient nodes-proxied', async (s, t) => {
     await doTransientNodes(s, t, false)
   })
 }
@@ -278,7 +278,9 @@ const doTransientNodes = async (s, t, local) => {
   console.log("******************************************************************")
   console.log("checking to see if bob can see the message")
   await gotChannelsAndMessages(t, "bob", bob_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
-
+  console.log("waiting for bob to integrate the message not just see it via get")
+  await delay(10000)
+  console.log("shutting down alice")
   await alice.shutdown()
   await carol.startup()
   const [[carol_chat_happ]] = await carol.installAgentsHapps(installation1agent)
