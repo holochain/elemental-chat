@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from "uuid";
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
+const RETRY_DELAY = 1000
+const RETRY_COUNT = 10
+
 // Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
 const conductorConfig = Config.gen()
@@ -211,11 +214,34 @@ module.exports = (orchestrator) => {
     await doTransientNodes(s, t, true)
   })
 
-  orchestrator.registerScenario.only('transient nodes-proxied', async (s, t) => {
+  orchestrator.registerScenario('transient nodes-proxied', async (s, t) => {
     await doTransientNodes(s, t, false)
   })
 }
 
+const gotChannelsAndMessages = async(t, name, happ, channel, retry_count, retry_delay)  => {
+  var retries = retry_count
+  while (true) {
+    const channel_list = await happ.call('chat', 'list_channels', { category: "General" });
+    console.log(`${name}'s channel list:`, channel_list.channels);
+    const r = await happ.call('chat', 'list_messages', { channel, active_chatter: false, chunk: {start:0, end: 1} })
+    t.ok(r)
+    console.log(`${name}'s message list:`, r);
+    if (r.messages.length > 0) {
+      t.equal(r.messages.length,1)
+      break;
+    }
+    else {
+      retries -= 1;
+      if (retries == 0) {
+        t.fail(`bailing after ${retry_count} retries waiting for ${name}`)
+        break;
+      }
+    }
+    console.log(`retry ${retries}`);
+    await delay( retry_delay )
+  }
+}
 const doTransientNodes = async (s, t, local) => {
   const config = local ? conductorConfig : networkedConductorConfig;
 
@@ -249,26 +275,9 @@ const doTransientNodes = async (s, t, local) => {
   t.deepEqual(r1.message, msg1.message);
 
 
+  console.log("******************************************************************")
   console.log("checking to see if bob can see the message")
-  var retries = 10
-  while (true) {
-    const channel_list = await bob_chat.call('chat', 'list_channels', { category: "General" });
-    console.log("BOB CHANNELS", channel_list.channels);
-    const r2 = await bob_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
-    t.ok(r2)
-    if (r2.messages.length == 1) {
-      break;
-    }
-    else {
-      retries -= 1;
-      if (retries == 0) {
-        t.equal(r2.messages.length,1)
-        break;
-      }
-    }
-    console.log(`retry ${retries}`);
-    await delay( 1000 )
-  }
+  await gotChannelsAndMessages(t, "bob", bob_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
 
   await alice.shutdown()
   await carol.startup()
@@ -281,56 +290,18 @@ const doTransientNodes = async (s, t, local) => {
 
   console.log("******************************************************************")
   console.log("checking to see if carol can see the message via bob")
-  retries = 20
-  while (true) {
-    const channel_list = await carol_chat.call('chat', 'list_channels', { category: "General" });
-    console.log("CAROL CHANNELS", channel_list.channels);
-    const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
-    console.log("Carol list message:", r2)
-    t.ok(r2)
-    if (r2.messages.length == 1) {
-      break;
-    }
-    else {
-      retries -= 1;
-      if (retries == 0) {
-        console.log("bailing after 10 retries")
-        t.equal(r2.messages.length,1)
-        break;
-      }
-    }
-    console.log(`retry ${retries}`);
-    await delay( 1000 )
+  await gotChannelsAndMessages(t, "carol", carol_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
+
+  // This above loop SHOULD work because carol should get the message via bob, but it doesn't
+  // So we try starting up alice and getting the message gossiped that way, but that also
+  // doesn't work!
+  await alice.startup()
+  if (local) {
+    await s.shareAllNodes([carol, alice]);
   }
-
-
-    // This above loop SHOULD work because carol should get the message via bob, but it doesn't
-    // So we try starting up alice and getting the message gossiped that way, but that also
-    // doesn't work!
-    await alice.startup()
-
   console.log("******************************************************************")
   console.log("checking to see if carol can see the message via alice after back on")
-    retries = 10
-    while (true) {
-      const channel_list = await carol_chat.call('chat', 'list_channels', { category: "General" });
-      console.log("CAROL CHANNELS", channel_list.channels);
-      const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
-      console.log("Carol list message:", r2)
-      t.ok(r2)
-      if (r2.messages.length == 1) {
-        break;
-      }
-      else {
-        retries -= 1;
-        if (retries == 0) {
-          t.equal(r2.messages.length,1)
-          break;
-        }
-      }
-      console.log(`retry ${retries}`);
-      await delay( 1000 )
-    }
+  await gotChannelsAndMessages(t, "carol", carol_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
 
 
 /*
