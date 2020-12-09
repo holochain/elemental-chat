@@ -7,7 +7,7 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/holochain.svg?style=social&label=Follow)](https://twitter.com/holochain)
 License: [![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
 
-The most basic of all possible chat apps.
+A fairly basic chat app.  Includes channels, and exercises various holochain features including signals.
 
 ## Running the Tests
 
