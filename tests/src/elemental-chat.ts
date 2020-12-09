@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from "uuid";
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
+const RETRY_DELAY = 1000
+const RETRY_COUNT = 10
+
 // Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
 const conductorConfig = Config.gen()
@@ -87,13 +90,13 @@ module.exports = (orchestrator) => {
     t.deepEqual(sends[0].message, recvs[0].message);
 
     // list messages should return messages from the correct chunk
-    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
+    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
     t.deepEqual(msgs.messages[0].message, sends[0].message)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:1, end: 1} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:1, end: 1} })
     t.equal(msgs.messages.length, 0)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:32, end: 32} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:32, end: 32} })
     t.deepEqual(msgs.messages[0].message, sends[1].message)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 32} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 32} })
     t.deepEqual(msgs.messages.length, 2)
 
     // list channels should have the latest chunk
@@ -162,12 +165,12 @@ module.exports = (orchestrator) => {
 
     // Alice lists the messages
     var msgs: any[] = [];
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[0].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
     // Bobbo lists the messages
     await delay(2000) // TODO add consistency instead
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log('bobbo.list_messages: '+_.map(msgs[1].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
 
@@ -198,11 +201,11 @@ module.exports = (orchestrator) => {
     t.deepEqual(sends[3].message, recvs[3].message);
     await delay(4000)
     // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[2].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[2].messages, just_msg));
     // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[3].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
   })
@@ -216,6 +219,29 @@ module.exports = (orchestrator) => {
   })
 }
 
+const gotChannelsAndMessages = async(t, name, happ, channel, retry_count, retry_delay)  => {
+  var retries = retry_count
+  while (true) {
+    const channel_list = await happ.call('chat', 'list_channels', { category: "General" });
+    console.log(`${name}'s channel list:`, channel_list.channels);
+    const r = await happ.call('chat', 'list_messages', { channel, active_chatter: false, chunk: {start:0, end: 1} })
+    t.ok(r)
+    console.log(`${name}'s message list:`, r);
+    if (r.messages.length > 0) {
+      t.equal(r.messages.length,1)
+      break;
+    }
+    else {
+      retries -= 1;
+      if (retries == 0) {
+        t.fail(`bailing after ${retry_count} retries waiting for ${name}`)
+        break;
+      }
+    }
+    console.log(`retry ${retries}`);
+    await delay( retry_delay )
+  }
+}
 const doTransientNodes = async (s, t, local) => {
   const config = local ? conductorConfig : networkedConductorConfig;
 
@@ -248,23 +274,10 @@ const doTransientNodes = async (s, t, local) => {
   const r1 = await alice_chat.call('chat', 'create_message', msg1);
   t.deepEqual(r1.message, msg1.message);
 
-  var retries = 10
-  while (true) {
-    const r2 = await bob_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
-    t.ok(r2)
-    if (r2.messages.length == 1) {
-      break;
-    }
-    else {
-      retries -= 1;
-      if (retries == 0) {
-        t.equal(r2.messages.length,1)
-        break;
-      }
-    }
-    console.log(`retry ${retries}`);
-    await delay( 1000 )
-  }
+
+  console.log("******************************************************************")
+  console.log("checking to see if bob can see the message")
+  await gotChannelsAndMessages(t, "bob", bob_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
 
   await alice.shutdown()
   await carol.startup()
@@ -275,50 +288,20 @@ const doTransientNodes = async (s, t, local) => {
     await s.shareAllNodes([carol, bob]);
   }
 
-  retries = 10
-  while (true) {
-    const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
-    console.log("Carol list message:", r2)
-    t.ok(r2)
-    if (r2.messages.length == 1) {
-      break;
-    }
-    else {
-      retries -= 1;
-      if (retries == 0) {
-        console.log("bailing after 10 retries")
-        t.equal(r2.messages.length,1)
-        break;
-      }
-    }
-    console.log(`retry ${retries}`);
-    await delay( 1000 )
+  console.log("******************************************************************")
+  console.log("checking to see if carol can see the message via bob")
+  await gotChannelsAndMessages(t, "carol", carol_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
+
+  // This above loop SHOULD work because carol should get the message via bob, but it doesn't
+  // So we try starting up alice and getting the message gossiped that way, but that also
+  // doesn't work!
+  await alice.startup()
+  if (local) {
+    await s.shareAllNodes([carol, alice]);
   }
-
-
-    // This above loop SHOULD work because carol should get the message via bob, but it doesn't
-    // So we try starting up alice and getting the message gossiped that way, but that also
-    // doesn't work!
-    await alice.startup()
-
-    retries = 10
-    while (true) {
-      const r2 = await carol_chat.call('chat', 'list_messages', { channel: channel.channel, chunk: {start:0, end: 1} })
-      console.log("Carol list message:", r2)
-      t.ok(r2)
-      if (r2.messages.length == 1) {
-        break;
-      }
-      else {
-        retries -= 1;
-        if (retries == 0) {
-          t.equal(r2.messages.length,1)
-          break;
-        }
-      }
-      console.log(`retry ${retries}`);
-      await delay( 1000 )
-    }
+  console.log("******************************************************************")
+  console.log("checking to see if carol can see the message via alice after back on")
+  await gotChannelsAndMessages(t, "carol", carol_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
 
 
 /*

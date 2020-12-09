@@ -62,11 +62,13 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
 
 /// List all the messages on this channel
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
-    let ListMessagesInput { channel, chunk } = list_message_input;
+    let ListMessagesInput { channel, chunk, active_chatter } = list_message_input;
 
     // Check if our agent key is active on this path and
     // add it if it's not
-    add_chatter(channel.chatters_path())?;
+    if active_chatter {
+        add_chatter(channel.chatters_path())?;
+    }
 
     let mut links: Vec<Link> = Vec::new();
     let mut counter = chunk.start;
