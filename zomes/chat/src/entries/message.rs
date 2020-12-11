@@ -54,6 +54,7 @@ pub struct SignalMessageData {
 pub struct ListMessagesInput {
     channel: Channel,
     chunk: Chunk,
+    active_chatter: bool,
 }
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct Chunk {
