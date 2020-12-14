@@ -28,6 +28,7 @@ pub struct Channel {
     uuid: String,
 }
 
+/*  using global chatters list for now.
 impl Channel {
     pub fn chatters_path(&self) -> Path {
         let mut components: Vec<Component> = Path::from(self.clone()).into();
@@ -35,6 +36,7 @@ impl Channel {
         components.into()
     }
 }
+ */
 
 /// The message type that goes to the UI
 #[derive(Serialize, Deserialize, SerializedBytes, derive_more::Constructor, Debug, Clone)]
