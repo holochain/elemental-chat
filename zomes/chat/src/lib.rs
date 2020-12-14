@@ -4,7 +4,7 @@ use error::ChatResult;
 use hdk3::prelude::Path;
 use hdk3::prelude::*;
 use message::{
-    ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SignalMessageData,
+    ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SignalMessageData, SigResults
 };
 
 mod entries;
@@ -78,7 +78,7 @@ fn signal_users_on_channel(message_data: SignalMessageData) -> ChatResult<()> {
 }*/
 
 #[hdk_extern]
-fn signal_chatters(message_data: SignalMessageData) -> ChatResult<()> {
+fn signal_chatters(message_data: SignalMessageData) -> ChatResult<SigResults> {
     message::handlers::signal_chatters(message_data)
 }
 

@@ -11,7 +11,7 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{
-    LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData,
+    LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData, SigResults
 };
 
 /// Create a new message
@@ -172,20 +172,22 @@ pub(crate) fn signal_users_on_channel(signal_message_data: SignalMessageData) ->
     Ok(())
 } */
 
-const CHAT_HOURS : i64 = 2;
+const CHATTER_REFRESH_HOURS : i64 = 2;
 
 pub(crate) fn signal_chatters(
     signal_message_data: SignalMessageData,
-) -> ChatResult<()> {
+) -> ChatResult<SigResults> {
     let me = agent_info()?.agent_latest_pubkey;
     let chatters_path: Path = chatters_path();
     let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
     debug!(format!("num online chatters {}", chatters.len()));
     let now = to_date(sys_time()?);
+    let mut sent: usize = 0;
+    let mut active: usize = 0;
+    let total = chatters.len();
     for link in chatters.into_iter().filter(|l| {
-//        let naive_time : chrono::NaiveDateTime = .into();
         let link_time = chrono::DateTime::<chrono::Utc>::from(l.timestamp);
-        now.signed_duration_since(link_time).num_hours() > CHAT_HOURS
+        now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS
     }
     ) {
         let tag = link.tag;
@@ -195,20 +197,31 @@ pub(crate) fn signal_chatters(
         }
         debug!(format!("Signaling {:?}", agent));
         // ignore any errors coming back from call_remotes
-        let _: HdkResult<()> = call_remote(
+        let r:HdkResult<()> = call_remote(
             agent,
             "chat".to_string().into(),
             "new_message_signal".to_string().into(),
             None,
             &signal_message_data,
         );
+        if r.is_err() {
+            sent += 1;
+        }
+        active += 1;
     }
-    Ok(())
+    // temporary debugging result of sending.  This will be removed when we have
+    // remote_signal.
+    Ok(SigResults {
+        total,
+        active,
+        sent
+    })
 }
 
 // simplified and expected as a zome call
 pub(crate)  fn refresh_chatter() -> ChatResult<()> {
     let path: Path = chatters_path();
+    path.ensure()?;
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
     create_link(path.hash()?, agent.into(), agent_tag.clone())?;
