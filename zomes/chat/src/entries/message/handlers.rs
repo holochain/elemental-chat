@@ -174,6 +174,8 @@ pub(crate) fn signal_users_on_channel(signal_message_data: SignalMessageData) ->
 
 const CHATTER_REFRESH_HOURS : i64 = 2;
 
+use std::collections::HashSet;
+
 pub(crate) fn signal_chatters(
     signal_message_data: SignalMessageData,
 ) -> ChatResult<SigResults> {
@@ -185,6 +187,8 @@ pub(crate) fn signal_chatters(
     let mut sent: usize = 0;
     let mut active: usize = 0;
     let total = chatters.len();
+    let mut agents = HashSet::new();
+    agents.insert(me);
     for link in chatters.into_iter().filter(|l| {
         let link_time = chrono::DateTime::<chrono::Utc>::from(l.timestamp);
         now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS
@@ -192,7 +196,7 @@ pub(crate) fn signal_chatters(
     ) {
         let tag = link.tag;
         let agent = tag_to_agent(tag)?;
-        if agent == me {
+        if agents.contains(&agent) {
             continue;
         }
         debug!(format!("Signaling {:?}", agent));
@@ -204,7 +208,7 @@ pub(crate) fn signal_chatters(
             None,
             &signal_message_data,
         );
-        if r.is_err() {
+        if !r.is_err() {
             sent += 1;
         }
         active += 1;
