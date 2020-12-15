@@ -189,36 +189,26 @@ pub(crate) fn signal_chatters(
     let total = chatters.len();
     let mut agents = HashSet::new();
     agents.insert(me);
-    for link in chatters.into_iter().filter(|l| {
+    let active_chatters : Vec<AgentPubKey> = chatters.into_iter().filter_map(|l| {
         let link_time = chrono::DateTime::<chrono::Utc>::from(l.timestamp);
-        now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS
-    }
-    ) {
-        let tag = link.tag;
-        let agent = tag_to_agent(tag)?;
-        if agents.contains(&agent) {
-            continue;
+        if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
+            let tag = l.tag;
+            let agent = tag_to_agent(tag).ok()?;
+            if agents.contains(&agent) {
+                None
+            } else {
+                agents.insert(agent);
+                Some(agent)
+            }
+        } else {
+            None
         }
-        debug!(format!("Signaling {:?}", agent));
-        // ignore any errors coming back from call_remotes
-        let r:HdkResult<()> = call_remote(
-            agent,
-            "chat".to_string().into(),
-            "new_message_signal".to_string().into(),
-            None,
-            &signal_message_data,
-        );
-        if !r.is_err() {
-            sent += 1;
-        }
-        active += 1;
-    }
-    // temporary debugging result of sending.  This will be removed when we have
-    // remote_signal.
+    }).collect();
+
+    remote_signal(&signal_message_data, active_chatters)?;
     Ok(SigResults {
         total,
         active,
-        sent
     })
 }
 

@@ -66,7 +66,6 @@ pub struct Chunk {
 pub struct SigResults {
     pub total: usize,
     pub active: usize,
-    pub sent: usize,
 }
 
 /// The messages returned from list messages

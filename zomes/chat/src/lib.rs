@@ -41,6 +41,12 @@ pub(crate) fn signal_ui(signal: SignalPayload) -> ChatResult<()> {
     Ok(emit_signal(&signal_payload)?)
 }
 
+#[hdk_extern]
+fn recv_remote_signal(signal: SignalMessageData) -> ChatResult<()> {
+    signal_ui(SignalPayload::SignalMessageData(signal))?;
+    Ok(())
+}
+
 entry_defs![
     Path::entry_def(),
     Message::entry_def(),
