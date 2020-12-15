@@ -184,10 +184,10 @@ pub(crate) fn signal_chatters(
     let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
     debug!(format!("num online chatters {}", chatters.len()));
     let now = to_date(sys_time()?);
-    let mut sent: usize = 0;
     let mut active: usize = 0;
     let total = chatters.len();
     let mut agents = HashSet::new();
+    let mut sent = Vec::new();
     agents.insert(me);
     for link in chatters.into_iter().filter(|l| {
         let link_time = chrono::DateTime::<chrono::Utc>::from(l.timestamp);
@@ -199,18 +199,19 @@ pub(crate) fn signal_chatters(
         if agents.contains(&agent) {
             continue;
         }
-        debug!(format!("Signaling {:?}", agent));
+        agents.insert(agent.clone());
+        //debug!(format!("Signaling {:?}", agent));
         // ignore any errors coming back from call_remotes
         let r:HdkResult<()> = call_remote(
-            agent,
+            agent.clone(),
             "chat".to_string().into(),
             "new_message_signal".to_string().into(),
             None,
             &signal_message_data,
         );
-        if !r.is_err() {
-            sent += 1;
-        }
+//        if !r.is_err() {
+            sent.push(format!("{}:{:?}:{:?}", agent.to_string(), link.timestamp, r.is_err()));
+//        }
         active += 1;
     }
     // temporary debugging result of sending.  This will be removed when we have
