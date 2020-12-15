@@ -11,7 +11,7 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{
-    LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData,
+    LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData, SigResults
 };
 
 /// Create a new message
@@ -62,13 +62,14 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
 
 /// List all the messages on this channel
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
-    let ListMessagesInput { channel, chunk, active_chatter } = list_message_input;
+    let ListMessagesInput { channel, chunk, active_chatter: _ } = list_message_input;
 
+    // Removing for now and expecting UI to call add_chatter once every 2 hours.
     // Check if our agent key is active on this path and
     // add it if it's not
-    if active_chatter {
-        add_chatter(channel.chatters_path())?;
-    }
+    //if active_chatter {
+    //    add_chatter(/*channel.chatters_path()*/)?;
+    //}
 
     let mut links: Vec<Link> = Vec::new();
     let mut counter = chunk.start;
@@ -148,6 +149,12 @@ fn add_chunk_path(path: Path, chunk: u32) -> ChatResult<Path> {
     Ok(components.into())
 }
 
+fn chatters_path() -> Path {
+    Path::from("chatters")
+}
+
+/*  At some point maybe add back in chatters  on a channel, but for now
+simple list of global chatters.
 pub(crate) fn signal_users_on_channel(signal_message_data: SignalMessageData) -> ChatResult<()> {
     let me = agent_info()?.agent_latest_pubkey;
 
@@ -158,34 +165,74 @@ pub(crate) fn signal_users_on_channel(signal_message_data: SignalMessageData) ->
     let hour_path = add_current_hour_minus_n_path(path, 1)?;
     hour_path.ensure()?;
     signal_hour(hour_path, signal_message_data, me)?;
-    Ok(())
-}
 
-fn signal_hour(
-    hour_path: Path,
+    let path: Path = chatters_path();
+    signal_chatters(path, signal_message_data, me)?;
+
+    Ok(())
+} */
+
+const CHATTER_REFRESH_HOURS : i64 = 2;
+
+use std::collections::HashSet;
+
+pub(crate) fn signal_chatters(
     signal_message_data: SignalMessageData,
-    me: AgentPubKey,
-) -> ChatResult<()> {
-    let chatters = get_links(hour_path.hash()?, None)?.into_inner();
+) -> ChatResult<SigResults> {
+    let me = agent_info()?.agent_latest_pubkey;
+    let chatters_path: Path = chatters_path();
+    let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
     debug!(format!("num online chatters {}", chatters.len()));
-    for tag in chatters.into_iter().map(|l| l.tag) {
+    let now = to_date(sys_time()?);
+    let mut sent: usize = 0;
+    let mut active: usize = 0;
+    let total = chatters.len();
+    let mut agents = HashSet::new();
+    agents.insert(me);
+    for link in chatters.into_iter().filter(|l| {
+        let link_time = chrono::DateTime::<chrono::Utc>::from(l.timestamp);
+        now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS
+    }
+    ) {
+        let tag = link.tag;
         let agent = tag_to_agent(tag)?;
-        if agent == me {
+        if agents.contains(&agent) {
             continue;
         }
         debug!(format!("Signaling {:?}", agent));
         // ignore any errors coming back from call_remotes
-        let _: HdkResult<()> = call_remote(
+        let r:HdkResult<()> = call_remote(
             agent,
             "chat".to_string().into(),
             "new_message_signal".to_string().into(),
             None,
             &signal_message_data,
         );
+        if !r.is_err() {
+            sent += 1;
+        }
+        active += 1;
     }
+    // temporary debugging result of sending.  This will be removed when we have
+    // remote_signal.
+    Ok(SigResults {
+        total,
+        active,
+        sent
+    })
+}
+
+// simplified and expected as a zome call
+pub(crate)  fn refresh_chatter() -> ChatResult<()> {
+    let path: Path = chatters_path();
+    path.ensure()?;
+    let agent = agent_info()?.agent_latest_pubkey;
+    let agent_tag = agent_to_tag(&agent);
+    create_link(path.hash()?, agent.into(), agent_tag.clone())?;
     Ok(())
 }
 
+/* old way using hours
 fn add_chatter(path: Path) -> ChatResult<()> {
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
@@ -206,6 +253,7 @@ fn add_chatter(path: Path) -> ChatResult<()> {
 
     Ok(())
 }
+*/
 
 fn agent_to_tag(agent: &AgentPubKey) -> LinkTag {
     let agent_tag: &[u8] = agent.as_ref();
@@ -216,6 +264,7 @@ fn tag_to_agent(tag: LinkTag) -> ChatResult<AgentPubKey> {
     Ok(AgentPubKey::from_raw_39(tag.0).map_err(|_| ChatError::AgentTag)?)
 }
 
+/*
 fn add_current_hour_path(path: Path) -> ChatResult<Path> {
     add_current_hour_path_inner(path, None)
 }
@@ -253,3 +302,4 @@ fn date_minus_hours(
     let hours = chrono::Duration::hours(hours as i64);
     date - hours
 }
+*/

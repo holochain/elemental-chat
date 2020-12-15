@@ -62,6 +62,13 @@ pub struct Chunk {
     end: u32,
 }
 
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct SigResults {
+    pub total: usize,
+    pub active: usize,
+    pub sent: usize,
+}
+
 /// The messages returned from list messages
 #[derive(Serialize, Deserialize, SerializedBytes, derive_more::From)]
 pub struct ListMessages {
