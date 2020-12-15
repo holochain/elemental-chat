@@ -199,6 +199,7 @@ pub(crate) fn signal_chatters(
         if agents.contains(&agent) {
             continue;
         }
+        agents.insert(agent.clone());
         //debug!(format!("Signaling {:?}", agent));
         // ignore any errors coming back from call_remotes
         let r:HdkResult<()> = call_remote(
