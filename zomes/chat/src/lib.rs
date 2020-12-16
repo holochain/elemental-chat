@@ -16,19 +16,14 @@ pub const NEW_MESSAGE_SIGNAL_TYPE: &str = "new_message";
 pub const NEW_CHANNEL_SIGNAL_TYPE: &str = "new_channel";
 
 #[derive(Serialize, Deserialize, SerializedBytes)]
+#[serde(tag = "signal_name", content = "signal_payload")]
 enum SignalPayload {
-    SignalMessageData(SignalMessageData),
-    ChannelData(ChannelData),
-}
-
-#[derive(Serialize, Deserialize, SerializedBytes)]
-struct SignalDetails {
-    pub signal_name: String,
-    pub signal_payload: SignalPayload,
+    Message(SignalMessageData),
+    Channel(ChannelData),
 }
 
 pub(crate) fn signal_ui(signal: SignalPayload) -> ChatResult<()> {
-    let signal_payload = match signal {
+    /*let signal_payload = match signal {
         SignalPayload::SignalMessageData(_) => SignalDetails {
             signal_name: "message".to_string(),
             signal_payload: signal,
@@ -37,14 +32,13 @@ pub(crate) fn signal_ui(signal: SignalPayload) -> ChatResult<()> {
             signal_name: "channel".to_string(),
             signal_payload: signal,
         },
-    };
-    Ok(emit_signal(&signal_payload)?)
+    };*/
+    Ok(emit_signal(&signal)?)
 }
 
 #[hdk_extern]
-fn recv_remote_signal(signal: SignalMessageData) -> ChatResult<()> {
-    signal_ui(SignalPayload::SignalMessageData(signal))?;
-    Ok(())
+fn recv_remote_signal(signal: SerializedBytes) -> ChatResult<()> {
+    Ok(emit_signal(&signal)?)
 }
 
 entry_defs![

@@ -10,5 +10,4 @@ opt-level = "z"
 opt-level = "z"
 
 [patch.crates-io]
-holochain_wasmer_guest = { git = "https://github.com/holochain/holochain-wasmer.git", branch = "remote_signal" }
-holochain_wasmer_common = { git = "https://github.com/holochain/holochain-wasmer.git", branch = "remote_signal" }
+holochain_serialized_bytes = { git = "https://github.com/holochain/holochain-serialization.git", branch = "try_from_ref" }

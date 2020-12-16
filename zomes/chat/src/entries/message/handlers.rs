@@ -110,7 +110,7 @@ pub(crate) fn new_message_signal(message: SignalMessageData) -> ChatResult<()> {
         message.message_data.message.content
     ));
     // emit signal alerting all connected uis about new message
-    signal_ui(SignalPayload::SignalMessageData(message))
+    signal_ui(SignalPayload::Message(message))
 }
 
 // Turn all the link targets into the actual message
@@ -213,7 +213,7 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
     for a in active_chatters.clone() {
         sent.push(format!("{}", a.to_string()));
     }
-    remote_signal(&signal_message_data, active_chatters)?;
+    remote_signal(&SignalPayload::Message(signal_message_data), active_chatters)?;
     Ok(SigResults { total, sent })
 }
 
