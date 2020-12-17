@@ -22,7 +22,7 @@ enum SignalPayload {
     Channel(ChannelData),
 }
 
-pub(crate) fn signal_ui(signal: SignalPayload) -> ChatResult<()> {
+// pub(crate) fn _signal_ui(signal: SignalPayload) -> ChatResult<()> {
     /*let signal_payload = match signal {
         SignalPayload::SignalMessageData(_) => SignalDetails {
             signal_name: "message".to_string(),
@@ -33,11 +33,12 @@ pub(crate) fn signal_ui(signal: SignalPayload) -> ChatResult<()> {
             signal_payload: signal,
         },
     };*/
-    Ok(emit_signal(&signal)?)
-}
+    // Ok(emit_signal(&signal)?)
+// }
 
 #[hdk_extern]
 fn recv_remote_signal(signal: SerializedBytes) -> ChatResult<()> {
+    debug!(format!("Received remote signal"));
     let sig : SignalPayload = SignalPayload::try_from(signal.clone())?;
     debug!(format!("Received remote signal {:?}", sig));
     Ok(emit_signal(&signal)?)
@@ -53,7 +54,7 @@ entry_defs![
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // grant unrestricted access to accept_cap_claim so other agents can send us claims
     let mut functions: GrantedFunctions = HashSet::new();
-    functions.insert((zome_info()?.zome_name, "new_message_signal".into()));
+    functions.insert((zome_info()?.zome_name, "recv_remote_signal".into()));
     create_cap_grant(CapGrantEntry {
         tag: "".into(),
         // empty access converts to unrestricted
@@ -90,10 +91,10 @@ fn refresh_chatter(_: ()) -> ChatResult<()> {
 }
 
 
-#[hdk_extern]
-fn new_message_signal(message_input: SignalMessageData) -> ChatResult<()> {
-    message::handlers::new_message_signal(message_input)
-}
+// #[hdk_extern]
+// fn new_message_signal(message_input: SignalMessageData) -> ChatResult<()> {
+//     message::handlers::new_message_signal(message_input)
+// }
 
 #[hdk_extern]
 fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {

@@ -2,7 +2,6 @@ use crate::{
     error::ChatError,
     error::ChatResult,
     message::{Message, MessageInput},
-    signal_ui,
     utils::{get_local_header, to_date},
     SignalPayload,
 };
@@ -104,14 +103,14 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     Ok(sorted_messages.into())
 }
 
-pub(crate) fn new_message_signal(message: SignalMessageData) -> ChatResult<()> {
-    debug!(format!(
-        "Received message: {:?}",
-        message.message_data.message.content
-    ));
+// pub(crate) fn _new_message_signal(message: SignalMessageData) -> ChatResult<()> {
+//     debug!(format!(
+//         "Received message: {:?}",
+//         message.message_data.message.content
+//     ));
     // emit signal alerting all connected uis about new message
-    signal_ui(SignalPayload::Message(message))
-}
+    // signal_ui(SignalPayload::Message(message))
+// }
 
 // Turn all the link targets into the actual message
 fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
@@ -208,6 +207,7 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
             }
         })
         .collect();
+    debug!(format!("sending to {:?}", active_chatters));
 
     let mut sent: Vec<String> = Vec::new();
     for a in active_chatters.clone() {
@@ -223,6 +223,7 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
     path.ensure()?;
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
+    // TODO check for existing
     create_link(path.hash()?, agent.into(), agent_tag.clone())?;
     Ok(())
 }
