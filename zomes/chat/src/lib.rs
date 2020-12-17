@@ -4,7 +4,8 @@ use error::ChatResult;
 use hdk3::prelude::Path;
 use hdk3::prelude::*;
 use message::{
-    ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SignalMessageData, SigResults
+    ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SigResults,
+    SignalMessageData,
 };
 
 mod entries;
@@ -23,23 +24,23 @@ enum SignalPayload {
 }
 
 // pub(crate) fn _signal_ui(signal: SignalPayload) -> ChatResult<()> {
-    /*let signal_payload = match signal {
-        SignalPayload::SignalMessageData(_) => SignalDetails {
-            signal_name: "message".to_string(),
-            signal_payload: signal,
-        },
-        SignalPayload::ChannelData(_) => SignalDetails {
-            signal_name: "channel".to_string(),
-            signal_payload: signal,
-        },
-    };*/
-    // Ok(emit_signal(&signal)?)
+/*let signal_payload = match signal {
+    SignalPayload::SignalMessageData(_) => SignalDetails {
+        signal_name: "message".to_string(),
+        signal_payload: signal,
+    },
+    SignalPayload::ChannelData(_) => SignalDetails {
+        signal_name: "channel".to_string(),
+        signal_payload: signal,
+    },
+};*/
+// Ok(emit_signal(&signal)?)
 // }
 
 #[hdk_extern]
 fn recv_remote_signal(signal: SerializedBytes) -> ChatResult<()> {
     debug!(format!("Received remote signal"));
-    let sig : SignalPayload = SignalPayload::try_from(signal.clone())?;
+    let sig: SignalPayload = SignalPayload::try_from(signal.clone())?;
     debug!(format!("Received remote signal {:?}", sig));
     Ok(emit_signal(&signal)?)
 }
@@ -66,6 +67,11 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 
 #[hdk_extern]
+fn get_local_chatter_link(_: ()) -> ChatResult<ElementVec> {
+    message::handlers::get_local_chatter_link()
+}
+
+#[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelData> {
     channel::handlers::create_channel(channel_input)
 }
@@ -89,7 +95,6 @@ fn signal_chatters(message_data: SignalMessageData) -> ChatResult<SigResults> {
 fn refresh_chatter(_: ()) -> ChatResult<()> {
     message::handlers::refresh_chatter()
 }
-
 
 // #[hdk_extern]
 // fn new_message_signal(message_input: SignalMessageData) -> ChatResult<()> {

@@ -108,8 +108,8 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
 //         "Received message: {:?}",
 //         message.message_data.message.content
 //     ));
-    // emit signal alerting all connected uis about new message
-    // signal_ui(SignalPayload::Message(message))
+// emit signal alerting all connected uis about new message
+// signal_ui(SignalPayload::Message(message))
 // }
 
 // Turn all the link targets into the actual message
@@ -180,6 +180,42 @@ const CHATTER_REFRESH_HOURS: i64 = 2;
 
 use std::collections::HashSet;
 
+pub(crate) fn get_local_chatter_link(chatters_path: Path) -> ChatResult<bool> {
+    let base = chatters_path.hash()?;
+    let filter = QueryFilter::new();
+    // let with_entry_filter = filter.include_entries(true);
+
+    // if let Some(app_entry_type) = entry_id_to_app_entry_type(entry_id)? {
+    // let entry_filter = with_entry_filter.entry_type(EntryType::App(app_entry_type));
+
+    let header_filter = filter.header_type(HeaderType::CreateLink);
+    let query_result: ElementVec = query(header_filter)?;
+    let now = to_date(sys_time()?);
+    let pass = false;
+    for x in query_result.0 {
+        match x.header() {
+            Header::CreateLink(c) => {
+                if c.base_address == base {
+                    let time: chrono::Duration = c.timestamp.into();
+                    let link_time = chrono::DateTime::<chrono::Utc>::from(c.timestamp.into());
+                    if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
+                        pass = true;
+                        break;
+                    } else {
+                        pass = false;
+                        break;
+                    }
+                } else {
+                    continue;
+                }
+            }
+            _ => unreachable!(),
+        }
+    }
+    Ok(pass)
+    // query_result.0.into_iter().foreach(|x, _| )
+}
+
 /// return the list of active chatters on a path.
 /// N.B.: assumes that the path has been ensured elsewhere.
 fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)> {
@@ -209,7 +245,6 @@ fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)>
     Ok((total, active))
 }
 
-
 pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatResult<SigResults> {
     let me = agent_info()?.agent_latest_pubkey;
     let chatters_path: Path = chatters_path();
@@ -221,7 +256,10 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
     for a in active_chatters.clone() {
         sent.push(format!("{}", a.to_string()));
     }
-    remote_signal(&SignalPayload::Message(signal_message_data), active_chatters)?;
+    remote_signal(
+        &SignalPayload::Message(signal_message_data),
+        active_chatters,
+    )?;
     Ok(SigResults { total, sent })
 }
 
