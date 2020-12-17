@@ -217,7 +217,7 @@ module.exports = (orchestrator) => {
   orchestrator.registerScenario('transient nodes-proxied', async (s, t) => {
     await doTransientNodes(s, t, false)
   })
-  
+
   orchestrator.registerScenario.only('test-signal', async (s, t) => {
     await doTestSignals(s, t)
   })
@@ -309,24 +309,12 @@ const doTransientNodes = async (s, t, local) => {
   console.log("checking to see if carol can see the message via alice after back on")
   await gotChannelsAndMessages(t, "carol", carol_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
 
-
-/*
-    // You can create players with unspawned conductors by passing in false as the second param:
-    const [carol] = await s.players([conductorConfig], false)
-
-    // and then start the conductor for them explicitly with:
-    await carol.startup()
-
-    // and install a single happ
-    const carol_blog_happ = await carol.installHapp([dnaBlog])
-    // or a happ with a previously generated key
-*/
 }
 
 const doTestSignals = async (s, t) => {
   const config = conductorConfig;
 
-  const [alice, bob, carol] = await s.players([config, config, config], false)
+  const [alice, bob] = await s.players([config, config], false)
   await alice.startup()
   await bob.startup()
 
@@ -335,7 +323,7 @@ const doTestSignals = async (s, t) => {
   const [alice_chat] = alice_chat_happ.cells
   const [bob_chat] = bob_chat_happ.cells
 
-    await s.shareAllNodes([alice, bob]);
+  await s.shareAllNodes([alice, bob]);
 
   // Create a channel
   const channel_uuid = uuidv4();
@@ -352,7 +340,7 @@ const doTestSignals = async (s, t) => {
   }
   const r1 = await alice_chat.call('chat', 'create_message', msg1);
   t.deepEqual(r1.message, msg1.message);
-  
+
   await alice_chat.call('chat', 'refresh_chatter', null);
 
   await bob_chat.call('chat', 'refresh_chatter', null);

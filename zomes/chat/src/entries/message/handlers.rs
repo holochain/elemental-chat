@@ -180,16 +180,15 @@ const CHATTER_REFRESH_HOURS: i64 = 2;
 
 use std::collections::HashSet;
 
-pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatResult<SigResults> {
-    let me = agent_info()?.agent_latest_pubkey;
-    let chatters_path: Path = chatters_path();
+/// return the list of active chatters on a path.
+/// N.B.: assumes that the path has been ensured elsewhere.
+fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)> {
     let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
     debug!(format!("num online chatters {}", chatters.len()));
     let now = to_date(sys_time()?);
     let total = chatters.len();
     let mut agents = HashSet::new();
-    agents.insert(me);
-    let active_chatters: Vec<AgentPubKey> = chatters
+    let active: Vec<AgentPubKey> = chatters
         .into_iter()
         .filter_map(|l| {
             let link_time = chrono::DateTime::<chrono::Utc>::from(l.timestamp);
@@ -207,6 +206,15 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
             }
         })
         .collect();
+    Ok((total, active))
+}
+
+
+pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatResult<SigResults> {
+    let me = agent_info()?.agent_latest_pubkey;
+    let chatters_path: Path = chatters_path();
+    let (total, mut active_chatters) = active_chatters(chatters_path)?;
+    active_chatters.retain(|a| *a != me);
     debug!(format!("sending to {:?}", active_chatters));
 
     let mut sent: Vec<String> = Vec::new();
@@ -217,14 +225,18 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
     Ok(SigResults { total, sent })
 }
 
+// TODO: re add chatter/channel instead of global
 // simplified and expected as a zome call
 pub(crate) fn refresh_chatter() -> ChatResult<()> {
     let path: Path = chatters_path();
     path.ensure()?;
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
-    // TODO check for existing
-    create_link(path.hash()?, agent.into(), agent_tag.clone())?;
+    let me = agent_info()?.agent_latest_pubkey;
+    let (_, active_chatters) = active_chatters(path.clone())?;
+    if !active_chatters.contains(&me) {
+        create_link(path.hash()?, agent.into(), agent_tag.clone())?;
+    }
     Ok(())
 }
 
