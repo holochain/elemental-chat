@@ -8,6 +8,3 @@ opt-level = "z"
 
 [profile.release]
 opt-level = "z"
-
-[patch.crates-io]
-holochain_serialized_bytes = { git = "https://github.com/holochain/holochain-serialization.git", branch = "try_from_ref" }
