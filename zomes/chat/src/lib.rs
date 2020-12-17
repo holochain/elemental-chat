@@ -15,7 +15,7 @@ mod utils;
 pub const NEW_MESSAGE_SIGNAL_TYPE: &str = "new_message";
 pub const NEW_CHANNEL_SIGNAL_TYPE: &str = "new_channel";
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(tag = "signal_name", content = "signal_payload")]
 enum SignalPayload {
     Message(SignalMessageData),
@@ -38,6 +38,8 @@ pub(crate) fn signal_ui(signal: SignalPayload) -> ChatResult<()> {
 
 #[hdk_extern]
 fn recv_remote_signal(signal: SerializedBytes) -> ChatResult<()> {
+    let sig : SignalPayload = SignalPayload::try_from(signal.clone())?;
+    debug!(format!("Received remote signal {:?}", sig));
     Ok(emit_signal(&signal)?)
 }
 
