@@ -214,8 +214,12 @@ module.exports = (orchestrator) => {
     await doTransientNodes(s, t, true)
   })
 
-  orchestrator.registerScenario.only('transient nodes-proxied', async (s, t) => {
+  orchestrator.registerScenario('transient nodes-proxied', async (s, t) => {
     await doTransientNodes(s, t, false)
+  })
+
+  orchestrator.registerScenario.only('test-signal', async (s, t) => {
+    await doTestSignals(s, t)
   })
 }
 
@@ -305,16 +309,48 @@ const doTransientNodes = async (s, t, local) => {
   console.log("checking to see if carol can see the message via alice after back on")
   await gotChannelsAndMessages(t, "carol", carol_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
 
+}
 
-/*
-    // You can create players with unspawned conductors by passing in false as the second param:
-    const [carol] = await s.players([conductorConfig], false)
+const doTestSignals = async (s, t) => {
+  const config = conductorConfig;
 
-    // and then start the conductor for them explicitly with:
-    await carol.startup()
+  const [alice, bob] = await s.players([config, config], false)
+  await alice.startup()
+  await bob.startup()
 
-    // and install a single happ
-    const carol_blog_happ = await carol.installHapp([dnaBlog])
-    // or a happ with a previously generated key
-*/
+  const [[alice_chat_happ]] = await alice.installAgentsHapps(installation1agent)
+  const [[bob_chat_happ]] = await bob.installAgentsHapps(installation1agent)
+  const [alice_chat] = alice_chat_happ.cells
+  const [bob_chat] = bob_chat_happ.cells
+
+  await s.shareAllNodes([alice, bob]);
+
+  // Create a channel
+  const channel_uuid = uuidv4();
+  const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
+
+  const msg1 = {
+    last_seen: { First: null },
+    channel: channel.channel,
+    chunk: 0,
+    message: {
+      uuid: uuidv4(),
+      content: "Hello from alice :)",
+    }
+  }
+  const r1 = await alice_chat.call('chat', 'create_message', msg1);
+  t.deepEqual(r1.message, msg1.message);
+
+  await alice_chat.call('chat', 'refresh_chatter', null);
+
+  await bob_chat.call('chat', 'refresh_chatter', null);
+  await delay(2000)
+  const signalMessageData = {
+    messageData: r1,
+    channelData: channel,
+  };
+  const r4 = await alice_chat.call('chat', 'signal_chatters', signalMessageData);
+  t.ok(r4);
+
+
 }

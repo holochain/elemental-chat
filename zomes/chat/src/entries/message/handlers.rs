@@ -2,7 +2,6 @@ use crate::{
     error::ChatError,
     error::ChatResult,
     message::{Message, MessageInput},
-    signal_ui,
     utils::{get_local_header, to_date},
     SignalPayload,
 };
@@ -11,7 +10,8 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{
-    LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SignalMessageData, SigResults
+    LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SigResults,
+    SignalMessageData,
 };
 
 /// Create a new message
@@ -62,7 +62,11 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
 
 /// List all the messages on this channel
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
-    let ListMessagesInput { channel, chunk, active_chatter: _ } = list_message_input;
+    let ListMessagesInput {
+        channel,
+        chunk,
+        active_chatter: _,
+    } = list_message_input;
 
     // Removing for now and expecting UI to call add_chatter once every 2 hours.
     // Check if our agent key is active on this path and
@@ -99,14 +103,14 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     Ok(sorted_messages.into())
 }
 
-pub(crate) fn new_message_signal(message: SignalMessageData) -> ChatResult<()> {
-    debug!(format!(
-        "Received message: {:?}",
-        message.message_data.message.content
-    ));
+// pub(crate) fn _new_message_signal(message: SignalMessageData) -> ChatResult<()> {
+//     debug!(format!(
+//         "Received message: {:?}",
+//         message.message_data.message.content
+//     ));
     // emit signal alerting all connected uis about new message
-    signal_ui(SignalPayload::SignalMessageData(message))
-}
+    // signal_ui(SignalPayload::Message(message))
+// }
 
 // Turn all the link targets into the actual message
 fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
@@ -172,64 +176,67 @@ pub(crate) fn signal_users_on_channel(signal_message_data: SignalMessageData) ->
     Ok(())
 } */
 
-const CHATTER_REFRESH_HOURS : i64 = 2;
+const CHATTER_REFRESH_HOURS: i64 = 2;
 
 use std::collections::HashSet;
 
-pub(crate) fn signal_chatters(
-    signal_message_data: SignalMessageData,
-) -> ChatResult<SigResults> {
-    let me = agent_info()?.agent_latest_pubkey;
-    let chatters_path: Path = chatters_path();
+/// return the list of active chatters on a path.
+/// N.B.: assumes that the path has been ensured elsewhere.
+fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)> {
     let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
     debug!(format!("num online chatters {}", chatters.len()));
     let now = to_date(sys_time()?);
-    let mut active: usize = 0;
     let total = chatters.len();
     let mut agents = HashSet::new();
-    let mut sent = Vec::new();
-    agents.insert(me);
-    for link in chatters.into_iter().filter(|l| {
-        let link_time = chrono::DateTime::<chrono::Utc>::from(l.timestamp);
-        now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS
-    }
-    ) {
-        let tag = link.tag;
-        let agent = tag_to_agent(tag)?;
-        if agents.contains(&agent) {
-            continue;
-        }
-        agents.insert(agent.clone());
-        //debug!(format!("Signaling {:?}", agent));
-        // ignore any errors coming back from call_remotes
-        let r:HdkResult<()> = call_remote(
-            agent.clone(),
-            "chat".to_string().into(),
-            "new_message_signal".to_string().into(),
-            None,
-            &signal_message_data,
-        );
-//        if !r.is_err() {
-            sent.push(format!("{}:{:?}:{:?}", agent.to_string(), link.timestamp, r.is_err()));
-//        }
-        active += 1;
-    }
-    // temporary debugging result of sending.  This will be removed when we have
-    // remote_signal.
-    Ok(SigResults {
-        total,
-        active,
-        sent
-    })
+    let active: Vec<AgentPubKey> = chatters
+        .into_iter()
+        .filter_map(|l| {
+            let link_time = chrono::DateTime::<chrono::Utc>::from(l.timestamp);
+            if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
+                let tag = l.tag;
+                let agent = tag_to_agent(tag).ok()?;
+                if agents.contains(&agent) {
+                    None
+                } else {
+                    agents.insert(agent.clone());
+                    Some(agent)
+                }
+            } else {
+                None
+            }
+        })
+        .collect();
+    Ok((total, active))
 }
 
+
+pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatResult<SigResults> {
+    let me = agent_info()?.agent_latest_pubkey;
+    let chatters_path: Path = chatters_path();
+    let (total, mut active_chatters) = active_chatters(chatters_path)?;
+    active_chatters.retain(|a| *a != me);
+    debug!(format!("sending to {:?}", active_chatters));
+
+    let mut sent: Vec<String> = Vec::new();
+    for a in active_chatters.clone() {
+        sent.push(format!("{}", a.to_string()));
+    }
+    remote_signal(&SignalPayload::Message(signal_message_data), active_chatters)?;
+    Ok(SigResults { total, sent })
+}
+
+// TODO: re add chatter/channel instead of global
 // simplified and expected as a zome call
-pub(crate)  fn refresh_chatter() -> ChatResult<()> {
+pub(crate) fn refresh_chatter() -> ChatResult<()> {
     let path: Path = chatters_path();
     path.ensure()?;
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
-    create_link(path.hash()?, agent.into(), agent_tag.clone())?;
+    let me = agent_info()?.agent_latest_pubkey;
+    let (_, active_chatters) = active_chatters(path.clone())?;
+    if !active_chatters.contains(&me) {
+        create_link(path.hash()?, agent.into(), agent_tag.clone())?;
+    }
     Ok(())
 }
 

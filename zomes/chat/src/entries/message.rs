@@ -65,7 +65,6 @@ pub struct Chunk {
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct SigResults {
     pub total: usize,
-    pub active: usize,
     pub sent: Vec<String>,
 }
 
