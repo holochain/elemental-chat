@@ -47,7 +47,7 @@ module.exports = async (orchestrator) => {
 
   // orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
 
-  await orchestrator.registerScenario('multi-chunk', async (s, t) => {
+  orchestrator.registerScenario('multi-chunk', async (s, t) => {
     const [conductor] = await s.players([conductorConfig])
     const [
       [alice_chat_happ],
@@ -80,7 +80,7 @@ module.exports = async (orchestrator) => {
     sends.push({
       last_seen: { First: null },
       channel: channel.channel,
-      chunk: 32,
+      chunk: 10,
       message: {
         uuid: uuidv4(),
         content: "message in chunk 32",
@@ -94,16 +94,14 @@ module.exports = async (orchestrator) => {
     t.deepEqual(msgs.messages[0].message, sends[0].message)
     msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:1, end: 1} })
     t.equal(msgs.messages.length, 0)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:32, end: 32} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:10, end: 10} })
     t.deepEqual(msgs.messages[0].message, sends[1].message)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 32} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 10} })
     t.deepEqual(msgs.messages.length, 2)
 
     // list channels should have the latest chunk
     channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
-    t.equal(channel_list.channels[0].latestChunk, 32);
-
-
+    t.equal(channel_list.channels[0].latestChunk, 10);
   })
 
   await orchestrator.registerScenario('chat away', async (s, t) => {
@@ -211,15 +209,15 @@ module.exports = async (orchestrator) => {
 
   })
 
-  await orchestrator.registerScenario('transient nodes-local', async (s, t) => {
+  orchestrator.registerScenario('transient nodes-local', async (s, t) => {
     await doTransientNodes(s, t, true)
   })
 
-  await orchestrator.registerScenario('transient nodes-proxied', async (s, t) => {
+  orchestrator.registerScenario('transient nodes-proxied', async (s, t) => {
     await doTransientNodes(s, t, false)
   })
 
-  await orchestrator.registerScenario.only('test-signal', async (s, t) => {
+  orchestrator.registerScenario.only('test-signal', async (s, t) => {
     await doTestSignals(s, t)
   })
 }
