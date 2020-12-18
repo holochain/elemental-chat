@@ -227,7 +227,7 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
     Ok(SigResults { total, sent })
 }
 
-pub(crate) fn get_local_chatter_link(chatters_path: Path) -> ChatResult<bool> {
+pub(crate) fn is_active_chatter(chatters_path: Path) -> ChatResult<bool> {
     let base = chatters_path.hash()?;
     let filter = QueryFilter::new();
     let header_filter = filter.header_type(HeaderType::CreateLink);
