@@ -264,7 +264,7 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
     path.ensure()?;
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
-    if get_local_chatter_link(path.clone())? {
+    if !is_active_chatter(path.clone())? {
         create_link(path.hash()?, agent.into(), agent_tag.clone())?;
     }
     Ok(())
