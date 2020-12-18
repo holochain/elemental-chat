@@ -67,11 +67,6 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 
 #[hdk_extern]
-fn get_local_chatter_link(_: ()) -> ChatResult<ElementVec> {
-    message::handlers::get_local_chatter_link()
-}
-
-#[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelData> {
     channel::handlers::create_channel(channel_input)
 }
@@ -82,7 +77,7 @@ fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
 }
 
 /*#[hdk_extern]
-fn signal_users_on_channel(message_data: SignalMessageData) -> ChatResult<()> {
+fn signal_users_on_channel(message_data SignalMessageData) -> ChatResult<()> {
     message::handlers::signal_users_on_channel(message_data)
 }*/
 

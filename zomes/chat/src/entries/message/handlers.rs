@@ -180,42 +180,6 @@ const CHATTER_REFRESH_HOURS: i64 = 2;
 
 use std::collections::HashSet;
 
-pub(crate) fn get_local_chatter_link(chatters_path: Path) -> ChatResult<bool> {
-    let base = chatters_path.hash()?;
-    let filter = QueryFilter::new();
-    // let with_entry_filter = filter.include_entries(true);
-
-    // if let Some(app_entry_type) = entry_id_to_app_entry_type(entry_id)? {
-    // let entry_filter = with_entry_filter.entry_type(EntryType::App(app_entry_type));
-
-    let header_filter = filter.header_type(HeaderType::CreateLink);
-    let query_result: ElementVec = query(header_filter)?;
-    let now = to_date(sys_time()?);
-    let pass = false;
-    for x in query_result.0 {
-        match x.header() {
-            Header::CreateLink(c) => {
-                if c.base_address == base {
-                    let time: chrono::Duration = c.timestamp.into();
-                    let link_time = chrono::DateTime::<chrono::Utc>::from(c.timestamp.into());
-                    if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
-                        pass = true;
-                        break;
-                    } else {
-                        pass = false;
-                        break;
-                    }
-                } else {
-                    continue;
-                }
-            }
-            _ => unreachable!(),
-        }
-    }
-    Ok(pass)
-    // query_result.0.into_iter().foreach(|x, _| )
-}
-
 /// return the list of active chatters on a path.
 /// N.B.: assumes that the path has been ensured elsewhere.
 fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)> {
@@ -263,6 +227,36 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
     Ok(SigResults { total, sent })
 }
 
+pub(crate) fn get_local_chatter_link(chatters_path: Path) -> ChatResult<bool> {
+    let base = chatters_path.hash()?;
+    let filter = QueryFilter::new();
+    let header_filter = filter.header_type(HeaderType::CreateLink);
+    let query_result: ElementVec = query(header_filter)?;
+    let now = to_date(sys_time()?);
+    let mut pass = false;
+    for x in query_result.0 {
+        match x.header() {
+            Header::CreateLink(c) => {
+                if c.base_address == base {
+                    let time = std::time::Duration::new(c.timestamp.0 as u64, c.timestamp.1);
+                    let link_time = to_date(time);
+                    if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
+                        pass = true;
+                        break;
+                    } else {
+                        pass = false;
+                        break;
+                    }
+                } else {
+                    continue;
+                }
+            }
+            _ => unreachable!(),
+        }
+    }
+    Ok(pass)
+}
+
 // TODO: re add chatter/channel instead of global
 // simplified and expected as a zome call
 pub(crate) fn refresh_chatter() -> ChatResult<()> {
@@ -270,9 +264,7 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
     path.ensure()?;
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
-    let me = agent_info()?.agent_latest_pubkey;
-    let (_, active_chatters) = active_chatters(path.clone())?;
-    if !active_chatters.contains(&me) {
+    if get_local_chatter_link(path.clone())? {
         create_link(path.hash()?, agent.into(), agent_tag.clone())?;
     }
     Ok(())
