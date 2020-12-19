@@ -1,4 +1,4 @@
-import { Orchestrator, tapeExecutor, groupPlayersByMachine, compose } from '@holochain/tryorama'
+import { Orchestrator, tapeExecutor, compose } from '@holochain/tryorama'
 import { defaultConfig, behaviorRunner } from './tx-per-second'  // import config and runner here
 
 const runName = process.argv[2] || ""+Date.now()  // default exam name is just a timestamp

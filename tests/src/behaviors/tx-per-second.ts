@@ -1,7 +1,8 @@
 import { Player } from '@holochain/tryorama'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { batcher as batchOfConfigs } from './config'
+import { DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps } from '@holochain/tryorama'
+const path = require('path')
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
@@ -14,15 +15,18 @@ export const defaultConfig = {
     endpoints: null, // Array of endpoints for Trycp
 }
 
+const dnaPath : DnaPath = path.join(__dirname, '../../../elemental-chat.dna.gz')
+
 function prettyCellID(id) {
     return JSON.stringify(id[1].hash)
 }
 
-const trial = async (period, allPlayers, cellChannels, messagesToSend) => {
-    const sendingConductor = allPlayers["0"]
-    const sendingCellNick = "0"
+const conductorConfig = Config.gen()
+
+const trial = async (period, playerAgents, cellChannels, messagesToSend) => {
+    const sendingCell = playerAgents[0][0][0].cells[0]
+    const receivingCell = playerAgents[0][1][0].cells[0]
     const senderId= "0:0"
-    const receivingCellNick = "1"
 
     const channel= { category: 'General', uuid: cellChannels[senderId] }
 
@@ -36,10 +40,11 @@ const trial = async (period, allPlayers, cellChannels, messagesToSend) => {
             message: {
                 uuid: uuidv4(),
                 content: `message ${i}`,
-            }
+            },
+            chunk: 0,
         }
         console.log(`sending message ${i}`)
-        msgs[i] = await sendingConductor.call(sendingCellNick, 'chat', 'create_message', msg)
+        msgs[i] = await sendingCell.call('chat', 'create_message', msg)
         if (Date.now() - start > period) {
             i = i+1
             console.log(`Couldn't send all messages in period, sent ${i}`)
@@ -51,7 +56,7 @@ const trial = async (period, allPlayers, cellChannels, messagesToSend) => {
 
     console.log(`Getting messages (should be ${messagesToSend})`)
 
-    const messagesReceived = await sendingConductor.call(receivingCellNick, 'chat', 'list_messages', { channel, date: today() })
+    const messagesReceived = await receivingCell.call('chat', 'list_messages', { channel, active_chatter: false, chunk: {start:0, end: 1} })
 
     console.log(`Receiver got ${messagesReceived.messages.length} messages`)
 
@@ -60,26 +65,35 @@ const trial = async (period, allPlayers, cellChannels, messagesToSend) => {
 
 export const behaviorRunner = async (s, t, config, period, txCount) => {
     t.comment(`Preparing playground: initializing conductors and spawning`)
-    const conductorConfigsArray = await batchOfConfigs(config.isRemote, config.conductors, config.instances)
-    const allPlayers = await s.players(conductorConfigsArray, true)
-    let spawnedAgents = 0
-    let cellChannels = {}
+    //const conductorConfigsArray = await batchOfConfigs(config.isRemote, config.conductors, config.instances)
+
+
+    const installation : InstallAgentsHapps = _.times(config.instances, ()=>{return [[dnaPath]]});
+    const conductorConfigsArray = _.times(config.conductors, ()=>{return conductorConfig});
+    const allPlayers = await s.players(conductorConfigsArray)
+
+    let playerAgents : InstalledAgentHapps = [];
+    // install chat on all the conductors
     for (const i in allPlayers) {
-        console.log(`Spawned conductor ${i} with cells:`)
-        for (const j in allPlayers[i]._cellIds) {
-            const conductor = allPlayers[i]
-            console.log(`   ${prettyCellID(conductor._cellIds[j])}`)
-            spawnedAgents++
+        console.log("player", i)
+        const happs = await allPlayers[i].installAgentsHapps(installation)
+        playerAgents.push(happs)
+    }
+    let cellChannels = {}
+    for (const i in playerAgents) {
+        console.log(`Creating channels for agents on conductor ${i}:`)
+        for (const j in playerAgents[i]) {
+            const happ = playerAgents[i][j][0] // only one happ per agent
             const channel_uuid = uuidv4();
-            const channel = await conductor.call(j, 'chat', 'create_channel', { name: `${i}:${j}'s Test Channel`, channel: { category: "General", uuid: channel_uuid } });
+            const channel = await happ.cells[0].call('chat', 'create_channel', { name: `${i}:${j}'s Test Channel`, channel: { category: "General", uuid: channel_uuid } });
             console.log(channel);
             cellChannels[`${i}:${j}`]= channel_uuid
         }
     }
-    const actual = await trial(period, allPlayers, cellChannels, txCount)
+    const actual = await trial(period, playerAgents, cellChannels, txCount)
     for (const i in allPlayers) {
         const conductor = allPlayers[i]
-        conductor.kill()
+        conductor.shutdown()
     }
     return actual
 }
