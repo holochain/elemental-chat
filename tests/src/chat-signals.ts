@@ -31,6 +31,9 @@ module.exports = async (orchestrator) => {
 
     await s.shareAllNodes([alice, bob]);
 
+    let stats = await alice_chat.call('chat', 'stats');
+    t.deepEqual(stats, {agents: 0, active: 0});
+
     // bob declares self as chatter
     await bob_chat.call('chat', 'refresh_chatter', null);
     // alice declares self as chatter
@@ -65,6 +68,9 @@ module.exports = async (orchestrator) => {
       await delay(500)
     }
     t.ok(flag)
+
+    stats = await alice_chat.call('chat', 'stats');
+    t.deepEqual(stats, {agents: 2, active: 2});
 
   })
 }

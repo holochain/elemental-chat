@@ -112,3 +112,10 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
     // Return all the channels data to the UI
     Ok(channels.into())
 }
+
+/*
+pub(crate) fn channel_stats() -> ChatResult<(usize, usize)> {
+
+    Ok((channels, messages))
+}
+*/

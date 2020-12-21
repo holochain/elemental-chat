@@ -270,6 +270,17 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
     Ok(())
 }
 
+// this is a relatively expensive call and really only for testing purposes
+pub(crate) fn message_stats() -> ChatResult<(usize, usize)> {
+    let chatters_path: Path = chatters_path();
+    let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
+
+    let agents = chatters.into_iter().map(|l| l.tag).collect::<::std::collections::HashSet<_>>().len();
+
+    let (_, active_chatters) = active_chatters(chatters_path)?;
+    Ok((agents, active_chatters.len()))
+}
+
 /* old way using hours
 fn add_chatter(path: Path) -> ChatResult<()> {
     let agent = agent_info()?.agent_latest_pubkey;
