@@ -7,10 +7,6 @@ import { RETRY_DELAY, RETRY_COUNT, conductorConfig, networkedConductorConfig, in
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = async (orchestrator) => {
-  // This is placeholder for signals test; awaiting implementation of signals testing in tryorama.
-  // Issue: https://github.com/holochain/tryorama/issues/40
-
-  // orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
 
   await orchestrator.registerScenario('multi-chunk', async (s, t) => {
     const [conductor] = await s.players([conductorConfig])
