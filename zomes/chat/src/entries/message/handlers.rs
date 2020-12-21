@@ -108,8 +108,8 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
 //         "Received message: {:?}",
 //         message.message_data.message.content
 //     ));
-    // emit signal alerting all connected uis about new message
-    // signal_ui(SignalPayload::Message(message))
+// emit signal alerting all connected uis about new message
+// signal_ui(SignalPayload::Message(message))
 // }
 
 // Turn all the link targets into the actual message
@@ -209,7 +209,6 @@ fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)>
     Ok((total, active))
 }
 
-
 pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatResult<SigResults> {
     let me = agent_info()?.agent_latest_pubkey;
     let chatters_path: Path = chatters_path();
@@ -221,8 +220,41 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
     for a in active_chatters.clone() {
         sent.push(format!("{}", a.to_string()));
     }
-    remote_signal(&SignalPayload::Message(signal_message_data), active_chatters)?;
+    remote_signal(
+        &SignalPayload::Message(signal_message_data),
+        active_chatters,
+    )?;
     Ok(SigResults { total, sent })
+}
+
+pub(crate) fn is_active_chatter(chatters_path: Path) -> ChatResult<bool> {
+    let base = chatters_path.hash()?;
+    let filter = QueryFilter::new();
+    let header_filter = filter.header_type(HeaderType::CreateLink);
+    let query_result: ElementVec = query(header_filter)?;
+    let now = to_date(sys_time()?);
+    let mut pass = false;
+    for x in query_result.0 {
+        match x.header() {
+            Header::CreateLink(c) => {
+                if c.base_address == base {
+                    let time = std::time::Duration::new(c.timestamp.0 as u64, c.timestamp.1);
+                    let link_time = to_date(time);
+                    if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
+                        pass = true;
+                        break;
+                    } else {
+                        pass = false;
+                        break;
+                    }
+                } else {
+                    continue;
+                }
+            }
+            _ => unreachable!(),
+        }
+    }
+    Ok(pass)
 }
 
 // TODO: re add chatter/channel instead of global
@@ -232,9 +264,7 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
     path.ensure()?;
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
-    let me = agent_info()?.agent_latest_pubkey;
-    let (_, active_chatters) = active_chatters(path.clone())?;
-    if !active_chatters.contains(&me) {
+    if !is_active_chatter(path.clone())? {
         create_link(path.hash()?, agent.into(), agent_tag.clone())?;
     }
     Ok(())

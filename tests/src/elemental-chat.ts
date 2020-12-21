@@ -41,11 +41,11 @@ const installation2agent: InstallAgentsHapps = [
   [[chatDna]],
 ]
 
-module.exports = (orchestrator) => {
+module.exports = async (orchestrator) => {
   // This is placeholder for signals test; awaiting implementation of signals testing in tryorama.
   // Issue: https://github.com/holochain/tryorama/issues/40
 
-  orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
+  // orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
 
   orchestrator.registerScenario('multi-chunk', async (s, t) => {
     const [conductor] = await s.players([conductorConfig])
@@ -80,7 +80,7 @@ module.exports = (orchestrator) => {
     sends.push({
       last_seen: { First: null },
       channel: channel.channel,
-      chunk: 32,
+      chunk: 10,
       message: {
         uuid: uuidv4(),
         content: "message in chunk 32",
@@ -94,19 +94,17 @@ module.exports = (orchestrator) => {
     t.deepEqual(msgs.messages[0].message, sends[0].message)
     msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:1, end: 1} })
     t.equal(msgs.messages.length, 0)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:32, end: 32} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:10, end: 10} })
     t.deepEqual(msgs.messages[0].message, sends[1].message)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 32} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 10} })
     t.deepEqual(msgs.messages.length, 2)
 
     // list channels should have the latest chunk
     channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
-    t.equal(channel_list.channels[0].latestChunk, 32);
-
-
+    t.equal(channel_list.channels[0].latestChunk, 10);
   })
 
-  orchestrator.registerScenario('chat away', async (s, t) => {
+  await orchestrator.registerScenario('chat away', async (s, t) => {
     // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
     // note that the first argument to players is just an array conductor configs that that will
     // be used to spin up the conductor processes which are returned in a matching array.
@@ -208,6 +206,7 @@ module.exports = (orchestrator) => {
     msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[3].messages, just_msg));
     t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
+
   })
 
   orchestrator.registerScenario('transient nodes-local', async (s, t) => {
