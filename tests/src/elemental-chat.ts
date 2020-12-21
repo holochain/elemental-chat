@@ -2,44 +2,9 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
+import { RETRY_DELAY, RETRY_COUNT, conductorConfig, networkedConductorConfig, installation1agent, installation2agent } from './common'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
-
-const RETRY_DELAY = 1000
-const RETRY_COUNT = 10
-
-// Set up a Conductor configuration using the handy `Conductor.config` helper.
-// Read the docs for more on configuration.
-const conductorConfig = Config.gen()
-
-import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from '@holochain/tryorama'
-const network = {
-  bootstrap_service: "https://bootstrap.holo.host",
-  transport_pool: [{
-    type: TransportConfigType.Proxy,
-    sub_transport: {type: TransportConfigType.Quic},
-    proxy_config: {
-      type: ProxyConfigType.RemoteProxyClient,
-      proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/proxy.holochain.org/p/5778/--",
-    }
-  }],
-}
-
-const networkedConductorConfig = Config.gen({network})
-
-
-// Construct proper paths for your DNAs
-const chatDna = path.join(__dirname, "../../elemental-chat.dna.gz")
-
-// create an InstallAgentsHapps array with your DNAs to tell tryorama what
-// to install into the conductor.
-const installation1agent: InstallAgentsHapps = [
-    [[chatDna]],
-]
-const installation2agent: InstallAgentsHapps = [
-  [[chatDna]],
-  [[chatDna]],
-]
 
 module.exports = async (orchestrator) => {
   // This is placeholder for signals test; awaiting implementation of signals testing in tryorama.
@@ -47,7 +12,7 @@ module.exports = async (orchestrator) => {
 
   // orchestrator.registerScenario.skip('emit signals', async (s, t) => {})
 
-  orchestrator.registerScenario('multi-chunk', async (s, t) => {
+  await orchestrator.registerScenario('multi-chunk', async (s, t) => {
     const [conductor] = await s.players([conductorConfig])
     const [
       [alice_chat_happ],
@@ -217,9 +182,6 @@ module.exports = async (orchestrator) => {
     await doTransientNodes(s, t, false)
   })
 
-  orchestrator.registerScenario.only('test-signal', async (s, t) => {
-    await doTestSignals(s, t)
-  })
 }
 
 const gotChannelsAndMessages = async(t, name, happ, channel, retry_count, retry_delay)  => {
@@ -307,49 +269,5 @@ const doTransientNodes = async (s, t, local) => {
   console.log("******************************************************************")
   console.log("checking to see if carol can see the message via alice after back on")
   await gotChannelsAndMessages(t, "carol", carol_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
-
-}
-
-const doTestSignals = async (s, t) => {
-  const config = conductorConfig;
-
-  const [alice, bob] = await s.players([config, config], false)
-  await alice.startup()
-  await bob.startup()
-
-  const [[alice_chat_happ]] = await alice.installAgentsHapps(installation1agent)
-  const [[bob_chat_happ]] = await bob.installAgentsHapps(installation1agent)
-  const [alice_chat] = alice_chat_happ.cells
-  const [bob_chat] = bob_chat_happ.cells
-
-  await s.shareAllNodes([alice, bob]);
-
-  // Create a channel
-  const channel_uuid = uuidv4();
-  const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
-
-  const msg1 = {
-    last_seen: { First: null },
-    channel: channel.channel,
-    chunk: 0,
-    message: {
-      uuid: uuidv4(),
-      content: "Hello from alice :)",
-    }
-  }
-  const r1 = await alice_chat.call('chat', 'create_message', msg1);
-  t.deepEqual(r1.message, msg1.message);
-
-  await alice_chat.call('chat', 'refresh_chatter', null);
-
-  await bob_chat.call('chat', 'refresh_chatter', null);
-  await delay(2000)
-  const signalMessageData = {
-    messageData: r1,
-    channelData: channel,
-  };
-  const r4 = await alice_chat.call('chat', 'signal_chatters', signalMessageData);
-  t.ok(r4);
-
 
 }
