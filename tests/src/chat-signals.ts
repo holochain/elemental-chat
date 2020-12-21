@@ -9,7 +9,7 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 module.exports = async (orchestrator) => {
 
   orchestrator.registerScenario.only('test signal', async (s, t) => {
-    const config = networkedConductorConfig;
+    const config = conductorConfig;
 
     const [alice, bob] = await s.players([config, config], false)
     await alice.startup()
@@ -31,6 +31,11 @@ module.exports = async (orchestrator) => {
 
     await s.shareAllNodes([alice, bob]);
 
+    // bob declares self as chatter
+    await bob_chat.call('chat', 'refresh_chatter', null);
+    // alice declares self as chatter
+    await alice_chat.call('chat', 'refresh_chatter', null);
+
     // Create a channel
     const channel_uuid = uuidv4();
     const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
@@ -45,25 +50,21 @@ module.exports = async (orchestrator) => {
     const r1 = await alice_chat.call('chat', 'create_message', msg1);
     t.deepEqual(r1.message, msg1.message);
 
-    await delay(5000)
-
-    await alice_chat.call('chat', 'refresh_chatter', null);
-
-    await bob_chat.call('chat', 'refresh_chatter', null);
-    await delay(2000)
     const signalMessageData = {
       messageData: r1,
       channelData: channel,
     };
     const r4 = await alice_chat.call('chat', 'signal_chatters', signalMessageData);
-    console.log("-->", r4);
     t.equal(r4.total, 2)
+    t.equal(r4.sent.length, 1)
 
-    // waiting for the signal to be received by bob. 
+    // waiting for the signal to be received by bob.
     for (let i = 0; i < 5; i++) {
       if (flag) break;
-      await delay(10000)
+      console.log(`wating for signal: ${i}`)
+      await delay(500)
     }
     t.ok(flag)
+
   })
 }
