@@ -55,12 +55,26 @@ module.exports = async (orchestrator) => {
     const r2 = await alice_chat.call('chat', 'create_message', msg2);
     t.deepEqual(r2.message, msg2.message);
 
+    const channel_uuid2 = uuidv4();
+    const channel2 = await alice_chat.call('chat', 'create_channel', { name: "Test2 Channel", channel: { category: "General", uuid: channel_uuid2 } });
+
+    const msg3 = {
+      last_seen: { First: null },
+      channel: channel2.channel,
+      chunk: 0,
+      message: {
+        uuid: uuidv4(),
+        content: "Hello from bob :)",
+      }
+    }
+    const r3 = await alice_chat.call('chat', 'create_message', msg3);
+    t.deepEqual(r3.message, msg3.message);
 
     let stats = await alice_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 2, active: 2, channels: 1, messages: 2});
+    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 3});
 
     stats = await bob_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 2, active: 2, channels: 1, messages: 2});
+    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 3});
 
   })
 }
