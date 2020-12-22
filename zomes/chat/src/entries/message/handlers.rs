@@ -146,7 +146,7 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
 }
 
 /// Add the chunk index from the Date type to this path
-fn add_chunk_path(path: Path, chunk: u32) -> ChatResult<Path> {
+pub fn add_chunk_path(path: Path, chunk: u32) -> ChatResult<Path> {
     let mut components: Vec<_> = path.into();
 
     components.push(format!("{}", chunk).into());
@@ -271,11 +271,15 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
 }
 
 // this is a relatively expensive call and really only for testing purposes
-pub(crate) fn message_stats() -> ChatResult<(usize, usize)> {
+pub(crate) fn agent_stats() -> ChatResult<(usize, usize)> {
     let chatters_path: Path = chatters_path();
     let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
 
-    let agents = chatters.into_iter().map(|l| l.tag).collect::<::std::collections::HashSet<_>>().len();
+    let agents = chatters
+        .into_iter()
+        .map(|l| l.tag)
+        .collect::<::std::collections::HashSet<_>>()
+        .len();
 
     let (_, active_chatters) = active_chatters(chatters_path)?;
     Ok((agents, active_chatters.len()))
