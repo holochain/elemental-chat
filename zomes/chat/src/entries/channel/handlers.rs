@@ -128,9 +128,6 @@ pub(crate) fn channel_stats(list_channels_input: ChannelListInput) -> ChatResult
             // Add the chunk component
             let path = add_chunk_path(message_path, chunk)?;
 
-            // Ensure the path exists
-            path.ensure()?;
-
             // Get the actual hash we are going to pull the messages from
             let channel_entry_hash = path.hash()?;
 
