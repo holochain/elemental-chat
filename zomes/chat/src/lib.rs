@@ -110,18 +110,18 @@ fn list_messages(list_messages_input: ListMessagesInput) -> ChatResult<ListMessa
 pub struct Stats {
     agents: usize,
     active: usize,
-//    channels: usize,
-//    messages: usize,
+    channels: usize,
+    messages: usize,
 }
 
 #[hdk_extern]
-fn stats(_:()) -> ChatResult<Stats> {
-    let (agents, active) = message::handlers::message_stats()?;
-//    let (channels, messages) = channels::handlers::channel_stats()?;
+fn stats(list_channels_input: ChannelListInput) -> ChatResult<Stats> {
+    let (agents, active) = message::handlers::agent_stats()?;
+    let (channels, messages) = channel::handlers::channel_stats(list_channels_input)?;
     Ok(Stats {
         agents,
         active,
-//        channels: usize,
-//        messages: usize,
+        channels,
+        messages,
     })
 }
