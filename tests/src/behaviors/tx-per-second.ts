@@ -11,7 +11,7 @@ type Players = Array<Player>
 
 export const defaultConfig = {
     nodes: 1, // Number of machines
-    conductors: 2, // Conductors per machine
+    conductors: 10, // Conductors per machine
     instances: 1, // Instances per conductor
     endpoints: null, // Array of endpoints for Trycp
 }
@@ -119,6 +119,17 @@ const gossipTrial = async (period, playerAgents, channel, messagesToSend) => {
 
 const signalTrial = async (period, playerAgents, allPlayers, channel, messagesToSend) => {
     const sendingCell = playerAgents[0][0][0].cells[0]
+
+    // wait for all agents to be active:
+    do {
+        await delay(1000)
+        const stats = await sendingCell.call('chat', 'stats', {category: "General"});
+        if (stats.agents == playerAgents.length) {
+            break;
+        }
+        console.log("waiting for all conductors to be listed as active", stats)
+    } while (true) // TODO fix for multi-instance
+
     let receipts : { [key: string]: number; } = {};
     for (const i in allPlayers) {
         const conductor = allPlayers[i]
@@ -169,7 +180,6 @@ export const signalTx = async (s, t, config, period, txCount, local) => {
         const cell = playerAgents[i][0][0].cells[0]
         await cell.call('chat', 'refresh_chatter', null);
     }
-    await delay(1000)
 
     const actual = await signalTrial(period, playerAgents, allPlayers, channel, txCount)
     for (const i in allPlayers) {
