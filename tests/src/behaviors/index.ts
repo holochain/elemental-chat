@@ -2,7 +2,7 @@ import { Orchestrator, tapeExecutor, compose } from '@holochain/tryorama'
 import { defaultConfig, behaviorRunner as txPerSecondBehavior} from './tx-per-second'  // import config and runner here
 
 const runName = process.argv[2] || ""+Date.now()  // default exam name is just a timestamp
-const config = process.argv[3] ? require(process.argv[3]) : defaultConfig  // use imported config or one passed as a test arg
+let config = process.argv[3] ? require(process.argv[3]) : defaultConfig  // use imported config or one passed as a test arg
 
 console.log(`Running behavior test id=${runName} with:\n`, config)
 
@@ -34,12 +34,13 @@ const doTxTrial = async(s, t, behavior, local) => {
         }
     } while (txCount == actual)
 
+    t.comment(`test context: ${config.numConductors} total conductors`)
     t.comment(`maxed message per second when sending ${txAtMax}: ${txPerSecondAtMax.toFixed(1)} (sent over ${period/1000}s)`)
     t.comment(`failed when attempting ${txCount} messages`)
 }
 
 orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
-    await doTxTrial(s, t, txPerSecondBehavior, true)
+    await doTxTrial(s, t, txPerSecondBehavior, false)
 })
 
 orchestrator.run()
