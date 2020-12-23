@@ -45,7 +45,7 @@ const setup = async(s, t, config, local) => {
     const channel = { category: "General", uuid: channel_uuid }
     const createChannelResult = await happ.cells[0].call('chat', 'create_channel', { name: `Test Channel`, channel});
     console.log(createChannelResult);
-    return {playerAgents, allPlayers, channel}
+    return {playerAgents, allPlayers, channel: createChannelResult}
 }
 
 export const gossipTx = async (s, t, config, period, txCount, local) => {
@@ -65,7 +65,7 @@ const sendSerialy = async(period, sendingCell, channel, messagesToSend, signal?)
     for (let i =0; i < messagesToSend; i++) {
         const msg = {
             last_seen: { First: null },
-            channel,
+            channel: channel.channel,
             message: {
                 uuid: uuidv4(),
                 content: `message ${i}`,
@@ -77,7 +77,7 @@ const sendSerialy = async(period, sendingCell, channel, messagesToSend, signal?)
         if (signal) {
             const signalMessageData = {
                 messageData: msgs[i],
-                channelData: {channel},
+                channelData: channel,
             };
             const r = await sendingCell.call('chat', 'signal_chatters', signalMessageData);
             console.log("signal results", r)
@@ -116,7 +116,7 @@ const signalTrial = async (period, playerAgents, allPlayers, channel, messagesTo
         const conductor = allPlayers[i]
         conductor.setSignalHandler((signal) => {
             const me = i
-            console.log(`Received Signal for ${me}:`, signal)
+            console.log(`Received Signal for ${me}:`, signal.data.payload.signal_payload.messageData.message)
             if (!receipts[me]) {
                 receipts[me] = 1
             } else {

@@ -20,7 +20,7 @@ const orchestrator = new Orchestrator({middleware})
 const doTxTrial = async(s, t, behavior, local) => {
     let txCount = 2
     let actual
-    const period = 10*1000
+    const period = 20*1000
     let txPerSecondAtMax = 0
     let txAtMax = 0
     do {
