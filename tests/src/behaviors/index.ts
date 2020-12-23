@@ -20,7 +20,7 @@ const orchestrator = new Orchestrator({middleware})
 const doTxTrial = async(s, t, behavior, local) => {
     let txCount = 2
     let actual
-    const period = 20*1000
+    const period = 10*1000
     let txPerSecondAtMax = 0
     let txAtMax = 0
     do {
@@ -39,9 +39,11 @@ const doTxTrial = async(s, t, behavior, local) => {
     t.comment(`failed when attempting ${txCount} messages`)
 }
 
-/*orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
+/*
+orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
     await doTxTrial(s, t, gossipTx, true)
-})*/
+})
+*/
 
 orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
     await doTxTrial(s, t, signalTx, true)

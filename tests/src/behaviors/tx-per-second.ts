@@ -58,10 +58,9 @@ export const gossipTx = async (s, t, config, period, txCount, local) => {
     return actual
 }
 
-const sendSerialy = async(period, sendingCell, channel, messagesToSend, signal?) => {
+const sendSerialy = async(start, period, sendingCell, channel, messagesToSend, signal?) => {
     var msgs: any[] = [];
     //    const msDelayBetweenMessage = period/messagesToSend
-    const start = Date.now()
     for (let i =0; i < messagesToSend; i++) {
         const msg = {
             last_seen: { First: null },
@@ -96,22 +95,31 @@ const sendSerialy = async(period, sendingCell, channel, messagesToSend, signal?)
 const gossipTrial = async (period, playerAgents, channel, messagesToSend) => {
     const sendingCell = playerAgents[0][0][0].cells[0]
     const receivingCell = playerAgents[1][0][0].cells[0]
-    const sent = await sendSerialy(period, sendingCell, channel, messagesToSend)
+    const start = Date.now()
+    const sent = await sendSerialy(start, period, sendingCell, channel, messagesToSend)
     if (sent != messagesToSend) {
         return sent
     }
     console.log(`Getting messages (should be ${messagesToSend})`)
-
-    const messagesReceived = await receivingCell.call('chat', 'list_messages', { channel, active_chatter: false, chunk: {start:0, end: 1} })
-
-    console.log(`Receiver got ${messagesReceived.messages.length} messages`)
-
-    return messagesReceived.messages.length
+    let received = 0
+    do {
+        const messagesReceived = await receivingCell.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
+        received = messagesReceived.messages.length
+        console.log(`Receiver got ${received} messages`)
+        if (received == messagesToSend) {
+            break;
+        }
+        if (Date.now() - start > period) {
+            console.log(`Didn't receive all messages in period!`)
+            break
+        }
+    } while(true)
+    return received
 }
 
 const signalTrial = async (period, playerAgents, allPlayers, channel, messagesToSend) => {
     const sendingCell = playerAgents[0][0][0].cells[0]
-    let receipts = {}
+    let receipts : { [key: string]: number; } = {};
     for (const i in allPlayers) {
         const conductor = allPlayers[i]
         conductor.setSignalHandler((signal) => {
@@ -124,12 +132,34 @@ const signalTrial = async (period, playerAgents, allPlayers, channel, messagesTo
             }
         })
     }
-    const sent = await sendSerialy(period, sendingCell, channel, messagesToSend, true)
+    const start = Date.now()
+    const sent = await sendSerialy(start, period, sendingCell, channel, messagesToSend, true)
     if (sent != messagesToSend) {
         return sent
     }
-    console.log(`Signals Received (should be ${messagesToSend})`, receipts)
-    return 0
+    let received = 0
+    do {
+        received = 0
+        let leastReceived = messagesToSend
+        for (const [key, count] of Object.entries(receipts)) {
+            if (count == messagesToSend) {
+                received +=1
+            } else {
+                if (count < leastReceived) {
+                    leastReceived = count
+                }
+            }
+        }
+        if (received == Object.keys(receipts).length) {
+            console.log(`All nodes got all signals!`)
+            return messagesToSend
+        }
+        if (Date.now() - start > period) {
+            console.log(`Didn't receive all messages in period!`)
+            return leastReceived
+        }
+        await delay(1000)
+    } while(true)
 }
 
 export const signalTx = async (s, t, config, period, txCount, local) => {
