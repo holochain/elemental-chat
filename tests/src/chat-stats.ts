@@ -14,25 +14,12 @@ module.exports = async (orchestrator) => {
     const [alice, bob] = await s.players([config, config], false)
     await alice.startup()
     await bob.startup()
-    let MESSAGE = {
-      uuid: uuidv4(),
-      content: "Hello from alice :)",
-    }
-    let flag = false
-    bob.setSignalHandler((signal) => {
-        console.log("Received Signal:",signal)
-        t.deepEqual(signal.data.payload.signal_payload.messageData.message, MESSAGE)
-        flag = true
-    })
     const [[alice_chat_happ]] = await alice.installAgentsHapps(installation1agent)
     const [[bob_chat_happ]] = await bob.installAgentsHapps(installation1agent)
     const [alice_chat] = alice_chat_happ.cells
     const [bob_chat] = bob_chat_happ.cells
 
     await s.shareAllNodes([alice, bob]);
-
-    let stats = await alice_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 0, active: 0, channels: 0, messages: 0});
 
     // bob declares self as chatter
     await bob_chat.call('chat', 'refresh_chatter', null);
@@ -48,29 +35,46 @@ module.exports = async (orchestrator) => {
       last_seen: { First: null },
       channel: channel.channel,
       chunk: 0,
-      message: MESSAGE
+      message: {
+        uuid: uuidv4(),
+        content: "Hello from alice :)",
+      }
     }
     const r1 = await alice_chat.call('chat', 'create_message', msg1);
     t.deepEqual(r1.message, msg1.message);
 
-    const signalMessageData = {
-      messageData: r1,
-      channelData: channel,
-    };
-    const r4 = await alice_chat.call('chat', 'signal_chatters', signalMessageData);
-    t.equal(r4.total, 2)
-    t.equal(r4.sent.length, 1)
-
-    // waiting for the signal to be received by bob.
-    for (let i = 0; i < 5; i++) {
-      if (flag) break;
-      console.log(`wating for signal: ${i}`)
-      await delay(500)
+    const msg2 = {
+      last_seen: { First: null },
+      channel: channel.channel,
+      chunk: 1,
+      message: {
+        uuid: uuidv4(),
+        content: "second messages",
+      }
     }
-    t.ok(flag)
+    const r2 = await alice_chat.call('chat', 'create_message', msg2);
+    t.deepEqual(r2.message, msg2.message);
 
-    stats = await alice_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 2, active: 2, channels: 1, messages: 1});
+    const channel_uuid2 = uuidv4();
+    const channel2 = await alice_chat.call('chat', 'create_channel', { name: "Test2 Channel", channel: { category: "General", uuid: channel_uuid2 } });
+
+    const msg3 = {
+      last_seen: { First: null },
+      channel: channel2.channel,
+      chunk: 0,
+      message: {
+        uuid: uuidv4(),
+        content: "Hello from bob :)",
+      }
+    }
+    const r3 = await alice_chat.call('chat', 'create_message', msg3);
+    t.deepEqual(r3.message, msg3.message);
+
+    let stats = await alice_chat.call('chat', 'stats', {category: "General"});
+    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 3});
+
+    stats = await bob_chat.call('chat', 'stats', {category: "General"});
+    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 3});
 
   })
 }

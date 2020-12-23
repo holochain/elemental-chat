@@ -105,3 +105,23 @@ fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelLis
 fn list_messages(list_messages_input: ListMessagesInput) -> ChatResult<ListMessages> {
     message::handlers::list_messages(list_messages_input)
 }
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct Stats {
+    agents: usize,
+    active: usize,
+    channels: usize,
+    messages: usize,
+}
+
+#[hdk_extern]
+fn stats(list_channels_input: ChannelListInput) -> ChatResult<Stats> {
+    let (agents, active) = message::handlers::agent_stats()?;
+    let (channels, messages) = channel::handlers::channel_stats(list_channels_input)?;
+    Ok(Stats {
+        agents,
+        active,
+        channels,
+        messages,
+    })
+}
