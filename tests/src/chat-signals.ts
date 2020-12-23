@@ -2,14 +2,14 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, conductorConfig, networkedConductorConfig, installation1agent, installation2agent } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installation1agent, installation2agent } from './common'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = async (orchestrator) => {
 
   orchestrator.registerScenario('test signal', async (s, t) => {
-    const config = conductorConfig;
+    const config = localConductorConfig;
 
     const [alice, bob] = await s.players([config, config], false)
     await alice.startup()

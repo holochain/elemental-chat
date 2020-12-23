@@ -2,6 +2,7 @@ import { Player } from '@holochain/tryorama'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
 import { DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps } from '@holochain/tryorama'
+import { localConductorConfig, networkedConductorConfig} from '../common'
 const path = require('path')
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
@@ -10,8 +11,8 @@ type Players = Array<Player>
 
 export const defaultConfig = {
     nodes: 1, // Number of machines
-    conductors: 1, // Conductors per machine
-    instances: 2, // Instances per conductor
+    conductors: 2, // Conductors per machine
+    instances: 1, // Instances per conductor
     endpoints: null, // Array of endpoints for Trycp
 }
 
@@ -21,14 +22,10 @@ function prettyCellID(id) {
     return JSON.stringify(id[1].hash)
 }
 
-const conductorConfig = Config.gen()
-
-const trial = async (period, playerAgents, cellChannels, messagesToSend) => {
+const trial = async (period, playerAgents, channel, messagesToSend) => {
     const sendingCell = playerAgents[0][0][0].cells[0]
-    const receivingCell = playerAgents[0][1][0].cells[0]
+    const receivingCell = playerAgents[1][0][0].cells[0]
     const senderId= "0:0"
-
-    const channel= { category: 'General', uuid: cellChannels[senderId] }
 
     var msgs: any[] = [];
 //    const msDelayBetweenMessage = period/messagesToSend
@@ -63,10 +60,11 @@ const trial = async (period, playerAgents, cellChannels, messagesToSend) => {
     return messagesReceived.messages.length
 }
 
-export const behaviorRunner = async (s, t, config, period, txCount) => {
+export const behaviorRunner = async (s, t, config, period, txCount, local) => {
+    const conductorConfig = local ? localConductorConfig : networkedConductorConfig;
+
     t.comment(`Preparing playground: initializing conductors and spawning`)
     //const conductorConfigsArray = await batchOfConfigs(config.isRemote, config.conductors, config.instances)
-
 
     const installation : InstallAgentsHapps = _.times(config.instances, ()=>{return [[dnaPath]]});
     const conductorConfigsArray = _.times(config.conductors, ()=>{return conductorConfig});
@@ -79,18 +77,18 @@ export const behaviorRunner = async (s, t, config, period, txCount) => {
         const happs = await allPlayers[i].installAgentsHapps(installation)
         playerAgents.push(happs)
     }
-    let cellChannels = {}
-    for (const i in playerAgents) {
-        console.log(`Creating channels for agents on conductor ${i}:`)
-        for (const j in playerAgents[i]) {
-            const happ = playerAgents[i][j][0] // only one happ per agent
-            const channel_uuid = uuidv4();
-            const channel = await happ.cells[0].call('chat', 'create_channel', { name: `${i}:${j}'s Test Channel`, channel: { category: "General", uuid: channel_uuid } });
-            console.log(channel);
-            cellChannels[`${i}:${j}`]= channel_uuid
-        }
+    if (local) {
+        await s.shareAllNodes(allPlayers);
     }
-    const actual = await trial(period, playerAgents, cellChannels, txCount)
+
+    console.log(`Creating channel for test:`)
+    const happ = playerAgents[0][0][0] // only one happ per agent
+    const channel_uuid = uuidv4();
+    const channel = { category: "General", uuid: channel_uuid }
+    const createChannelResult = await happ.cells[0].call('chat', 'create_channel', { name: `Test Channel`, channel});
+    console.log(createChannelResult);
+
+    const actual = await trial(period, playerAgents, channel, txCount)
     for (const i in allPlayers) {
         const conductor = allPlayers[i]
         conductor.shutdown()

@@ -2,14 +2,14 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, conductorConfig, networkedConductorConfig, installation1agent, installation2agent } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installation1agent, installation2agent } from './common'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = async (orchestrator) => {
 
   await orchestrator.registerScenario('multi-chunk', async (s, t) => {
-    const [conductor] = await s.players([conductorConfig])
+    const [conductor] = await s.players([localConductorConfig])
     const [
       [alice_chat_happ],
     ] = await conductor.installAgentsHapps(installation1agent)
@@ -69,7 +69,7 @@ module.exports = async (orchestrator) => {
     // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
     // note that the first argument to players is just an array conductor configs that that will
     // be used to spin up the conductor processes which are returned in a matching array.
-    const [a_and_b_conductor] = await s.players([conductorConfig])
+    const [a_and_b_conductor] = await s.players([localConductorConfig])
 
     // install your happs into the coductors and destructuring the returned happ data using the same
     // array structure as you created in your installation array.
@@ -204,7 +204,7 @@ const gotChannelsAndMessages = async(t, name, happ, channel, retry_count, retry_
   }
 }
 const doTransientNodes = async (s, t, local) => {
-  const config = local ? conductorConfig : networkedConductorConfig;
+  const config = local ? localConductorConfig : networkedConductorConfig;
 
   const [alice, bob, carol] = await s.players([config, config, config], false)
   await alice.startup()

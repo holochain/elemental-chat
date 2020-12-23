@@ -6,7 +6,7 @@ export const RETRY_COUNT = 10
 
 // Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
-export const conductorConfig = Config.gen()
+export const localConductorConfig = Config.gen()
 
 import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from '@holochain/tryorama'
 export const network = {
