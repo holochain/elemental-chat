@@ -1,5 +1,5 @@
 import { Orchestrator, tapeExecutor, compose } from '@holochain/tryorama'
-import { defaultConfig, behaviorRunner as txPerSecondBehavior} from './tx-per-second'  // import config and runner here
+import { defaultConfig, gossipTx, signalTx} from './tx-per-second'  // import config and runner here
 
 const runName = process.argv[2] || ""+Date.now()  // default exam name is just a timestamp
 let config = process.argv[3] ? require(process.argv[3]) : defaultConfig  // use imported config or one passed as a test arg
@@ -40,7 +40,11 @@ const doTxTrial = async(s, t, behavior, local) => {
 }
 
 orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
-    await doTxTrial(s, t, txPerSecondBehavior, false)
+    await doTxTrial(s, t, gossipTx, true)
 })
+/*
+orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
+    await doTxTrial(s, t, signalpTx, true)
+})*/
 
 orchestrator.run()
