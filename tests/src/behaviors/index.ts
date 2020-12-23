@@ -39,12 +39,12 @@ const doTxTrial = async(s, t, behavior, local) => {
     t.comment(`failed when attempting ${txCount} messages`)
 }
 
-orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
+/*orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
     await doTxTrial(s, t, gossipTx, true)
-})
-/*
-orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
-    await doTxTrial(s, t, signalpTx, true)
 })*/
+
+orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
+    await doTxTrial(s, t, signalTx, true)
+})
 
 orchestrator.run()
