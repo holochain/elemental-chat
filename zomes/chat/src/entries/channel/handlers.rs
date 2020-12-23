@@ -1,6 +1,7 @@
 use crate::{
     channel::{Channel, ChannelInput},
     error::ChatResult,
+    message::handlers::add_chunk_path,
     utils::to_timestamp,
 };
 use hdk3::prelude::*;
@@ -98,7 +99,7 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
         }
 
         // Get the actual channel info entry
-        if let Some(element) = get(latest_info.target,  GetOptions::content())? {
+        if let Some(element) = get(latest_info.target, GetOptions::content())? {
             if let Some(info) = element.into_inner().1.to_app_option()? {
                 // Construct the channel data from the channel and info
                 channels.push(ChannelData {
@@ -111,4 +112,32 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
     }
     // Return all the channels data to the UI
     Ok(channels.into())
+}
+
+// Note: This function can get very heavy
+pub(crate) fn channel_stats(list_channels_input: ChannelListInput) -> ChatResult<(usize, usize)> {
+    let channel_path = Path::from(list_channels_input.category);
+    let channel_links = channel_path.children()?.into_inner();
+    let mut msg_links: Vec<Link> = Vec::new();
+    for tag in channel_links.clone().into_iter().map(|link| link.tag) {
+        let channel_path = Path::try_from(&tag)?;
+        let channel = Channel::try_from(&channel_path)?;
+        let mut chunk = 0;
+        loop {
+            let message_path: Path = channel.clone().into();
+            // Add the chunk component
+            let path = add_chunk_path(message_path, chunk)?;
+
+            // Get the actual hash we are going to pull the messages from
+            let channel_entry_hash = path.hash()?;
+
+            let mut links = get_links(channel_entry_hash.clone(), None)?.into_inner();
+            if links.clone().len() == 0 {
+                break;
+            }
+            msg_links.append(&mut links);
+            chunk += 1
+        }
+    }
+    Ok((channel_links.len(), msg_links.len()))
 }
