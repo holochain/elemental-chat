@@ -19,7 +19,7 @@
     "uuidv4": "^6.2.3"
   },
   "devDependencies": {
-    "@holochain/tryorama": "0.4.0-dev.3",
+    "@holochain/tryorama": "holochain/tryorama#88e96a2344236c0d85225ec673d46d54dd31ae04",
     "@holochain/tryorama-stress-utils": "0.0.11",
     "@types/lodash": "^4.14.158",
     "@types/node": "^14.0.14"
