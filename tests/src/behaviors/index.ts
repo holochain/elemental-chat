@@ -1,5 +1,6 @@
 import { Orchestrator, tapeExecutor, compose } from '@holochain/tryorama'
 import { defaultConfig, gossipTx, signalTx} from './tx-per-second'  // import config and runner here
+import { v4 as uuidv4 } from "uuid";
 
 const runName = process.argv[2] || ""+Date.now()  // default exam name is just a timestamp
 let config = process.argv[3] ? require(process.argv[3]) : defaultConfig  // use imported config or one passed as a test arg
@@ -26,6 +27,8 @@ const doTxTrial = async(s, t, behavior, local) => {
     do {
         txCount *= 2
         t.comment(`trial with ${txCount} tx per ${period}ms`)
+        // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
+        s._uuid = uuidv4();
         actual = await behavior(s, t, config, period, txCount, local)  // run runner :-)
         const txPerSecond = actual/period*1000
         if (txPerSecond > txPerSecondAtMax) {
