@@ -1,7 +1,9 @@
 import { Player } from '@holochain/tryorama'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { batcher as batchOfConfigs } from './config'
+import { DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps } from '@holochain/tryorama'
+import { localConductorConfig, networkedConductorConfig} from '../common'
+const path = require('path')
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
@@ -9,37 +11,76 @@ type Players = Array<Player>
 
 export const defaultConfig = {
     nodes: 1, // Number of machines
-    conductors: 1, // Conductors per machine
-    instances: 2, // Instances per conductor
+    conductors: 10, // Conductors per machine
+    instances: 1, // Instances per conductor
     endpoints: null, // Array of endpoints for Trycp
 }
 
-function prettyCellID(id) {
-    return JSON.stringify(id[1].hash)
+const dnaPath : DnaPath = path.join(__dirname, '../../../elemental-chat.dna.gz')
+
+const setup = async(s, t, config, local) => {
+    const conductorConfig = local ? localConductorConfig : networkedConductorConfig;
+
+    t.comment(`Preparing playground: initializing conductors and spawning`)
+    //const conductorConfigsArray = await batchOfConfigs(config.isRemote, config.conductors, config.instances)
+
+    const installation : InstallAgentsHapps = _.times(config.instances, ()=>{return [[dnaPath]]});
+    const conductorConfigsArray = _.times(config.conductors, ()=>{return conductorConfig});
+    const allPlayers = await s.players(conductorConfigsArray)
+
+    let playerAgents : InstalledAgentHapps = [];
+    // install chat on all the conductors
+    for (const i in allPlayers) {
+        console.log("player", i)
+        const happs = await allPlayers[i].installAgentsHapps(installation)
+        playerAgents.push(happs)
+    }
+    if (local) {
+        await s.shareAllNodes(allPlayers);
+    }
+
+    console.log(`Creating channel for test:`)
+    const happ = playerAgents[0][0][0] // only one happ per agent
+    const channel_uuid = uuidv4();
+    const channel = { category: "General", uuid: channel_uuid }
+    const createChannelResult = await happ.cells[0].call('chat', 'create_channel', { name: `Test Channel`, channel});
+    console.log(createChannelResult);
+    return {playerAgents, allPlayers, channel: createChannelResult}
 }
 
-const trial = async (period, allPlayers, cellChannels, messagesToSend) => {
-    const sendingConductor = allPlayers["0"]
-    const sendingCellNick = "0"
-    const senderId= "0:0"
-    const receivingCellNick = "1"
+export const gossipTx = async (s, t, config, period, txCount, local) => {
+    const {playerAgents, allPlayers, channel} = await setup(s, t, config, local)
+    const actual = await gossipTrial(period, playerAgents, channel, txCount)
+    for (const i in allPlayers) {
+        const conductor = allPlayers[i]
+        conductor.shutdown()
+    }
+    return actual
+}
 
-    const channel= { category: 'General', uuid: cellChannels[senderId] }
-
+const sendSerialy = async(start, period, sendingCell, channel, messagesToSend, signal?) => {
     var msgs: any[] = [];
-//    const msDelayBetweenMessage = period/messagesToSend
-    const start = Date.now()
+    //    const msDelayBetweenMessage = period/messagesToSend
     for (let i =0; i < messagesToSend; i++) {
         const msg = {
             last_seen: { First: null },
-            channel,
+            channel: channel.channel,
             message: {
                 uuid: uuidv4(),
                 content: `message ${i}`,
-            }
+            },
+            chunk: 0,
         }
         console.log(`sending message ${i}`)
-        msgs[i] = await sendingConductor.call(sendingCellNick, 'chat', 'create_message', msg)
+        msgs[i] = await sendingCell.call('chat', 'create_message', msg)
+        if (signal) {
+            const signalMessageData = {
+                messageData: msgs[i],
+                channelData: channel,
+            };
+            const r = await sendingCell.call('chat', 'signal_chatters', signalMessageData);
+            console.log("signal results", r)
+        }
         if (Date.now() - start > period) {
             i = i+1
             console.log(`Couldn't send all messages in period, sent ${i}`)
@@ -48,139 +89,102 @@ const trial = async (period, allPlayers, cellChannels, messagesToSend) => {
         // console.log(`waiting ${msDelayBetweenMessage}ms`)
         // await delay(msDelayBetweenMessage-20)
     }
-
-    console.log(`Getting messages (should be ${messagesToSend})`)
-
-    const messagesReceived = await sendingConductor.call(receivingCellNick, 'chat', 'list_messages', { channel, date: today() })
-
-    console.log(`Receiver got ${messagesReceived.messages.length} messages`)
-
-    return messagesReceived.messages.length
+    return messagesToSend
 }
 
-export const behaviorRunner = async (s, t, config, period, txCount) => {
-    t.comment(`Preparing playground: initializing conductors and spawning`)
-    const conductorConfigsArray = await batchOfConfigs(config.isRemote, config.conductors, config.instances)
-    const allPlayers = await s.players(conductorConfigsArray, true)
-    let spawnedAgents = 0
-    let cellChannels = {}
-    for (const i in allPlayers) {
-        console.log(`Spawned conductor ${i} with cells:`)
-        for (const j in allPlayers[i]._cellIds) {
-            const conductor = allPlayers[i]
-            console.log(`   ${prettyCellID(conductor._cellIds[j])}`)
-            spawnedAgents++
-            const channel_uuid = uuidv4();
-            const channel = await conductor.call(j, 'chat', 'create_channel', { name: `${i}:${j}'s Test Channel`, channel: { category: "General", uuid: channel_uuid } });
-            console.log(channel);
-            cellChannels[`${i}:${j}`]= channel_uuid
-        }
+const gossipTrial = async (period, playerAgents, channel, messagesToSend) => {
+    const sendingCell = playerAgents[0][0][0].cells[0]
+    const receivingCell = playerAgents[1][0][0].cells[0]
+    const start = Date.now()
+    const sent = await sendSerialy(start, period, sendingCell, channel, messagesToSend)
+    if (sent != messagesToSend) {
+        return sent
     }
-    const actual = await trial(period, allPlayers, cellChannels, txCount)
+    console.log(`Getting messages (should be ${messagesToSend})`)
+    let received = 0
+    do {
+        const messagesReceived = await receivingCell.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
+        received = messagesReceived.messages.length
+        console.log(`Receiver got ${received} messages`)
+        if (received == messagesToSend) {
+            break;
+        }
+        if (Date.now() - start > period) {
+            console.log(`Didn't receive all messages in period!`)
+            break
+        }
+    } while(true)
+    return received
+}
+
+const signalTrial = async (period, playerAgents, allPlayers, channel, messagesToSend) => {
+    const sendingCell = playerAgents[0][0][0].cells[0]
+
+    // wait for all agents to be active:
+    do {
+        await delay(1000)
+        const stats = await sendingCell.call('chat', 'stats', {category: "General"});
+        if (stats.agents == playerAgents.length) {
+            break;
+        }
+        console.log("waiting for all conductors to be listed as active", stats)
+    } while (true) // TODO fix for multi-instance
+
+    let receipts : { [key: string]: number; } = {};
     for (const i in allPlayers) {
         const conductor = allPlayers[i]
-        conductor.kill()
+        conductor.setSignalHandler((signal) => {
+            const me = i
+            console.log(`Received Signal for ${me}:`, signal.data.payload.signal_payload.messageData.message)
+            if (!receipts[me]) {
+                receipts[me] = 1
+            } else {
+                receipts[me] += 1
+            }
+        })
+    }
+    const start = Date.now()
+    const sent = await sendSerialy(start, period, sendingCell, channel, messagesToSend, true)
+    if (sent != messagesToSend) {
+        return sent
+    }
+    let received = 0
+    do {
+        received = 0
+        let leastReceived = messagesToSend
+        for (const [key, count] of Object.entries(receipts)) {
+            if (count == messagesToSend) {
+                received +=1
+            } else {
+                if (count < leastReceived) {
+                    leastReceived = count
+                }
+            }
+        }
+        if (received == Object.keys(receipts).length) {
+            console.log(`All nodes got all signals!`)
+            return messagesToSend
+        }
+        if (Date.now() - start > period) {
+            console.log(`Didn't receive all messages in period!`)
+            return leastReceived
+        }
+        await delay(1000)
+    } while(true)
+}
+
+export const signalTx = async (s, t, config, period, txCount, local) => {
+    // do the standard setup
+    const {playerAgents, allPlayers, channel} = await setup(s, t, config, local)
+    for (const i in playerAgents) {
+        const cell = playerAgents[i][0][0].cells[0]
+        await cell.call('chat', 'refresh_chatter', null);
+    }
+
+    const actual = await signalTrial(period, playerAgents, allPlayers, channel, txCount)
+    for (const i in allPlayers) {
+        const conductor = allPlayers[i]
+        conductor.shutdown()
     }
     return actual
-}
-/*
-module.exports = (orchestrator) => {
-  orchestrator.registerScenario('fish', async (s, t) => {
-    // spawn the conductor process
-    const { conductor } = await s.players({ conductor: config })
-    await conductor.spawn()
-return
-    // Create a channel
-    const channel_uuid = uuidv4();
-    const channel = await conductor.call('alice', 'chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
-    console.log(channel);
-
-    var sends: any[] = [];
-    var recvs: any[] = [];
-    function just_msg(m) { return m.message }
-
-    // Alice send a message
-    sends.push({
-      last_seen: { First: null },
-      channel: channel.channel,
-      message: {
-        uuid: uuidv4(),
-        content: "Hello from alice :)",
-      }
-    });
-    console.log(sends[0]);
-    recvs.push(await conductor.call('alice', 'chat', 'create_message', sends[0]));
-    console.log(recvs[0]);
-    t.deepEqual(sends[0].message, recvs[0].message);
-
-    // Alice sends another messag
-    sends.push({
-      last_seen: { Message: recvs[0].entryHash },
-      channel: channel.channel,
-      message: {
-        uuid: uuidv4(),
-        content: "Is anybody out there?",
-      }
-    });
-    console.log(sends[1]);
-    recvs.push(await conductor.call('alice', 'chat', 'create_message', sends[1]));
-    console.log(recvs[1]);
-    t.deepEqual(sends[1].message, recvs[1].message);
-
-    const channel_list = await conductor.call('alice', 'chat', 'list_channels', { category: "General" });
-    console.log(channel_list);
-
-    // Alice lists the messages
-    var msgs: any[] = [];
-    console.log(today());
-    msgs.push(await conductor.call('alice', 'chat', 'list_messages', { channel: channel.channel, date: today() }));
-    console.log(_.map(msgs[0].messages, just_msg));
-    t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
-    // Bobbo lists the messages
-    msgs.push(await conductor.call('bobbo', 'chat', 'list_messages', { channel: channel.channel, date: today() }));
-    console.log(_.map(msgs[1].messages, just_msg));
-    t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
-
-    // Bobbo and Alice both reply to the same message
-    sends.push({
-      last_seen: { Message: recvs[1].entryHash },
-      channel: channel.channel,
-      message: {
-        uuid: uuidv4(),
-        content: "I'm here",
-      }
-    });
-    sends.push({
-      last_seen: { Message: recvs[1].entryHash },
-      channel: channel.channel,
-      message: {
-        uuid: uuidv4(),
-        content: "Anybody?",
-      }
-    });
-    recvs.push(await conductor.call('bobbo', 'chat', 'create_message', sends[2]));
-    console.log(recvs[2]);
-    t.deepEqual(sends[2].message, recvs[2].message);
-    recvs.push(await conductor.call('alice', 'chat', 'create_message', sends[3]));
-    console.log(recvs[3]);
-    t.deepEqual(sends[3].message, recvs[3].message);
-
-    // Alice lists the messages
-    msgs.push(await conductor.call('alice', 'chat', 'list_messages', { channel: channel.channel, date: today() }));
-    console.log(_.map(msgs[2].messages, just_msg));
-    t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[2].messages, just_msg));
-    // Bobbo lists the messages
-    msgs.push(await conductor.call('bobbo', 'chat', 'list_messages', { channel: channel.channel, date: today() }));
-    console.log(_.map(msgs[3].messages, just_msg));
-    t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
-  })
-}
-*/
-// Get a basic date object for right now
-function today() {
-  var today = new Date();
-  var dd: String = String(today.getUTCDate());
-  var mm: String = String(today.getUTCMonth() + 1); //January is 0!
-  var yyyy: String = String(today.getUTCFullYear());
-  return { year: yyyy, month: mm, day: dd }
 }
