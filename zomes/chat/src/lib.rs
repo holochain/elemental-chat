@@ -72,6 +72,29 @@ fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelData> {
 }
 
 #[hdk_extern]
+fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
+    let element = data.element;
+    let entry = element.into_inner().1;
+    let entry = match entry {
+        ElementEntry::Present(e) => e,
+        _ => return Ok(ValidateCallbackResult::Valid),
+    };
+    if let Entry::Agent(_) = entry {
+        return Ok(ValidateCallbackResult::Valid);
+    }
+    Ok(match Message::try_from(&entry) {
+        Ok(message) => {
+            if message.content.len() <= 1024 {
+                ValidateCallbackResult::Valid
+            } else {
+                ValidateCallbackResult::Invalid("Message too long".to_string())
+            }
+        }
+        _ => ValidateCallbackResult::Valid,
+    })
+}
+
+#[hdk_extern]
 fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
     message::handlers::create_message(message_input)
 }
