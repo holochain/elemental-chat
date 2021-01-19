@@ -13,7 +13,7 @@ export const network = {
   bootstrap_service: "https://bootstrap.holo.host",
   transport_pool: [{
     type: TransportConfigType.Proxy,
-    sub_transport: {type: TransportConfigType.Quic},
+    sub_transport: { type: TransportConfigType.Quic },
     proxy_config: {
       type: ProxyConfigType.RemoteProxyClient,
       proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/proxy.holochain.org/p/5778/--",
@@ -21,7 +21,7 @@ export const network = {
   }],
 }
 
-export const networkedConductorConfig = Config.gen({network})
+export const networkedConductorConfig = Config.gen({ network })
 
 
 // Construct proper paths for your DNAs
@@ -30,7 +30,7 @@ export const chatDna = path.join(__dirname, "../../elemental-chat.dna.gz")
 // create an InstallAgentsHapps array with your DNAs to tell tryorama what
 // to install into the conductor.
 export const installation1agent: InstallAgentsHapps = [
-    [[chatDna]],
+  [[chatDna]],
 ]
 export const installation2agent: InstallAgentsHapps = [
   [[chatDna]],
