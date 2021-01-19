@@ -1,23 +1,22 @@
 import { Player, DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps } from '@holochain/tryorama'
+import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
 import { localConductorConfig, networkedConductorConfig } from '../common'
+import trycpAddresses from './trycp-addresses'
 const path = require('path')
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
-type Players = Array<Player>
-
 export const defaultConfig = {
-    nodes: 1, // Number of machines
-    conductors: 10, // Conductors per machine
-    instances: 1, // Instances per conductor
-    endpoints: null, // Array of endpoints for Trycp
+    nodes: 2, // Number of machines
+    conductors: 2, // Conductors per machine
+    instances: 2, // Instances per conductor
 }
 
 const dnaPath: DnaPath = path.join(__dirname, '../../../elemental-chat.dna.gz')
 
-const setup = async (s, t, config, local) => {
+const setup = async (s: ScenarioApi, t, config, local) => {
     const conductorConfig = local ? localConductorConfig : networkedConductorConfig;
 
     t.comment(`Preparing playground: initializing conductors and spawning`)
@@ -25,9 +24,28 @@ const setup = async (s, t, config, local) => {
 
     const installation: InstallAgentsHapps = _.times(config.instances, () => [[dnaPath]]);
     const conductorConfigsArray = _.times(config.conductors, () => conductorConfig);
-    const allPlayers = await s.players(conductorConfigsArray)
 
-    let playerAgents: InstalledAgentHapps = [];
+    const allPlayers: Player[] = []
+    let i = 0;
+
+    while (allPlayers.length / config.conductors < config.nodes) {
+        if (i >= trycpAddresses.length) {
+            throw new Error(`ran out of trycp addresses after contacting ${allPlayers.length / config.conductors} nodes`)
+        }
+        let players: Player[];
+        try {
+            players = await s.playersRemote(conductorConfigsArray, trycpAddresses[i])
+            await Promise.all(players.map(player => player.startup(() => { })));
+        } catch (e) {
+            console.log(`Skipping trycp node ${trycpAddresses[i]} due to error: ${e}`)
+            i += 1
+            continue
+        }
+        players.forEach(player => allPlayers.push(player));
+        i += 1
+    }
+
+    let playerAgents: InstalledAgentHapps[] = [];
     // install chat on all the conductors
     for (const i in allPlayers) {
         console.log("player", i)
