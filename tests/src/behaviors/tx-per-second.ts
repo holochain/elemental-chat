@@ -20,7 +20,6 @@ const setup = async (s: ScenarioApi, t, config, local) => {
     const conductorConfig = local ? localConductorConfig : networkedConductorConfig;
 
     t.comment(`Preparing playground: initializing conductors and spawning`)
-    //const conductorConfigsArray = await batchOfConfigs(config.isRemote, config.conductors, config.instances)
 
     const installation: InstallAgentsHapps = _.times(config.instances, () => [[config.dnaSource]]);
     const conductorConfigsArray = _.times(config.conductors, () => conductorConfig);

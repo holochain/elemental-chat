@@ -16,7 +16,6 @@ console.log(`Running behavior test id=${runName} with:\n`, config)
 // Below this line should not need changes
 
 config.numConductors = config.nodes * config.conductors
-config.isRemote = Boolean(config.endpoints)
 
 const middleware = /*config.endpoints
   ? compose(tapeExecutor(require('tape')), groupPlayersByMachine(config.endpoints, config.conductors))
