@@ -12,9 +12,9 @@ export const defaultConfig = {
     nodes: 2, // Number of machines
     conductors: 2, // Conductors per machine
     instances: 2, // Instances per conductor
+    dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
+    // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
-
-const dnaPath: DnaPath = path.join(__dirname, '../../../elemental-chat.dna.gz')
 
 const setup = async (s: ScenarioApi, t, config, local) => {
     const conductorConfig = local ? localConductorConfig : networkedConductorConfig;
@@ -22,7 +22,7 @@ const setup = async (s: ScenarioApi, t, config, local) => {
     t.comment(`Preparing playground: initializing conductors and spawning`)
     //const conductorConfigsArray = await batchOfConfigs(config.isRemote, config.conductors, config.instances)
 
-    const installation: InstallAgentsHapps = _.times(config.instances, () => [[dnaPath]]);
+    const installation: InstallAgentsHapps = _.times(config.instances, () => [[config.dnaSource]]);
     const conductorConfigsArray = _.times(config.conductors, () => conductorConfig);
 
     const allPlayers: Player[] = []
