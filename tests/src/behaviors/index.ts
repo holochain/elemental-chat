@@ -29,7 +29,7 @@ const trial: "signal" | "gossip" = "gossip"
 
 if (trial === "gossip") {
     orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
-        let txCount = 64
+        let txCount = 4
         while (true) {
             t.comment(`trial with ${txCount} tx`)
             // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
