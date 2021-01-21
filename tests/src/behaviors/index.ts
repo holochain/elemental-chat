@@ -17,44 +17,56 @@ console.log(`Running behavior test id=${runName} with:\n`, config)
 
 config.numConductors = config.nodes * config.conductors
 
+const local = true
+
 const middleware = /*config.endpoints
   ? compose(tapeExecutor(require('tape')), groupPlayersByMachine(config.endpoints, config.conductors))
   :*/ undefined
 
 const orchestrator = new Orchestrator({ middleware })
 
-const doTxTrial = async (s, t, behavior, local) => {
-    let txCount = 2
-    let actual
-    const period = 20 * 1000
-    let txPerSecondAtMax = 0
-    let txAtMax = 0
-    do {
-        txCount *= 2
-        t.comment(`trial with ${txCount} tx per ${period}ms`)
-        // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
-        s._uuid = uuidv4();
-        actual = await behavior(s, t, config, period, txCount, local)  // run runner :-)
-        const txPerSecond = actual / period * 1000
-        if (txPerSecond > txPerSecondAtMax) {
-            txAtMax = txCount
-            txPerSecondAtMax = txPerSecond
-        }
-    } while (txCount == actual)
+const trial: "signal" | "gossip" = "gossip"
 
-    t.comment(`test context: ${config.numConductors} total conductors`)
-    t.comment(`maxed message per second when sending ${txAtMax}: ${txPerSecondAtMax.toFixed(1)} (sent over ${period / 1000}s)`)
-    t.comment(`failed when attempting ${txCount} messages`)
+if (trial === "gossip") {
+    orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
+        let txCount = 64
+        while (true) {
+            t.comment(`trial with ${txCount} tx`)
+            // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
+            s._uuid = uuidv4();
+            const duration = await gossipTx(s, t, config, txCount, local)
+            const txPerSecond = txCount / (duration * 1000)
+            t.comment(`took ${duration}ms to receive ${txCount} messages through gossip. TPS: ${txPerSecond}`)
+            txCount *= 2
+        }
+    })
+} else if (trial === "signal") {
+    orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
+        let txCount = 2
+        let actual
+        const period = 20 * 1000
+        let txPerSecondAtMax = 0
+        let txAtMax = 0
+        do {
+            txCount *= 2
+            t.comment(`trial with ${txCount} tx per ${period}ms`)
+            // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
+            s._uuid = uuidv4();
+            actual = await signalTx(s, t, config, period, txCount, local)
+            const txPerSecond = actual / period * 1000
+            if (txPerSecond > txPerSecondAtMax) {
+                txAtMax = txCount
+                txPerSecondAtMax = txPerSecond
+            }
+        } while (txCount === actual)
+
+        t.comment(`test context: ${config.numConductors} total conductors`)
+        t.comment(`maxed message per second when sending ${txAtMax}: ${txPerSecondAtMax.toFixed(1)} (sent over ${period / 1000}s)`)
+        t.comment(`failed when attempting ${txCount} messages`)
+    })
 }
 
-/*
-orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
-    await doTxTrial(s, t, gossipTx, true)
-})
-*/
 
-orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
-    await doTxTrial(s, t, signalTx, true)
-})
+
 
 orchestrator.run()
