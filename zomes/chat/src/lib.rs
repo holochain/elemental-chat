@@ -148,3 +148,14 @@ fn stats(list_channels_input: ChannelListInput) -> ChatResult<Stats> {
         messages,
     })
 }
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct AgentStats {
+    agents: usize,
+    active: usize,
+}
+#[hdk_extern]
+fn agent_stats(_: ()) -> ChatResult<AgentStats> {
+    let (agents, active) = message::handlers::agent_stats()?;
+    Ok(AgentStats { agents, active })
+}
