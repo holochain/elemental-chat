@@ -2,7 +2,7 @@ import { Player, DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps } from
 import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { localConductorConfig, networkedConductorConfig } from '../common'
+import { network } from '../common'
 import trycpAddresses from './trycp-addresses'
 const path = require('path')
 
@@ -10,14 +10,27 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
     nodes: 2, // Number of machines
-    conductors: 15, // Conductors per machine
-    instances: 10, // Instances per conductor
+    conductors: 1, // Conductors per machine
+    instances: 1, // Instances per conductor
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
 
 const setup = async (s: ScenarioApi, t, config, local) => {
-    const conductorConfig = local ? localConductorConfig : networkedConductorConfig;
+    const conductorConfig = Config.gen({
+        network: {
+            tuning_params: {
+                gossip_loop_iteration_delay_ms: 10,
+                default_notify_remote_agent_count: 5,
+                default_notify_timeout_ms: 1000,
+                default_rpc_single_timeout_ms: 2000,
+                default_rpc_multi_remote_agent_count: 2,
+                default_rpc_multi_timeout_ms: 2000,
+                agent_info_expires_after_ms: 1000 * 60 * 20, // 20 minutes
+            },
+            ...(local ? { transport_pool: [], bootstrap_service: undefined } : network)
+        }
+    })
 
     t.comment(`Preparing playground: initializing conductors and spawning`)
 
@@ -82,7 +95,7 @@ const send = async (i, cell, channel, signal: boolean) => {
             messageData,
             channelData: channel,
         })
-        console.log("signal results", r)
+        // console.log("signal results", r)
     }
 }
 
@@ -90,7 +103,7 @@ const sendSerially = async (end, sendingCell, channel, messagesToSend) => {
     //    const msDelayBetweenMessage = period/messagesToSend
     for (let i = 0; i < messagesToSend; i++) {
         await send(i, sendingCell, channel, true)
-        if (Date.now() < end) {
+        if (Date.now() > end) {
             i = i + 1
             console.log(`Couldn't send all messages in period, sent ${i}`)
             return i
