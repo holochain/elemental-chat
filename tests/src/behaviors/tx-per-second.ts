@@ -1,4 +1,4 @@
-import { Player, DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps } from '@holochain/tryorama'
+import { Player, DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps, TransportConfigType, ProxyAcceptConfig, ProxyConfigType  } from '@holochain/tryorama'
 import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
@@ -9,52 +9,67 @@ const path = require('path')
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
-    nodes: 2, // Number of machines
-    conductors: 1, // Conductors per machine
-    instances: 1, // Instances per conductor
+    remote: false,
+    nodes: 1, // Number of machines
+    conductors: 10, // Conductors per machine
+    instances: 2, // Instances per conductor
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
 
+
+
 const setup = async (s: ScenarioApi, t, config, local) => {
-    const conductorConfig = Config.gen({
-        network: {
-            tuning_params: {
-                gossip_loop_iteration_delay_ms: 10,
-                default_notify_remote_agent_count: 5,
-                default_notify_timeout_ms: 1000,
-                default_rpc_single_timeout_ms: 2000,
-                default_rpc_multi_remote_agent_count: 2,
-                default_rpc_multi_timeout_ms: 2000,
-                agent_info_expires_after_ms: 1000 * 60 * 20, // 20 minutes
-            },
-            ...(local ? { transport_pool: [], bootstrap_service: undefined } : network)
+    let network;
+    if (local) {
+        network = { transport_pool: [], bootstrap_service: undefined }
+    } else {
+        network = {
+            bootstrap_service: "https://bootstrap.holo.host",
+            transport_pool: [{
+                type: TransportConfigType.Proxy,
+                sub_transport: { type: TransportConfigType.Quic },
+                proxy_config: {
+                    type: ProxyConfigType.RemoteProxyClient,
+                    proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/proxy.holochain.org/p/5778/--",
+                }
+            }],
         }
-    })
+    }
+
+    const conductorConfig = Config.gen({network})
 
     t.comment(`Preparing playground: initializing conductors and spawning`)
 
     const installation: InstallAgentsHapps = _.times(config.instances, () => [[config.dnaSource]]);
     const conductorConfigsArray = _.times(config.conductors, () => conductorConfig);
 
-    const allPlayers: Player[] = []
+    let allPlayers: Player[]
     let i = 0;
 
-    while (allPlayers.length / config.conductors < config.nodes) {
-        if (i >= trycpAddresses.length) {
-            throw new Error(`ran out of trycp addresses after contacting ${allPlayers.length / config.conductors} nodes`)
-        }
-        let players: Player[];
-        try {
-            players = await s.playersRemote(conductorConfigsArray, trycpAddresses[i])
-            await Promise.all(players.map(player => player.startup(() => { })));
-        } catch (e) {
-            console.log(`Skipping trycp node ${trycpAddresses[i]} due to error: ${e}`)
+    // remote in config means use trycp server
+    if (!config.remote) {
+        allPlayers = await s.players(conductorConfigsArray)
+        await Promise.all(allPlayers.map(player => player.startup(() => { })));
+        i = allPlayers.length
+    } else {
+        allPlayers = []
+        while (allPlayers.length / config.conductors < config.nodes) {
+            if (i >= trycpAddresses.length) {
+                throw new Error(`ran out of trycp addresses after contacting ${allPlayers.length / config.conductors} nodes`)
+            }
+            let players: Player[];
+            try {
+                players = await s.playersRemote(conductorConfigsArray, trycpAddresses[i])
+                await Promise.all(players.map(player => player.startup(() => { })));
+            } catch (e) {
+                console.log(`Skipping trycp node ${trycpAddresses[i]} due to error: ${e}`)
+                i += 1
+                continue
+            }
+            players.forEach(player => allPlayers.push(player));
             i += 1
-            continue
         }
-        players.forEach(player => allPlayers.push(player));
-        i += 1
     }
 
     // install chat on all the conductors
@@ -123,8 +138,7 @@ const sendConcurrently = async (playerAgents, channel, messagesToSend) => {
 }
 
 const gossipTrial = async (playerAgents, channel, messagesToSend): Promise<number> => {
-    const sendingCell = playerAgents[0][0][0].cells[0]
-    const receivingCell = playerAgents[1][0][0].cells[0]
+    const receivingCell = playerAgents[0][0][0].cells[0]
     const start = Date.now()
     await sendConcurrently(playerAgents, channel, messagesToSend)
     console.log(`Getting messages (should be ${messagesToSend})`)
@@ -150,6 +164,64 @@ const gossipTrial = async (playerAgents, channel, messagesToSend): Promise<numbe
 }
 
 const signalTrial = async (period, playerAgents, allPlayers, channel, messagesToSend) => {
+    const sendingCell = playerAgents[0][0][0].cells[0]
+
+    // wait for all agents to be active:
+    do {
+        await delay(1000)
+        const stats = await sendingCell.call('chat', 'stats', { category: "General" });
+        if (stats.agents == playerAgents.length) {
+            break;
+        }
+        console.log("waiting for all conductors to be listed as active", stats)
+    } while (true) // TODO fix for multi-instance
+
+    // setup the signal handler for all the players so we can check
+    // if all the signals are returned
+    let receipts: { [key: string]: number; } = {};
+    for (const i in allPlayers) {
+        const conductor = allPlayers[i]
+        conductor.setSignalHandler((signal) => {
+            const me = i
+            console.log(`Received Signal for ${me}:`, signal.data.payload.signal_payload.messageData.message)
+            if (!receipts[me]) {
+                receipts[me] = 1
+            } else {
+                receipts[me] += 1
+            }
+        })
+    }
+
+    const start = Date.now()
+    await sendConcurrently(playerAgents, channel, messagesToSend)
+    console.log(`Getting messages (should be ${messagesToSend})`)
+
+    let received = 0
+    do {
+        received = 0
+        let leastReceived = messagesToSend
+        for (const [key, count] of Object.entries(receipts)) {
+            if (count == messagesToSend) {
+                received += 1
+            } else {
+                if (count < leastReceived) {
+                    leastReceived = count
+                }
+            }
+        }
+        if (received == Object.keys(receipts).length) {
+            console.log(`All nodes got all signals!`)
+            return Date.now()-start
+        }
+        if (Date.now() - start > period) {
+            console.log(`Didn't receive all messages in period!`)
+            return undefined
+        }
+        await delay(1000)
+    } while (true)
+}
+
+const signalTrialOld = async (period, playerAgents, allPlayers, channel, messagesToSend) => {
     const sendingCell = playerAgents[0][0][0].cells[0]
 
     // wait for all agents to be active:
@@ -221,9 +293,6 @@ export const signalTx = async (s, t, config, period, txCount, local) => {
     }
 
     const actual = await signalTrial(period, playerAgents, allPlayers, channel, txCount)
-    for (const i in allPlayers) {
-        const conductor = allPlayers[i]
-        await conductor.shutdown()
-    }
+    await Promise.all(allPlayers.map(player => player.shutdown()))
     return actual
 }
