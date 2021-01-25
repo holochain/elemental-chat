@@ -10,8 +10,8 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
     nodes: 2, // Number of machines
-    conductors: 2, // Conductors per machine
-    instances: 2, // Instances per conductor
+    conductors: 15, // Conductors per machine
+    instances: 10, // Instances per conductor
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
@@ -44,14 +44,13 @@ const setup = async (s: ScenarioApi, t, config, local) => {
         i += 1
     }
 
-    let playerAgents: InstalledAgentHapps[] = [];
     // install chat on all the conductors
-    for (const i in allPlayers) {
-        console.log("player", i)
-        console.log("installation", installation)
-        const happs = await allPlayers[i].installAgentsHapps(installation)
-        playerAgents.push(happs)
-    }
+    const playerAgents = await Promise.all(allPlayers.map((player, i) => {
+        console.log("installing player", i)
+        // console.log("installation", installation)
+        return allPlayers[i].installAgentsHapps(installation)
+    }))
+
     if (local) {
         await s.shareAllNodes(allPlayers);
     }
@@ -65,40 +64,33 @@ const setup = async (s: ScenarioApi, t, config, local) => {
     return { playerAgents, allPlayers, channel: createChannelResult }
 }
 
-export const gossipTx = async (s, t, config, period, txCount, local) => {
-    const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
-    const actual = await gossipTrial(period, playerAgents, channel, txCount)
-    for (const i in allPlayers) {
-        const conductor = allPlayers[i]
-        conductor.shutdown()
+const send = async (i, cell, channel, signal: boolean) => {
+    const msg = {
+        last_seen: { First: null },
+        channel: channel.channel,
+        message: {
+            uuid: uuidv4(),
+            content: `message ${i}`,
+        },
+        chunk: 0,
     }
-    return actual
+    console.log(`sending message ${i}`)
+    const messageData = await cell.call('chat', 'create_message', msg)
+
+    if (signal) {
+        const r = await cell.call('chat', 'signal_chatters', {
+            messageData,
+            channelData: channel,
+        })
+        console.log("signal results", r)
+    }
 }
 
-const sendSerially = async (start, period, sendingCell, channel, messagesToSend, signal?) => {
-    var msgs: any[] = [];
+const sendSerially = async (end, sendingCell, channel, messagesToSend) => {
     //    const msDelayBetweenMessage = period/messagesToSend
     for (let i = 0; i < messagesToSend; i++) {
-        const msg = {
-            last_seen: { First: null },
-            channel: channel.channel,
-            message: {
-                uuid: uuidv4(),
-                content: `message ${i}`,
-            },
-            chunk: 0,
-        }
-        console.log(`sending message ${i}`)
-        msgs[i] = await sendingCell.call('chat', 'create_message', msg)
-        if (signal) {
-            const signalMessageData = {
-                messageData: msgs[i],
-                channelData: channel,
-            };
-            const r = await sendingCell.call('chat', 'signal_chatters', signalMessageData);
-            console.log("signal results", r)
-        }
-        if (Date.now() - start > period) {
+        await send(i, sendingCell, channel, true)
+        if (Date.now() < end) {
             i = i + 1
             console.log(`Couldn't send all messages in period, sent ${i}`)
             return i
@@ -109,29 +101,39 @@ const sendSerially = async (start, period, sendingCell, channel, messagesToSend,
     return messagesToSend
 }
 
-const gossipTrial = async (period, playerAgents, channel, messagesToSend) => {
+const sendConcurrently = async (playerAgents, channel, messagesToSend) => {
+    const messagePromises = new Array(messagesToSend)
+    for (let i = 0; i < messagesToSend; i++) {
+        messagePromises[i] = send(i, playerAgents[i % playerAgents.length][0][0].cells[0], channel, false)
+    }
+    await Promise.all(messagePromises)
+}
+
+const gossipTrial = async (playerAgents, channel, messagesToSend): Promise<number> => {
     const sendingCell = playerAgents[0][0][0].cells[0]
     const receivingCell = playerAgents[1][0][0].cells[0]
     const start = Date.now()
-    const sent = await sendSerially(start, period, sendingCell, channel, messagesToSend)
-    if (sent != messagesToSend) {
-        return sent
-    }
+    await sendConcurrently(playerAgents, channel, messagesToSend)
     console.log(`Getting messages (should be ${messagesToSend})`)
     let received = 0
-    do {
-        const messagesReceived = await receivingCell.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: { start: 0, end: 1 } })
-        received = messagesReceived.messages.length
-        console.log(`Receiver got ${received} messages`)
-        if (received == messagesToSend) {
-            break;
+    while (true) {
+        let justReceived = 0;
+        try {
+            justReceived = (await receivingCell.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: { start: 0, end: 1 } })).messages.length
+        } catch (e) {
+            console.error("error while checking number of messages received", e)
         }
-        if (Date.now() - start > period) {
-            console.log(`Didn't receive all messages in period!`)
-            break
+
+        if (received !== justReceived) {
+            received = justReceived
+            console.log(`After ${(Date.now() - start)}ms, receiver got ${received} messages`)
+            if (received === messagesToSend) {
+                return Date.now() - start
+            }
+        } else {
+            await delay(200)
         }
-    } while (true)
-    return received
+    }
 }
 
 const signalTrial = async (period, playerAgents, allPlayers, channel, messagesToSend) => {
@@ -161,7 +163,7 @@ const signalTrial = async (period, playerAgents, allPlayers, channel, messagesTo
         })
     }
     const start = Date.now()
-    const sent = await sendSerially(start, period, sendingCell, channel, messagesToSend, true)
+    const sent = await sendSerially(start + period, sendingCell, channel, messagesToSend)
     if (sent != messagesToSend) {
         return sent
     }
@@ -190,6 +192,13 @@ const signalTrial = async (period, playerAgents, allPlayers, channel, messagesTo
     } while (true)
 }
 
+export const gossipTx = async (s, t, config, txCount, local) => {
+    const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
+    const actual = await gossipTrial(playerAgents, channel, txCount)
+    await Promise.all(allPlayers.map(player => player.shutdown()))
+    return actual
+}
+
 export const signalTx = async (s, t, config, period, txCount, local) => {
     // do the standard setup
     const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
@@ -201,7 +210,7 @@ export const signalTx = async (s, t, config, period, txCount, local) => {
     const actual = await signalTrial(period, playerAgents, allPlayers, channel, txCount)
     for (const i in allPlayers) {
         const conductor = allPlayers[i]
-        conductor.shutdown()
+        await conductor.shutdown()
     }
     return actual
 }
