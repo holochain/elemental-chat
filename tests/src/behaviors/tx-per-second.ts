@@ -2,7 +2,7 @@ import { Player, DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps, Trans
 import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { network } from '../common'
+import { network as defaultNetworkConfig } from '../common'
 import trycpAddresses from './trycp-addresses'
 const path = require('path')
 
@@ -24,17 +24,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     if (local) {
         network = { transport_pool: [], bootstrap_service: undefined }
     } else {
-        network = {
-            bootstrap_service: "https://bootstrap.holo.host",
-            transport_pool: [{
-                type: TransportConfigType.Proxy,
-                sub_transport: { type: TransportConfigType.Quic },
-                proxy_config: {
-                    type: ProxyConfigType.RemoteProxyClient,
-                    proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/proxy.holochain.org/p/5778/--",
-                }
-            }],
-        }
+        network = defaultNetworkConfig
     }
 
     const conductorConfig = Config.gen({ network })
