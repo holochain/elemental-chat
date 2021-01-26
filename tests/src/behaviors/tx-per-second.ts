@@ -95,7 +95,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     return { playerAgents, allPlayers, channel: createChannelResult }
 }
 
-const send = async (i, cell, channel, signal: boolean) => {
+const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
     const msg = {
         last_seen: { First: null },
         channel: channel.channel,
@@ -108,7 +108,7 @@ const send = async (i, cell, channel, signal: boolean) => {
     console.log(`sending message ${i}`)
     const messageData = await cell.call('chat', 'create_message', msg)
 
-    if (signal) {
+    if (signal === "signal") {
         const r = await cell.call('chat', 'signal_chatters', {
             messageData,
             channelData: channel,
@@ -132,11 +132,11 @@ const sendSerially = async (end: number, sendingCell: Cell, channel, messagesToS
     return messagesToSend
 }
 
-const sendConcurrently = async (playerAgents: PlayerAgents, channel, messagesToSend: number) => {
+const sendConcurrently = async (playerAgents: PlayerAgents, channel, messagesToSend: number, signal: "signal" | "noSignal") => {
     const instances = playerAgents[0].length
     const messagePromises = new Array(messagesToSend)
     for (let i = 0; i < messagesToSend; i++) {
-        messagePromises[i] = send(i, playerAgents[(i / instances) % playerAgents.length][i % instances].cell, channel, false)
+        messagePromises[i] = send(i, playerAgents[(i / instances) % playerAgents.length][i % instances].cell, channel, signal)
     }
     await Promise.all(messagePromises)
 }
@@ -144,7 +144,7 @@ const sendConcurrently = async (playerAgents: PlayerAgents, channel, messagesToS
 const gossipTrial = async (playerAgents: PlayerAgents, channel, messagesToSend: number): Promise<number> => {
     const receivingCell = playerAgents[0][0].cell
     const start = Date.now()
-    await sendConcurrently(playerAgents, channel, messagesToSend)
+    await sendConcurrently(playerAgents, channel, messagesToSend, "noSignal")
     console.log(`Getting messages (should be ${messagesToSend})`)
     let received = 0
     while (true) {
@@ -167,14 +167,15 @@ const gossipTrial = async (playerAgents: PlayerAgents, channel, messagesToSend: 
     }
 }
 
-const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers, channel, messagesToSend) => {
+const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Player[], channel, messagesToSend) => {
+    const numInstances = playerAgents[0].length
     const sendingCell = playerAgents[0][0].cell
 
     // wait for all agents to be active:
     do {
         await delay(1000)
         const stats = await sendingCell.call('chat', 'agent_stats', null);
-        if (stats.agents == playerAgents.length) {
+        if (stats.agents === playerAgents.length * numInstances) {
             break;
         }
         console.log("waiting for all conductors to be listed as active", stats)
@@ -182,38 +183,35 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers, chann
 
     // setup the signal handler for all the players so we can check
     // if all the signals are returned
-    let receipts: { [key: string]: number; } = {};
-    for (const i in allPlayers) {
+    let receipts: number[] = new Array(playerAgents.length * numInstances);
+    for (let i = 0; i < playerAgents.length; i++) {
         const conductor = allPlayers[i]
         conductor.setSignalHandler((signal) => {
-            const me = i
-            console.log(`Received Signal for ${me}:`, signal.data.payload.signal_payload.messageData.message)
-            if (!receipts[me]) {
-                receipts[me] = 1
+            const { data: { cellId: [dnaHash, agentKey], payload: any } } = signal
+            console.log(`Received Signal for conductor #${i.toString()}, agentKey ${agentKey.toString('hex')}:`, signal.data.payload.signal_payload.messageData.message)
+
+            const instanceIdx = playerAgents[i].findIndex(agent => agent.agent.equals(agentKey))
+            const idx = i * numInstances + instanceIdx
+            if (!receipts[idx]) {
+                receipts[idx] = 1
             } else {
-                receipts[me] += 1
+                receipts[idx] += 1
             }
         })
     }
 
     const start = Date.now()
-    await sendConcurrently(playerAgents, channel, messagesToSend)
+    await sendConcurrently(playerAgents, channel, messagesToSend, "signal")
     console.log(`Getting messages (should be ${messagesToSend})`)
 
-    let received = 0
     do {
-        received = 0
-        let leastReceived = messagesToSend
-        for (const [key, count] of Object.entries(receipts)) {
-            if (count == messagesToSend) {
+        let received = 0
+        for (const count of receipts) {
+            if (count === messagesToSend) {
                 received += 1
-            } else {
-                if (count < leastReceived) {
-                    leastReceived = count
-                }
             }
         }
-        if (received == Object.keys(receipts).length) {
+        if (received === playerAgents.length * numInstances) {
             console.log(`All nodes got all signals!`)
             return Date.now() - start
         }
