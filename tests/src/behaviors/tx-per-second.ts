@@ -1,4 +1,4 @@
-import { Player, DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps, TransportConfigType, ProxyAcceptConfig, ProxyConfigType  } from '@holochain/tryorama'
+import { Player, DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps, TransportConfigType, ProxyAcceptConfig, ProxyConfigType, Cell } from '@holochain/tryorama'
 import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
@@ -17,9 +17,9 @@ export const defaultConfig = {
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
 
+type PlayerAgents = Array<Array<{ hAppId: string, agent: Buffer, cell: Cell }>>
 
-
-const setup = async (s: ScenarioApi, t, config, local) => {
+const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
     let network;
     if (local) {
         network = { transport_pool: [], bootstrap_service: undefined }
@@ -37,7 +37,7 @@ const setup = async (s: ScenarioApi, t, config, local) => {
         }
     }
 
-    const conductorConfig = Config.gen({network})
+    const conductorConfig = Config.gen({ network })
 
     t.comment(`Preparing playground: initializing conductors and spawning`)
 
@@ -73,10 +73,14 @@ const setup = async (s: ScenarioApi, t, config, local) => {
     }
 
     // install chat on all the conductors
-    const playerAgents = await Promise.all(allPlayers.map((player, i) => {
+    const playerAgents: PlayerAgents = await Promise.all(allPlayers.map(async (player, i) => {
         console.log("installing player", i)
         // console.log("installation", installation)
-        return allPlayers[i].installAgentsHapps(installation)
+        const agents = await player.installAgentsHapps(installation)
+        return agents.map((happs) => {
+            const [{ hAppId, agent, cells: [cell] }] = happs;
+            return { hAppId, agent, cell }
+        })
     }))
 
     if (local) {
@@ -84,10 +88,9 @@ const setup = async (s: ScenarioApi, t, config, local) => {
     }
 
     console.log(`Creating channel for test:`)
-    const happ = playerAgents[0][0][0] // only one happ per agent
     const channel_uuid = uuidv4();
     const channel = { category: "General", uuid: channel_uuid }
-    const createChannelResult = await happ.cells[0].call('chat', 'create_channel', { name: `Test Channel`, channel });
+    const createChannelResult = await playerAgents[0][0].cell.call('chat', 'create_channel', { name: `Test Channel`, channel });
     console.log(createChannelResult);
     return { playerAgents, allPlayers, channel: createChannelResult }
 }
@@ -114,7 +117,7 @@ const send = async (i, cell, channel, signal: boolean) => {
     }
 }
 
-const sendSerially = async (end, sendingCell, channel, messagesToSend) => {
+const sendSerially = async (end: number, sendingCell: Cell, channel, messagesToSend: number) => {
     //    const msDelayBetweenMessage = period/messagesToSend
     for (let i = 0; i < messagesToSend; i++) {
         await send(i, sendingCell, channel, true)
@@ -129,16 +132,17 @@ const sendSerially = async (end, sendingCell, channel, messagesToSend) => {
     return messagesToSend
 }
 
-const sendConcurrently = async (playerAgents, channel, messagesToSend) => {
+const sendConcurrently = async (playerAgents: PlayerAgents, channel, messagesToSend: number) => {
+    const instances = playerAgents[0].length
     const messagePromises = new Array(messagesToSend)
     for (let i = 0; i < messagesToSend; i++) {
-        messagePromises[i] = send(i, playerAgents[i % playerAgents.length][0][0].cells[0], channel, false)
+        messagePromises[i] = send(i, playerAgents[(i / instances) % playerAgents.length][i % instances].cell, channel, false)
     }
     await Promise.all(messagePromises)
 }
 
-const gossipTrial = async (playerAgents, channel, messagesToSend): Promise<number> => {
-    const receivingCell = playerAgents[0][0][0].cells[0]
+const gossipTrial = async (playerAgents: PlayerAgents, channel, messagesToSend: number): Promise<number> => {
+    const receivingCell = playerAgents[0][0].cell
     const start = Date.now()
     await sendConcurrently(playerAgents, channel, messagesToSend)
     console.log(`Getting messages (should be ${messagesToSend})`)
@@ -163,13 +167,13 @@ const gossipTrial = async (playerAgents, channel, messagesToSend): Promise<numbe
     }
 }
 
-const signalTrial = async (period, playerAgents, allPlayers, channel, messagesToSend) => {
-    const sendingCell = playerAgents[0][0][0].cells[0]
+const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers, channel, messagesToSend) => {
+    const sendingCell = playerAgents[0][0].cell
 
     // wait for all agents to be active:
     do {
         await delay(1000)
-        const stats = await sendingCell.call('chat', 'stats', { category: "General" });
+        const stats = await sendingCell.call('chat', 'agent_stats', null);
         if (stats.agents == playerAgents.length) {
             break;
         }
@@ -211,7 +215,7 @@ const signalTrial = async (period, playerAgents, allPlayers, channel, messagesTo
         }
         if (received == Object.keys(receipts).length) {
             console.log(`All nodes got all signals!`)
-            return Date.now()-start
+            return Date.now() - start
         }
         if (Date.now() - start > period) {
             console.log(`Didn't receive all messages in period!`)
@@ -221,8 +225,8 @@ const signalTrial = async (period, playerAgents, allPlayers, channel, messagesTo
     } while (true)
 }
 
-const signalTrialOld = async (period, playerAgents, allPlayers, channel, messagesToSend) => {
-    const sendingCell = playerAgents[0][0][0].cells[0]
+const signalTrialOld = async (period, playerAgents: PlayerAgents, allPlayers, channel, messagesToSend) => {
+    const sendingCell = playerAgents[0][0].cell
 
     // wait for all agents to be active:
     do {
@@ -287,9 +291,10 @@ export const gossipTx = async (s, t, config, txCount, local) => {
 export const signalTx = async (s, t, config, period, txCount, local) => {
     // do the standard setup
     const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
-    for (const i in playerAgents) {
-        const cell = playerAgents[i][0][0].cells[0]
-        await cell.call('chat', 'refresh_chatter', null);
+    for (const player of playerAgents) {
+        for (const agent of player) {
+            await agent.cell.call('chat', 'refresh_chatter', null);
+        }
     }
 
     const actual = await signalTrial(period, playerAgents, allPlayers, channel, txCount)
