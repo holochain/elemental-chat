@@ -39,7 +39,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
 
     // remote in config means use trycp server
     if (!config.remote) {
-        allPlayers = await s.players(conductorConfigsArray)
+        allPlayers = await s.players(conductorConfigsArray, false)
         await Promise.all(allPlayers.map(player => player.startup(() => { })));
         i = allPlayers.length
     } else {
@@ -82,6 +82,26 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     const channel = { category: "General", uuid: channel_uuid }
     const createChannelResult = await playerAgents[0][0].cell.call('chat', 'create_channel', { name: `Test Channel`, channel });
     console.log(createChannelResult);
+
+    for (const player of playerAgents) {
+        for (const agent of player) {
+            await agent.cell.call('chat', 'refresh_chatter', null);
+        }
+    }
+
+    // wait for all agents to be active:
+    for (const player of playerAgents) {
+        for (const agent of player) {
+            while (true) {
+                const stats = await agent.cell.call('chat', 'agent_stats', null);
+                console.log("waiting for all agents to be listed as active", stats)
+                if (stats.agents === config.nodes * config.conductors * config.instances) {
+                    break;
+                }
+                await delay(1000)
+            }
+        }
+    }
     return { playerAgents, allPlayers, channel: createChannelResult }
 }
 
@@ -159,17 +179,6 @@ const gossipTrial = async (playerAgents: PlayerAgents, channel, messagesToSend: 
 
 const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Player[], channel, messagesToSend) => {
     const numInstances = playerAgents[0].length
-    const sendingCell = playerAgents[0][0].cell
-
-    // wait for all agents to be active:
-    do {
-        await delay(1000)
-        const stats = await sendingCell.call('chat', 'agent_stats', null);
-        if (stats.agents === playerAgents.length * numInstances) {
-            break;
-        }
-        console.log("waiting for all conductors to be listed as active", stats)
-    } while (true) // TODO fix for multi-instance
 
     let allReceiptsResolve
     const allReceipts = new Promise<number | undefined>((resolve, reject) => allReceiptsResolve = resolve)
@@ -285,11 +294,6 @@ export const gossipTx = async (s, t, config, txCount, local) => {
 export const signalTx = async (s, t, config, period, txCount, local) => {
     // do the standard setup
     const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
-    for (const player of playerAgents) {
-        for (const agent of player) {
-            await agent.cell.call('chat', 'refresh_chatter', null);
-        }
-    }
 
     const actual = await signalTrial(period, playerAgents, allPlayers, channel, txCount)
     await Promise.all(allPlayers.map(player => player.shutdown()))

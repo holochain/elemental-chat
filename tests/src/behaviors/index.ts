@@ -17,7 +17,7 @@ console.log(`Running behavior test id=${runName} with:\n`, config)
 
 config.numConductors = config.nodes * config.conductors
 
-const local = false
+const local = true
 
 const middleware = /*config.endpoints
   ? compose(tapeExecutor(require('tape')), groupPlayersByMachine(config.endpoints, config.conductors))
@@ -25,7 +25,7 @@ const middleware = /*config.endpoints
 
 const orchestrator = new Orchestrator({ middleware })
 
-const trial: string = "signal"
+const trial: string = "gossip"
 
 if (trial === "gossip") {
     orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {

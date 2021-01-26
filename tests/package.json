@@ -7,7 +7,7 @@
     "test": "npm run test:setup && npm run test:standard",
     "test:standard": "TRYORAMA_LOG_LEVEL=info RUST_LOG=holochain::core::ribosome::host_fn::debug=debug RUST_BACKTRACE=1 ts-node src/index.ts | tap-diff",
     "test:setup": "CARGO_TARGET_DIR=../target cargo build --release --target wasm32-unknown-unknown && dna-util -c ../elemental-chat.dna.workdir",
-    "test:behavior": "TRYORAMA_LOG_LEVEL=debug RUST_BACKTRACE=1 ts-node src/behaviors/index.ts | tap-diff"
+    "test:behavior": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 ts-node src/behaviors/index.ts | tap-diff"
   },
   "author": "",
   "license": "ISC",
