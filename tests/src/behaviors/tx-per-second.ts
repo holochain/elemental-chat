@@ -205,13 +205,16 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
     console.log(`Getting messages (should be ${messagesToSend})`)
 
     do {
-        let received = 0
-        for (const count of receipts) {
-            if (count === messagesToSend) {
-                received += 1
+        // Check that all receipts are present.
+        // Note that this cannot use Array.every because that ignores unpopulated indices.
+        let allDone = true
+        for (const i in receipts) {
+            if (receipts[i] !== messagesToSend) {
+                allDone = false
+                break
             }
         }
-        if (received === playerAgents.length * numInstances) {
+        if (allDone) {
             console.log(`All nodes got all signals!`)
             return Date.now() - start
         }
