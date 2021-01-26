@@ -120,7 +120,7 @@ const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
 const sendSerially = async (end: number, sendingCell: Cell, channel, messagesToSend: number) => {
     //    const msDelayBetweenMessage = period/messagesToSend
     for (let i = 0; i < messagesToSend; i++) {
-        await send(i, sendingCell, channel, true)
+        await send(i, sendingCell, channel, "signal")
         if (Date.now() > end) {
             i = i + 1
             console.log(`Couldn't send all messages in period, sent ${i}`)
@@ -136,7 +136,7 @@ const sendConcurrently = async (playerAgents: PlayerAgents, channel, messagesToS
     const instances = playerAgents[0].length
     const messagePromises = new Array(messagesToSend)
     for (let i = 0; i < messagesToSend; i++) {
-        messagePromises[i] = send(i, playerAgents[(i / instances) % playerAgents.length][i % instances].cell, channel, signal)
+        messagePromises[i] = send(i, playerAgents[Math.floor(i / instances) % playerAgents.length][i % instances].cell, channel, signal)
     }
     await Promise.all(messagePromises)
 }
@@ -181,49 +181,52 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
         console.log("waiting for all conductors to be listed as active", stats)
     } while (true) // TODO fix for multi-instance
 
+    let allReceiptsResolve
+    const allReceipts = new Promise<number | undefined>((resolve, reject) => allReceiptsResolve = resolve)
+
+
+    let finishedCount = 0
+    // Track how many signals each agent has received.
+    // Initialize each slot in `receipts` to equal how many that agent has sent.
+    const receipts: number[] = new Array(playerAgents.length * numInstances);
+    for (let i = 0; i < playerAgents.length * numInstances; i++) {
+        receipts[i] = Math.ceil(Math.max(messagesToSend - i, 0) / (playerAgents.length * numInstances))
+    }
+    console.log(receipts)
     // setup the signal handler for all the players so we can check
     // if all the signals are returned
-    let receipts: number[] = new Array(playerAgents.length * numInstances);
     for (let i = 0; i < playerAgents.length; i++) {
         const conductor = allPlayers[i]
         conductor.setSignalHandler((signal) => {
             const { data: { cellId: [dnaHash, agentKey], payload: any } } = signal
-            console.log(`Received Signal for conductor #${i.toString()}, agentKey ${agentKey.toString('hex')}:`, signal.data.payload.signal_payload.messageData.message)
-
             const instanceIdx = playerAgents[i].findIndex(agent => agent.agent.equals(agentKey))
             const idx = i * numInstances + instanceIdx
-            if (!receipts[idx]) {
-                receipts[idx] = 1
-            } else {
-                receipts[idx] += 1
+            // console.log(`Received Signal for conductor #${i.toString()}, agentKey ${agentKey.toString('hex')}, agent #${idx}:`, signal.data.payload.signal_payload.messageData.message)
+            receipts[idx] += 1
+            if (receipts[idx] === messagesToSend) {
+                finishedCount += 1
+                console.log(`agent #${idx} finished! count: ${finishedCount}`)
+                if (finishedCount === playerAgents.length * numInstances) {
+                    allReceiptsResolve(Date.now())
+                }
             }
         })
     }
 
     const start = Date.now()
+    const delayPromise = delay(period).then(() => undefined)
     await sendConcurrently(playerAgents, channel, messagesToSend, "signal")
     console.log(`Getting messages (should be ${messagesToSend})`)
 
-    do {
-        // Check that all receipts are present.
-        // Note that this cannot use Array.every because that ignores unpopulated indices.
-        let allDone = true
-        for (const i in receipts) {
-            if (receipts[i] !== messagesToSend) {
-                allDone = false
-                break
-            }
-        }
-        if (allDone) {
-            console.log(`All nodes got all signals!`)
-            return Date.now() - start
-        }
-        if (Date.now() - start > period) {
-            console.log(`Didn't receive all messages in period!`)
-            return undefined
-        }
-        await delay(1000)
-    } while (true)
+    const finishTime: number | undefined = await Promise.race([allReceipts, delayPromise])
+
+    if (finishTime === undefined) {
+        console.log(`Didn't receive all messages in period!`)
+        return undefined
+    }
+
+    console.log(`All nodes got all signals!`)
+    return finishTime - start
 }
 
 const signalTrialOld = async (period, playerAgents: PlayerAgents, allPlayers, channel, messagesToSend) => {
