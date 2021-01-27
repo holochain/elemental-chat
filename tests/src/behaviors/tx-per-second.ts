@@ -69,6 +69,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
         const agents = await player.installAgentsHapps(installation)
         return agents.map((happs) => {
             const [{ hAppId, agent, cells: [cell] }] = happs;
+            console.log(`DNA HASH: ${cell.cellId[0].toString('base64')}`)
             return { hAppId, agent, cell }
         })
     }))
