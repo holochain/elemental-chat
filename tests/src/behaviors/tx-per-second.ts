@@ -3,16 +3,16 @@ import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
 import { network as defaultNetworkConfig } from '../common'
-import trycpAddresses from './trycp-addresses'
 const path = require('path')
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
-    remote: false,
-    nodes: 1, // Number of machines
-    conductors: 10, // Conductors per machine
-    instances: 2, // Instances per conductor
+    trycpAddresses: ["172.26.136.38:9000", "172.26.38.158:9000"],
+//    trycpAddresses: ["localhost:9000"],
+    nodes: 2, // Number of machines
+    conductors: 5, // Conductors per machine
+    instances: 5, // Instances per conductor
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
@@ -38,22 +38,25 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     let i = 0;
 
     // remote in config means use trycp server
-    if (!config.remote) {
+    if (config.trycpAddresses.length == 0) {
         allPlayers = await s.players(conductorConfigsArray, false)
         await Promise.all(allPlayers.map(player => player.startup(() => { })));
         i = allPlayers.length
     } else {
         allPlayers = []
         while (allPlayers.length / config.conductors < config.nodes) {
-            if (i >= trycpAddresses.length) {
+            if (i >= config.trycpAddresses.length) {
                 throw new Error(`ran out of trycp addresses after contacting ${allPlayers.length / config.conductors} nodes`)
             }
             let players: Player[];
             try {
-                players = await s.playersRemote(conductorConfigsArray, trycpAddresses[i])
+                console.log("PLAYERS")
+                players = await s.players(conductorConfigsArray, false, config.trycpAddresses[i])
+                console.log("STARTUP")
                 await Promise.all(players.map(player => player.startup(() => { })));
+                console.log("DONE")
             } catch (e) {
-                console.log(`Skipping trycp node ${trycpAddresses[i]} due to error: ${e}`)
+                console.log(`Skipping trycp node ${config.trycpAddresses[i]} due to error: ${e}`)
                 i += 1
                 continue
             }

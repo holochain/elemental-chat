@@ -15,7 +15,8 @@ export const network = {
     type: TransportConfigType.Proxy,
     sub_transport: { type: TransportConfigType.Quic },
     proxy_config: {
-      type: ProxyConfigType.RemoteProxyClient,
+        type: ProxyConfigType.RemoteProxyClient,
+//        proxy_url: "kitsune-proxy://A7quSj_YTzwP1DF93QmErksPkDDuDSPT8zBGyhf7MPU/kitsune-quic/h/192.168.1.85/p/58451/--",
       proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/proxy.holochain.org/p/5778/--",
     }
   }],
