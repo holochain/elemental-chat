@@ -17,7 +17,7 @@ console.log(`Running behavior test id=${runName} with:\n`, config)
 
 config.numConductors = config.nodes * config.conductors
 
-const local = false
+const local = true
 
 const middleware = /*config.endpoints
   ? compose(tapeExecutor(require('tape')), groupPlayersByMachine(config.endpoints, config.conductors))
@@ -32,6 +32,7 @@ if (trial === "gossip") {
         let txCount = 50
         while (true) {
             t.comment(`trial with ${txCount} tx`)
+            await s._cleanup()
             // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
             s._uuid = uuidv4();
             const duration = await gossipTx(s, t, config, txCount, local)
@@ -43,12 +44,13 @@ if (trial === "gossip") {
 } else if (trial === "signal") {
     const period = 20 * 1000  // timeout
     orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
-        let txCount = 10
+        let txCount = 100
         let duration
         let txPerSecondAtMax = 0
         t.comment(`trial with ${config.nodes} nodes, ${config.conductors} conductors per node and ${config.instances} cells per conductor`)
         do {
             t.comment(`trial with ${txCount} tx per ${period}ms`)
+            await s._cleanup()
             // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
             s._uuid = uuidv4();
             duration = await signalTx(s, t, config, period, txCount, local)

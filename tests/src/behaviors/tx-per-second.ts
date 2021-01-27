@@ -8,11 +8,12 @@ const path = require('path')
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
-    trycpAddresses: ["172.26.136.38:9000", "172.26.38.158:9000"],
-//    trycpAddresses: ["localhost:9000"],
-    nodes: 2, // Number of machines
-    conductors: 5, // Conductors per machine
-    instances: 5, // Instances per conductor
+    // trycpAddresses: ["172.26.136.38:9000", "172.26.38.158:9000"],
+    // trycpAddresses: ["localhost:9000"],
+    trycpAddresses: [],
+    nodes: 1, // Number of machines
+    conductors: 2, // Conductors per machine
+    instances: 10, // Instances per conductor
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
@@ -109,17 +110,17 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     return { playerAgents, allPlayers, channel: createChannelResult }
 }
 
-const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
+const send = async (agentId, messageId, cell, channel, signal: "signal" | "noSignal") => {
     const msg = {
         last_seen: { First: null },
         channel: channel.channel,
         message: {
             uuid: uuidv4(),
-            content: `message ${i}`,
+            content: `message #${messageId} from agent #${agentId}`,
         },
         chunk: 0,
     }
-    console.log(`sending message ${i}`)
+    console.log(`sending message #${messageId} from agent #${agentId}`)
     const messageData = await cell.call('chat', 'create_message', msg)
 
     if (signal === "signal") {
@@ -131,26 +132,37 @@ const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
     }
 }
 
-const sendSerially = async (end: number, sendingCell: Cell, channel, messagesToSend: number) => {
+const sendSerially = async (sendingCell: Cell, channel, messagesToSend: number, signal: "signal" | "noSignal", agentId: number = 0) => {
     //    const msDelayBetweenMessage = period/messagesToSend
     for (let i = 0; i < messagesToSend; i++) {
-        await send(i, sendingCell, channel, "signal")
-        if (Date.now() > end) {
-            i = i + 1
-            console.log(`Couldn't send all messages in period, sent ${i}`)
-            return i
-        }
+        await send(agentId, i, sendingCell, channel, signal)
         // console.log(`waiting ${msDelayBetweenMessage}ms`)
         // await delay(msDelayBetweenMessage-20)
     }
-    return messagesToSend
 }
 
 const sendConcurrently = async (playerAgents: PlayerAgents, channel, messagesToSend: number, signal: "signal" | "noSignal") => {
-    const instances = playerAgents[0].length
-    const messagePromises = new Array(messagesToSend)
-    for (let i = 0; i < messagesToSend; i++) {
-        messagePromises[i] = send(i, playerAgents[Math.floor(i / instances) % playerAgents.length][i % instances].cell, channel, signal)
+    const numInstances = playerAgents[0].length
+    const numAgents = playerAgents.length * numInstances
+    const messagePromises = new Array(numAgents)
+    // Let X = the number of messages to send
+    // Let Y = the number of agents
+    // For the most distributed sending, all agents would send the same amount of messages.
+    // If X is not a multiple of Y, then X % Y agents will have to send one more than the rest
+    const numMessagesToSendPerAgent = Math.floor(messagesToSend / numAgents)
+    const numAgentsSendingOneExtraMessage = messagesToSend % numAgents
+    let messageId = 0
+    for (let agent = 0; agent < numAgentsSendingOneExtraMessage; agent++) {
+        const cell = playerAgents[Math.floor(agent / numInstances)][agent % numInstances].cell
+        messagePromises[agent] = sendSerially(cell, channel, numMessagesToSendPerAgent + 1, signal, agent)
+        messageId += numMessagesToSendPerAgent + 1
+    }
+    if (numMessagesToSendPerAgent !== 0) {
+        for (let agent = numAgentsSendingOneExtraMessage; agent < numAgents; agent++) {
+            const cell = playerAgents[Math.floor(agent / numInstances)][agent % numInstances].cell
+            messagePromises[agent] = sendSerially(cell, channel, numMessagesToSendPerAgent, signal, agent)
+            messageId += numMessagesToSendPerAgent + 1
+        }
     }
     await Promise.all(messagePromises)
 }
@@ -230,62 +242,6 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
 
     console.log(`All nodes got all signals!`)
     return finishTime - start
-}
-
-const signalTrialOld = async (period, playerAgents: PlayerAgents, allPlayers, channel, messagesToSend) => {
-    const sendingCell = playerAgents[0][0].cell
-
-    // wait for all agents to be active:
-    do {
-        await delay(1000)
-        const stats = await sendingCell.call('chat', 'stats', { category: "General" });
-        if (stats.agents == playerAgents.length) {
-            break;
-        }
-        console.log("waiting for all conductors to be listed as active", stats)
-    } while (true) // TODO fix for multi-instance
-
-    let receipts: { [key: string]: number; } = {};
-    for (const i in allPlayers) {
-        const conductor = allPlayers[i]
-        conductor.setSignalHandler((signal) => {
-            const me = i
-            console.log(`Received Signal for ${me}:`, signal.data.payload.signal_payload.messageData.message)
-            if (!receipts[me]) {
-                receipts[me] = 1
-            } else {
-                receipts[me] += 1
-            }
-        })
-    }
-    const start = Date.now()
-    const sent = await sendSerially(start + period, sendingCell, channel, messagesToSend)
-    if (sent != messagesToSend) {
-        return sent
-    }
-    let received = 0
-    do {
-        received = 0
-        let leastReceived = messagesToSend
-        for (const [key, count] of Object.entries(receipts)) {
-            if (count == messagesToSend) {
-                received += 1
-            } else {
-                if (count < leastReceived) {
-                    leastReceived = count
-                }
-            }
-        }
-        if (received == Object.keys(receipts).length) {
-            console.log(`All nodes got all signals!`)
-            return messagesToSend
-        }
-        if (Date.now() - start > period) {
-            console.log(`Didn't receive all messages in period!`)
-            return leastReceived
-        }
-        await delay(1000)
-    } while (true)
 }
 
 export const gossipTx = async (s, t, config, txCount, local) => {
