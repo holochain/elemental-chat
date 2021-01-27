@@ -17,7 +17,7 @@ console.log(`Running behavior test id=${runName} with:\n`, config)
 
 config.numConductors = config.nodes * config.conductors
 
-const local = false
+const local = true
 
 const middleware = /*config.endpoints
   ? compose(tapeExecutor(require('tape')), groupPlayersByMachine(config.endpoints, config.conductors))

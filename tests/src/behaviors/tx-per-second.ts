@@ -8,11 +8,11 @@ const path = require('path')
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
-    trycpAddresses: ["172.26.136.38:9000", "172.26.38.158:9000"],
-//    trycpAddresses: ["localhost:9000"],
+    // trycpAddresses: ["172.26.136.38:9000", "172.26.38.158:9000"],
+    trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
     nodes: 2, // Number of machines
     conductors: 5, // Conductors per machine
-    instances: 5, // Instances per conductor
+    instances: 2, // Instances per conductor
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
