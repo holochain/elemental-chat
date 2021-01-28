@@ -56,7 +56,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
                 await Promise.all(players.map(player => player.startup(() => { })));
                 console.log("DONE")
             } catch (e) {
-                console.log(`Skipping trycp node ${config.trycpAddresses[i]} due to error: ${e}`)
+                console.log(`Skipping trycp node ${config.trycpAddresses[i]} due to error: ${JSON.stringify(e)}`)
                 i += 1
                 continue
             }
