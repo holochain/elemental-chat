@@ -6,7 +6,7 @@ pub mod handlers;
 /// This is the actual name of the channel that
 /// can change.
 #[hdk_entry(id = "channel_info")]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChannelInfo {
     pub name: String,
     pub created_by: AgentPubKey,
@@ -16,16 +16,16 @@ pub struct ChannelInfo {
 /// Input to the create channel call
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelInput {
-    name: String,
-    channel: Channel,
+    pub name: String,
+    pub channel: Channel,
 }
 
 /// A channel is consists of the category it belongs to
 /// and a unique id
-#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes, PartialEq, Eq)]
 pub struct Channel {
-    category: String,
-    uuid: String,
+    pub category: String,
+    pub uuid: String,
 }
 
 /*  using global chatters list for now.
@@ -39,7 +39,9 @@ impl Channel {
  */
 
 /// The message type that goes to the UI
-#[derive(Serialize, Deserialize, SerializedBytes, derive_more::Constructor, Debug, Clone)]
+#[derive(
+    Serialize, Deserialize, SerializedBytes, derive_more::Constructor, Debug, Clone, PartialEq, Eq,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelData {
     pub channel: Channel,
@@ -50,13 +52,13 @@ pub struct ChannelData {
 /// Input to the list channels call
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelListInput {
-    category: String,
+    pub category: String,
 }
 
 /// The channels returned from list messages
-#[derive(Serialize, Deserialize, SerializedBytes, derive_more::From)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, derive_more::From)]
 pub struct ChannelList {
-    channels: Vec<ChannelData>,
+    pub channels: Vec<ChannelData>,
 }
 
 impl From<Channel> for Path {

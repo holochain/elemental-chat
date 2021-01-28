@@ -1,16 +1,16 @@
-use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
-use entries::{channel, message};
-use error::ChatResult;
-use hdk3::prelude::Path;
-use hdk3::prelude::*;
-use message::{
+pub use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
+pub use entries::{channel, message};
+pub use error::ChatResult;
+pub use hdk3::prelude::Path;
+pub use hdk3::prelude::*;
+pub use message::{
     ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SigResults,
     SignalMessageData,
 };
 
-mod entries;
-mod error;
-mod utils;
+pub mod entries;
+pub mod error;
+pub mod utils;
 
 // signals:
 pub const NEW_MESSAGE_SIGNAL_TYPE: &str = "new_message";

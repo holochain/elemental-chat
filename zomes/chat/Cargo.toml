@@ -9,9 +9,18 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-
-hdk3 = { git = "https://github.com/holochain/holochain.git", rev = "b3b5f0171d93249189ac84b81f3fd3dbaa7d2528" }
+hdk3 = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file" }
 serde = "=1.0.104"
 chrono = { version = "0.4", features = ['alloc', 'std']}
-derive_more = "0.99.9"
+derive_more = "0.99"
 thiserror = "1.0.20"
+
+[dev-dependencies]
+holochain = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file", features = ["test_utils"] }
+tokio = { version = "0.2", features = ["full"]}
+
+# [patch.crates-io]
+# rkv = { git = "https://github.com/holochain/rkv.git", branch = "master" }
+# lmdb-rkv = { git = "https://github.com/holochain/lmdb-rs.git" }
+# observability = { git = "https://github.com/freesig/observability.git", branch = "metrics" }
+# tokio_safe_block_on = { git = "https://github.com/neonphog/tokio_safe_block_on.git", branch = "fix_holochain_bug" }
