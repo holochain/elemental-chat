@@ -228,7 +228,7 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
     const finishTime: number | undefined = await Promise.race([allReceipts, delayPromise])
 
     if (finishTime === undefined) {
-        console.log(`Didn't receive all messages in period (${period})!`)
+        console.log(`Didn't receive all messages in period (${period/1000}s)!`)
         console.log(`Total agents: ${totalAgents}`)
         console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalAgents*100).toFixed(1)}%)`)
         console.log(`Total messages sent: ${messagesToSend * totalAgents}`)
