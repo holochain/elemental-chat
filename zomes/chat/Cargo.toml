@@ -16,8 +16,14 @@ derive_more = "0.99"
 thiserror = "1.0.20"
 
 [dev-dependencies]
-holochain = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file", features = ["test_utils"] }
+# holochain = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file", features = ["test_utils"] }
+holochain = { path = "../../../holochain/crates/holochain/"}
+holochain_types = { path = "../../../holochain/crates/holochain_types/"}
 tokio = { version = "0.2", features = ["full"]}
+observability = "0.1.2"
+nanoid = "0.3"
+futures = "0.3.1"
+stream-cancel = "0.8.0"
 
 # [patch.crates-io]
 # rkv = { git = "https://github.com/holochain/rkv.git", branch = "master" }

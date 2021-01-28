@@ -18,7 +18,7 @@ pub const NEW_CHANNEL_SIGNAL_TYPE: &str = "new_channel";
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(tag = "signal_name", content = "signal_payload")]
-enum SignalPayload {
+pub enum SignalPayload {
     Message(SignalMessageData),
     Channel(ChannelData),
 }
