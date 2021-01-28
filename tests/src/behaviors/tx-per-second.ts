@@ -8,11 +8,24 @@ const path = require('path')
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
-    // trycpAddresses: ["172.26.136.38:9000", "172.26.38.158:9000"],
-    trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
-    nodes: 2, // Number of machines
-    conductors: 5, // Conductors per machine
-    instances: 2, // Instances per conductor
+    trycpAddresses: [
+        "172.26.136.38:9000", // zippy1
+        "172.26.38.158:9000", // zippy2
+        "172.26.37.152:9000",
+        "172.26.55.252:9000",
+        "172.26.223.202:9000", // alastar
+        "172.26.160.247:9000",
+        "172.26.84.233:9000", // katie
+        "172.26.187.15:9000", //bekah
+        "172.26.201.167:9000", // lucas
+        "172.26.44.116:9000" // peeech
+        //"172.26.100.202:9000", // timo1
+        //"172.26.156.115:9500" // timo2
+    ],
+    //trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
+    nodes: 10, // Number of machines
+    conductors: 1, // Conductors per machine
+    instances: 1, // Instances per conductor
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
@@ -84,12 +97,15 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     const createChannelResult = await playerAgents[0][0].cell.call('chat', 'create_channel', { name: `Test Channel`, channel });
     console.log(createChannelResult);
 
+    let a = 0;
     for (const player of playerAgents) {
-        for (const agent of player) {
-            await agent.cell.call('chat', 'refresh_chatter', null);
-        }
+        console.log(`calling refresh chatter from player ${a}`)
+        a+=1;
+        await Promise.all(player.map(agent => {return agent.cell.call('chat', 'refresh_chatter', null)} ));
     }
 
+    const startFindAgents = Date.now()
+    console.log(`Start find agents at ${new Date(startFindAgents).toLocaleString("en-US")}`)
     let p = 0;
     // wait for all agents to be active:
     for (const player of playerAgents) {
@@ -107,6 +123,10 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
         }
         p+=1;
     }
+    const endFindAgents = Date.now()
+    console.log(`Found messages at ${new Date(endFindAgents).toLocaleString("en-US")}`)
+    console.log(`Took: ${(endFindAgents-startFindAgents)/1000}s`)
+
     return { playerAgents, allPlayers, channel: createChannelResult }
 }
 
@@ -120,15 +140,17 @@ const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
         },
         chunk: 0,
     }
-    console.log(`sending message ${i}`)
+    console.log(`creating message ${i}`)
     const messageData = await cell.call('chat', 'create_message', msg)
+    console.log(`message created ${i}`)
 
     if (signal === "signal") {
+        console.log(`sending signal ${i}`)
         const r = await cell.call('chat', 'signal_chatters', {
             messageData,
             channelData: channel,
         })
-        // console.log("signal results", r)
+        console.log(`signal sent ${i}`)
     }
 }
 
@@ -196,6 +218,9 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
     const receipts: number[] = new Array(totalAgents);
     for (let i = 0; i < totalAgents; i++) {
         receipts[i] = Math.ceil(Math.max(messagesToSend - i, 0) / (playerAgents.length * numInstances))
+        if (receipts[i] == messagesToSend) {
+            finishedCount += 1
+        }
     }
     console.log(receipts)
     // setup the signal handler for all the players so we can check
@@ -231,12 +256,14 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
         console.log(`Didn't receive all messages in period (${period/1000}s)!`)
         console.log(`Total agents: ${totalAgents}`)
         console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalAgents*100).toFixed(1)}%)`)
-        console.log(`Total messages sent: ${messagesToSend * totalAgents}`)
+        console.log(`Total messages created: ${messagesToSend}`)
+        console.log(`Total signals sent: ${(messagesToSend * totalAgents) - messagesToSend}`)
         let totalReceived = 0
         for (let i = 0; i < totalAgents; i++) {
             totalReceived += receipts[i]
         }
-        console.log(`Total messages received: ${totalReceived} (${(totalReceived/(messagesToSend * totalAgents)*100).toFixed(1)}%)`)
+        totalReceived -= messagesToSend; // account for messages not sent to self
+        console.log(`Total signals received: ${totalReceived} (${(totalReceived/(messagesToSend * totalAgents)*100).toFixed(1)}%)`)
         return undefined
     }
 

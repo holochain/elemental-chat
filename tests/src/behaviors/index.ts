@@ -17,7 +17,7 @@ console.log(`Running behavior test id=${runName} with:\n`, config)
 
 config.numConductors = config.nodes * config.conductors
 
-const local = true
+const local = false
 
 const middleware = /*config.endpoints
   ? compose(tapeExecutor(require('tape')), groupPlayersByMachine(config.endpoints, config.conductors))
@@ -41,7 +41,7 @@ if (trial === "gossip") {
         }
     })
 } else if (trial === "signal") {
-    const period = 30 * 1000  // timeout
+    const period = 60 * 1000  // timeout
     orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
         let txCount = 10
         let duration
