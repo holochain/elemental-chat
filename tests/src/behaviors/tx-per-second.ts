@@ -50,11 +50,8 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
             }
             let players: Player[];
             try {
-                console.log("PLAYERS")
                 players = await s.players(conductorConfigsArray, false, config.trycpAddresses[i])
-                console.log("STARTUP")
                 await Promise.all(players.map(player => player.startup(() => { })));
-                console.log("DONE")
             } catch (e) {
                 console.log(`Skipping trycp node ${config.trycpAddresses[i]} due to error: ${JSON.stringify(e)}`)
                 i += 1
@@ -93,18 +90,22 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
         }
     }
 
+    let p = 0;
     // wait for all agents to be active:
     for (const player of playerAgents) {
+        let a = 0;
         for (const agent of player) {
             while (true) {
                 const stats = await agent.cell.call('chat', 'agent_stats', null);
-                console.log("waiting for all agents to be listed as active", stats)
+                console.log(`player ${p} agent ${a}: waiting for all agents to be listed as active`, stats)
                 if (stats.agents === config.nodes * config.conductors * config.instances) {
                     break;
                 }
-                await delay(1000)
+                await delay(2000)
             }
+            a+=1;
         }
+        p+=1;
     }
     return { playerAgents, allPlayers, channel: createChannelResult }
 }
@@ -189,10 +190,11 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
 
 
     let finishedCount = 0
+    let totalAgents = playerAgents.length * numInstances
     // Track how many signals each agent has received.
     // Initialize each slot in `receipts` to equal how many that agent has sent.
-    const receipts: number[] = new Array(playerAgents.length * numInstances);
-    for (let i = 0; i < playerAgents.length * numInstances; i++) {
+    const receipts: number[] = new Array(totalAgents);
+    for (let i = 0; i < totalAgents; i++) {
         receipts[i] = Math.ceil(Math.max(messagesToSend - i, 0) / (playerAgents.length * numInstances))
     }
     console.log(receipts)
@@ -208,8 +210,8 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
             receipts[idx] += 1
             if (receipts[idx] === messagesToSend) {
                 finishedCount += 1
-                console.log(`agent #${idx} finished! count: ${finishedCount}`)
-                if (finishedCount === playerAgents.length * numInstances) {
+                console.log(`agent #${idx} got all messages!`)
+                if (finishedCount === totalAgents) {
                     allReceiptsResolve(Date.now())
                 }
             }
@@ -217,14 +219,24 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
     }
 
     const start = Date.now()
+    console.log(`Start sending messages at ${new Date(start).toLocaleString("en-US")}`)
     const delayPromise = delay(period).then(() => undefined)
     await sendConcurrently(playerAgents, channel, messagesToSend, "signal")
+    console.log(`Finished sending messages at ${new Date(Date.now()).toLocaleString("en-US")}`)
     console.log(`Getting messages (should be ${messagesToSend})`)
 
     const finishTime: number | undefined = await Promise.race([allReceipts, delayPromise])
 
     if (finishTime === undefined) {
-        console.log(`Didn't receive all messages in period!`)
+        console.log(`Didn't receive all messages in period (${period})!`)
+        console.log(`Total agents: ${totalAgents}`)
+        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalAgents*100).toFixed(1)}%)`)
+        console.log(`Total messages sent: ${messagesToSend * totalAgents}`)
+        let totalReceived = 0
+        for (let i = 0; i < totalAgents; i++) {
+            totalReceived += receipts[i]
+        }
+        console.log(`Total messages received: ${totalReceived} (${(totalReceived/(messagesToSend * totalAgents)*100).toFixed(1)}%)`)
         return undefined
     }
 
