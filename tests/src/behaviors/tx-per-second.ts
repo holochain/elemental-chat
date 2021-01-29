@@ -88,7 +88,9 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     }))
 
     if (local) {
+        console.log(`Calling share all nodes ${new Date(endFindAgents).toLocaleString("en-US")}`)
         await s.shareAllNodes(allPlayers);
+        console.log(`Finished share all nodes ${new Date(endFindAgents).toLocaleString("en-US")}`)
     }
 
     console.log(`Creating channel for test:`)
