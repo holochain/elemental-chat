@@ -278,62 +278,6 @@ const signalTrial = async (period, activeAgents: Agents, allPlayers: Player[], c
     return finishTime - start
 }
 
-const signalTrialOld = async (period, playerAgents: PlayerAgents, allPlayers, channel, messagesToSend) => {
-    const sendingCell = playerAgents[0][0].cell
-
-    // wait for all agents to be active:
-    do {
-        await delay(1000)
-        const stats = await sendingCell.call('chat', 'stats', { category: "General" });
-        if (stats.agents == playerAgents.length) {
-            break;
-        }
-        console.log("waiting for all conductors to be listed as active", stats)
-    } while (true) // TODO fix for multi-instance
-
-    let receipts: { [key: string]: number; } = {};
-    for (const i in allPlayers) {
-        const conductor = allPlayers[i]
-        conductor.setSignalHandler((signal) => {
-            const me = i
-            console.log(`Received Signal for ${me}:`, signal.data.payload.signal_payload.messageData.message)
-            if (!receipts[me]) {
-                receipts[me] = 1
-            } else {
-                receipts[me] += 1
-            }
-        })
-    }
-    const start = Date.now()
-    const sent = await sendSerially(start + period, sendingCell, channel, messagesToSend)
-    if (sent != messagesToSend) {
-        return sent
-    }
-    let received = 0
-    do {
-        received = 0
-        let leastReceived = messagesToSend
-        for (const [key, count] of Object.entries(receipts)) {
-            if (count == messagesToSend) {
-                received += 1
-            } else {
-                if (count < leastReceived) {
-                    leastReceived = count
-                }
-            }
-        }
-        if (received == Object.keys(receipts).length) {
-            console.log(`All nodes got all signals!`)
-            return messagesToSend
-        }
-        if (Date.now() - start > period) {
-            console.log(`Didn't receive all messages in period!`)
-            return leastReceived
-        }
-        await delay(1000)
-    } while (true)
-}
-
 export const gossipTx = async (s, t, config, txCount, local) => {
     const { activeAgents: activeAgents, playerAgents, allPlayers, channel } = await setup(s, t, config, local)
     const actual = await gossipTrial(activeAgents, playerAgents, channel, txCount)
