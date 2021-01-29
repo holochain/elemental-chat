@@ -46,7 +46,7 @@ if (trial === "gossip") {
         let txCount = 60
         let duration
         let txPerSecondAtMax = 0
-        t.comment(`trial with ${config.nodes} nodes, ${config.conductors} conductors per node and ${config.instances} cells per conductor`)
+        t.comment(`trial with a network of ${config.nodes} nodes, ${config.conductors} conductors per node, and ${config.instances} cells per conductor, but only ${config.activeAgents} active agents (cells)`)
         do {
             t.comment(`trial with ${txCount} tx per ${period}ms`)
             // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
