@@ -35,8 +35,8 @@ type Agents = Array<{ hAppId: string, agent: Buffer, cell: Cell }>
 type PlayerAgents = Array<Agents>
 
 // TODO fix to be random distribution
-const selectActiveAgents = (count: number, playerAgents: PlayerAgents) : Agents => {
-    let activeAgents : Agents =  new Array(count)
+const selectActiveAgents = (count: number, playerAgents: PlayerAgents): Agents => {
+    let activeAgents: Agents = new Array(count)
     let a = 0;
     for (const player of playerAgents) {
         for (const agent of player) {
@@ -51,13 +51,13 @@ const selectActiveAgents = (count: number, playerAgents: PlayerAgents) : Agents 
         }
     }
     if (a < count) {
-       console.log(`Not enough agents for to make ${count} active`)
+        console.log(`Not enough agents for to make ${count} active`)
     }
     return activeAgents
 }
 
 
-const setup = async (s: ScenarioApi, t, config, local): Promise<{activeAgents: Agents, playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
+const setup = async (s: ScenarioApi, t, config, local): Promise<{ activeAgents: Agents, playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
     let network;
     if (local) {
         network = { transport_pool: [], bootstrap_service: undefined }
@@ -129,7 +129,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{activeAgents: A
     let now = Date.now()
 
     console.log(`Start calling refresh chatter for ${activeAgents.length} agents at ${new Date(now).toLocaleString("en-US")}`)
-    await Promise.all(activeAgents.map(agent => {return agent.cell.call('chat', 'refresh_chatter', null)} ));
+    await Promise.all(activeAgents.map(agent => { return agent.cell.call('chat', 'refresh_chatter', null) }));
     console.log(`End calling refresh chatter at ${new Date(Date.now()).toLocaleString("en-US")}`)
 
     now = Date.now()
@@ -145,13 +145,13 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{activeAgents: A
             }
             await delay(2000)
         }
-        a+=1;
+        a += 1;
     }
     const endFindAgents = Date.now()
     console.log(`Found messages at ${new Date(endFindAgents).toLocaleString("en-US")}`)
-    console.log(`Took: ${(endFindAgents-now)/1000}s`)
+    console.log(`Took: ${(endFindAgents - now) / 1000}s`)
 
-    return {activeAgents, playerAgents, allPlayers, channel: createChannelResult }
+    return { activeAgents, playerAgents, allPlayers, channel: createChannelResult }
 }
 
 const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
@@ -270,12 +270,12 @@ const signalTrial = async (period, activeAgents: Agents, playerAgents: PlayerAge
     const finishTime: number | undefined = await Promise.race([allReceipts, delayPromise])
 
     if (finishTime === undefined) {
-        console.log(`Didn't receive all messages in period (${period/1000}s)!`)
+        console.log(`Didn't receive all messages in period (${period / 1000}s)!`)
         console.log(`Total active agents: ${totalAgents}`)
-//        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalAgents*100).toFixed(1)}%)`)
+        //        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalAgents*100).toFixed(1)}%)`)
         console.log(`Total messages created: ${messagesToSend}`)
         console.log(`Total signals sent: ${totalExpected}`)
-        console.log(`Total signals received: ${totalReceived} (${(totalReceived/totalExpected*100).toFixed(1)}%)`)
+        console.log(`Total signals received: ${totalReceived} (${(totalReceived / totalExpected * 100).toFixed(1)}%)`)
         return undefined
     }
 
