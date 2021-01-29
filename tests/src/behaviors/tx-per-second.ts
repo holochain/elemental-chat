@@ -26,13 +26,38 @@ export const defaultConfig = {
     nodes: 10, // Number of machines
     conductors: 1, // Conductors per machine
     instances: 1, // Instances per conductor
+    activeAgents: 5, // Number of agents to consider "active" for chatting
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
 
-type PlayerAgents = Array<Array<{ hAppId: string, agent: Buffer, cell: Cell }>>
+type Agents = Array<{ hAppId: string, agent: Buffer, cell: Cell }>
+type PlayerAgents = Array<Agents>
 
-const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
+// TODO fix to be random distribution
+const selectActiveAgents = (count: number, playerAgents: PlayerAgents) : Agents => {
+    let activeAgents : Agents =  new Array(count)
+    let a = 0;
+    for (const player of playerAgents) {
+        for (const agent of player) {
+            activeAgents[a] = agent
+            a += 1
+            if (a == count) {
+                break
+            }
+        }
+        if (a == count) {
+            break
+        }
+    }
+    if (a < count) {
+       console.log(`Not enough agents for to make ${count} active`)
+    }
+    return activeAgents
+}
+
+
+const setup = async (s: ScenarioApi, t, config, local): Promise<{activeAgents: Agents, playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
     let network;
     if (local) {
         network = { transport_pool: [], bootstrap_service: undefined }
@@ -88,9 +113,10 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     }))
 
     if (local) {
-        console.log(`Calling share all nodes ${new Date(endFindAgents).toLocaleString("en-US")}`)
+        let now = Date.now()
+        console.log(`Calling share all nodes ${new Date(now).toLocaleString("en-US")}`)
         await s.shareAllNodes(allPlayers);
-        console.log(`Finished share all nodes ${new Date(endFindAgents).toLocaleString("en-US")}`)
+        console.log(`Finished share all nodes ${new Date(Date.now()).toLocaleString("en-US")}`)
     }
 
     console.log(`Creating channel for test:`)
@@ -99,37 +125,33 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     const createChannelResult = await playerAgents[0][0].cell.call('chat', 'create_channel', { name: `Test Channel`, channel });
     console.log(createChannelResult);
 
-    let a = 0;
-    for (const player of playerAgents) {
-        console.log(`calling refresh chatter from player ${a}`)
-        a+=1;
-        await Promise.all(player.map(agent => {return agent.cell.call('chat', 'refresh_chatter', null)} ));
-    }
+    const activeAgents = selectActiveAgents(config.activeAgents, playerAgents)
+    let now = Date.now()
 
-    const startFindAgents = Date.now()
-    console.log(`Start find agents at ${new Date(startFindAgents).toLocaleString("en-US")}`)
-    let p = 0;
-    // wait for all agents to be active:
-    for (const player of playerAgents) {
-        let a = 0;
-        for (const agent of player) {
-            while (true) {
-                const stats = await agent.cell.call('chat', 'agent_stats', null);
-                console.log(`player ${p} agent ${a}: waiting for all agents to be listed as active`, stats)
-                if (stats.agents === config.nodes * config.conductors * config.instances) {
-                    break;
-                }
-                await delay(2000)
+    console.log(`Start calling refresh chatter for ${activeAgents.length} agents at ${new Date(now).toLocaleString("en-US")}`)
+    await Promise.all(activeAgents.map(agent => {return agent.cell.call('chat', 'refresh_chatter', null)} ));
+    console.log(`End calling refresh chatter at ${new Date(Date.now()).toLocaleString("en-US")}`)
+
+    now = Date.now()
+    console.log(`Start find agents at ${new Date(now).toLocaleString("en-US")}`)
+    let a = 0;
+    // wait for all active agents to see all other active agents:
+    for (const agent of activeAgents) {
+        while (true) {
+            const stats = await agent.cell.call('chat', 'agent_stats', null);
+            console.log(`checking for active agent ${a} if all agents to be listed as active`, stats)
+            if (stats.agents === config.activeAgents) {
+                break;
             }
-            a+=1;
+            await delay(2000)
         }
-        p+=1;
+        a+=1;
     }
     const endFindAgents = Date.now()
     console.log(`Found messages at ${new Date(endFindAgents).toLocaleString("en-US")}`)
-    console.log(`Took: ${(endFindAgents-startFindAgents)/1000}s`)
+    console.log(`Took: ${(endFindAgents-now)/1000}s`)
 
-    return { playerAgents, allPlayers, channel: createChannelResult }
+    return {activeAgents, playerAgents, allPlayers, channel: createChannelResult }
 }
 
 const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
@@ -171,19 +193,18 @@ const sendSerially = async (end: number, sendingCell: Cell, channel, messagesToS
     return messagesToSend
 }
 
-const sendConcurrently = async (playerAgents: PlayerAgents, channel, messagesToSend: number, signal: "signal" | "noSignal") => {
-    const instances = playerAgents[0].length
+const sendConcurrently = async (agents: Agents, channel, messagesToSend: number, signal: "signal" | "noSignal") => {
     const messagePromises = new Array(messagesToSend)
     for (let i = 0; i < messagesToSend; i++) {
-        messagePromises[i] = send(i, playerAgents[Math.floor(i / instances) % playerAgents.length][i % instances].cell, channel, signal)
+        messagePromises[i] = send(i, agents[i % (agents.length)].cell, channel, signal)
     }
     await Promise.all(messagePromises)
 }
 
-const gossipTrial = async (playerAgents: PlayerAgents, channel, messagesToSend: number): Promise<number> => {
+const gossipTrial = async (activeAgents: Agents, playerAgents: PlayerAgents, channel, messagesToSend: number): Promise<number> => {
     const receivingCell = playerAgents[0][0].cell
     const start = Date.now()
-    await sendConcurrently(playerAgents, channel, messagesToSend, "noSignal")
+    await sendConcurrently(activeAgents, channel, messagesToSend, "noSignal")
     console.log(`Getting messages (should be ${messagesToSend})`)
     let received = 0
     while (true) {
@@ -206,41 +227,35 @@ const gossipTrial = async (playerAgents: PlayerAgents, channel, messagesToSend: 
     }
 }
 
-const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Player[], channel, messagesToSend) => {
+const signalTrial = async (period, activeAgents: Agents, playerAgents: PlayerAgents, allPlayers: Player[], channel, messagesToSend) => {
     const numInstances = playerAgents[0].length
 
     let allReceiptsResolve
     const allReceipts = new Promise<number | undefined>((resolve, reject) => allReceiptsResolve = resolve)
 
-
-    let finishedCount = 0
-    let totalAgents = playerAgents.length * numInstances
+    let totalAgents = activeAgents.length
     // Track how many signals each agent has received.
     // Initialize each slot in `receipts` to equal how many that agent has sent.
-    const receipts: number[] = new Array(totalAgents);
-    for (let i = 0; i < totalAgents; i++) {
-        receipts[i] = Math.ceil(Math.max(messagesToSend - i, 0) / (playerAgents.length * numInstances))
-        if (receipts[i] == messagesToSend) {
-            finishedCount += 1
-        }
+    const receipts = {}
+    let totalReceived = 0;
+    const totalExpected = messagesToSend * (totalAgents - 1) // sender doesn't receive signals
+    for (const agent of activeAgents) {
+        receipts[agent.agent.toString('base64')] = 0
     }
-    console.log(receipts)
+    console.log("Receipts:", receipts)
     // setup the signal handler for all the players so we can check
     // if all the signals are returned
     for (let i = 0; i < playerAgents.length; i++) {
         const conductor = allPlayers[i]
         conductor.setSignalHandler((signal) => {
             const { data: { cellId: [dnaHash, agentKey], payload: any } } = signal
-            const instanceIdx = playerAgents[i].findIndex(agent => agent.agent.equals(agentKey))
-            const idx = i * numInstances + instanceIdx
+            const key = agentKey.toString('base64')
+            receipts[key] += 1
+            totalReceived += 1
+            // console.log(`${key} got signal. Total so far: ${totalReceived}`)
             // console.log(`Received Signal for conductor #${i.toString()}, agentKey ${agentKey.toString('hex')}, agent #${idx}:`, signal.data.payload.signal_payload.messageData.message)
-            receipts[idx] += 1
-            if (receipts[idx] === messagesToSend) {
-                finishedCount += 1
-                console.log(`agent #${idx} got all messages!`)
-                if (finishedCount === totalAgents) {
-                    allReceiptsResolve(Date.now())
-                }
+            if (totalReceived === totalExpected) {
+                allReceiptsResolve(Date.now())
             }
         })
     }
@@ -248,7 +263,7 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
     const start = Date.now()
     console.log(`Start sending messages at ${new Date(start).toLocaleString("en-US")}`)
     const delayPromise = delay(period).then(() => undefined)
-    await sendConcurrently(playerAgents, channel, messagesToSend, "signal")
+    await sendConcurrently(activeAgents, channel, messagesToSend, "signal")
     console.log(`Finished sending messages at ${new Date(Date.now()).toLocaleString("en-US")}`)
     console.log(`Getting messages (should be ${messagesToSend})`)
 
@@ -256,16 +271,11 @@ const signalTrial = async (period, playerAgents: PlayerAgents, allPlayers: Playe
 
     if (finishTime === undefined) {
         console.log(`Didn't receive all messages in period (${period/1000}s)!`)
-        console.log(`Total agents: ${totalAgents}`)
-        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalAgents*100).toFixed(1)}%)`)
+        console.log(`Total active agents: ${totalAgents}`)
+//        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalAgents*100).toFixed(1)}%)`)
         console.log(`Total messages created: ${messagesToSend}`)
-        console.log(`Total signals sent: ${(messagesToSend * totalAgents) - messagesToSend}`)
-        let totalReceived = 0
-        for (let i = 0; i < totalAgents; i++) {
-            totalReceived += receipts[i]
-        }
-        totalReceived -= messagesToSend; // account for messages not sent to self
-        console.log(`Total signals received: ${totalReceived} (${(totalReceived/(messagesToSend * totalAgents)*100).toFixed(1)}%)`)
+        console.log(`Total signals sent: ${totalExpected}`)
+        console.log(`Total signals received: ${totalReceived} (${(totalReceived/totalExpected*100).toFixed(1)}%)`)
         return undefined
     }
 
@@ -330,17 +340,17 @@ const signalTrialOld = async (period, playerAgents: PlayerAgents, allPlayers, ch
 }
 
 export const gossipTx = async (s, t, config, txCount, local) => {
-    const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
-    const actual = await gossipTrial(playerAgents, channel, txCount)
+    const { activeAgents, playerAgents, allPlayers, channel } = await setup(s, t, config, local)
+    const actual = await gossipTrial(activeAgents, playerAgents, channel, txCount)
     await Promise.all(allPlayers.map(player => player.shutdown()))
     return actual
 }
 
 export const signalTx = async (s, t, config, period, txCount, local) => {
     // do the standard setup
-    const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
+    const { activeAgents, playerAgents, allPlayers, channel } = await setup(s, t, config, local)
 
-    const actual = await signalTrial(period, playerAgents, allPlayers, channel, txCount)
+    const actual = await signalTrial(period, activeAgents, playerAgents, allPlayers, channel, txCount)
     await Promise.all(allPlayers.map(player => player.shutdown()))
     return actual
 }
