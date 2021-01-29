@@ -1,6 +1,5 @@
 use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
 use entries::{channel, message};
-use error::ChatResult;
 use hdk3::prelude::Path;
 use hdk3::prelude::*;
 use message::{
@@ -38,11 +37,10 @@ enum SignalPayload {
 // }
 
 #[hdk_extern]
-fn recv_remote_signal(signal: SerializedBytes) -> ChatResult<()> {
-    debug!(format!("Received remote signal"));
-    let sig: SignalPayload = SignalPayload::try_from(signal.clone())?;
+fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
+    let sig: SignalPayload = signal.decode()?;
     debug!(format!("Received remote signal {:?}", sig));
-    Ok(emit_signal(&signal)?)
+    Ok(emit_signal(&sig)?)
 }
 
 entry_defs![
@@ -67,8 +65,8 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 
 #[hdk_extern]
-fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelData> {
-    channel::handlers::create_channel(channel_input)
+fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
+    Ok(channel::handlers::create_channel(channel_input)?)
 }
 
 #[hdk_extern]
@@ -95,8 +93,8 @@ fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
 }
 
 #[hdk_extern]
-fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
-    message::handlers::create_message(message_input)
+fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
+    Ok(message::handlers::create_message(message_input)?)
 }
 
 /*#[hdk_extern]
@@ -105,13 +103,13 @@ fn signal_users_on_channel(message_data SignalMessageData) -> ChatResult<()> {
 }*/
 
 #[hdk_extern]
-fn signal_chatters(message_data: SignalMessageData) -> ChatResult<SigResults> {
-    message::handlers::signal_chatters(message_data)
+fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> {
+    Ok(message::handlers::signal_chatters(message_data)?)
 }
 
 #[hdk_extern]
-fn refresh_chatter(_: ()) -> ChatResult<()> {
-    message::handlers::refresh_chatter()
+fn refresh_chatter(_: ()) -> ExternResult<()> {
+    Ok(message::handlers::refresh_chatter()?)
 }
 
 // #[hdk_extern]
@@ -120,13 +118,13 @@ fn refresh_chatter(_: ()) -> ChatResult<()> {
 // }
 
 #[hdk_extern]
-fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {
-    channel::handlers::list_channels(list_channels_input)
+fn list_channels(list_channels_input: ChannelListInput) -> ExternResult<ChannelList> {
+    Ok(channel::handlers::list_channels(list_channels_input)?)
 }
 
 #[hdk_extern]
-fn list_messages(list_messages_input: ListMessagesInput) -> ChatResult<ListMessages> {
-    message::handlers::list_messages(list_messages_input)
+fn list_messages(list_messages_input: ListMessagesInput) -> ExternResult<ListMessages> {
+    Ok(message::handlers::list_messages(list_messages_input)?)
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
@@ -138,7 +136,7 @@ pub struct Stats {
 }
 
 #[hdk_extern]
-fn stats(list_channels_input: ChannelListInput) -> ChatResult<Stats> {
+fn stats(list_channels_input: ChannelListInput) -> ExternResult<Stats> {
     let (agents, active) = message::handlers::agent_stats()?;
     let (channels, messages) = channel::handlers::channel_stats(list_channels_input)?;
     Ok(Stats {
@@ -155,7 +153,7 @@ pub struct AgentStats {
     active: usize,
 }
 #[hdk_extern]
-fn agent_stats(_: ()) -> ChatResult<AgentStats> {
+fn agent_stats(_: ()) -> ExternResult<AgentStats> {
     let (agents, active) = message::handlers::agent_stats()?;
     Ok(AgentStats { agents, active })
 }
