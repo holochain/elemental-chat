@@ -13,8 +13,8 @@ pub enum ChatError {
     AgentTag,
     #[error(transparent)]
     Wasm(#[from] WasmError),
-    #[error(transparent)]
-    HdkError(#[from] HdkError),
+    // #[error(transparent)]
+    // WasmError(#[from] WasmError),
     #[error("Header that was just committed is missing. This means something went really wrong")]
     MissingLocalHeader,
     #[error("Tried to use a header without an entry as for where it only makes sense to use a new entry header")]
@@ -26,3 +26,9 @@ pub enum ChatError {
 }
 
 pub type ChatResult<T> = Result<T, ChatError>;
+
+impl From<ChatError> for WasmError {
+    fn from(c: ChatError) -> Self {
+        WasmError::Zome(c.to_string())
+    }
+}

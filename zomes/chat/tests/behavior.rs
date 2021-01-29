@@ -30,7 +30,7 @@ use stream_cancel::Valve;
 #[tokio::test(threaded_scheduler)]
 async fn behavior() {
     observability::test_run().ok();
-    const NUM_CONDUCTORS: usize = 20;
+    const NUM_CONDUCTORS: usize = 15;
     const NUM_MESSAGES: usize = 40;
 
     let dna_path = std::env::current_dir()
@@ -98,7 +98,7 @@ async fn behavior() {
             let total_recv = total_recv.clone();
             async move {
                 while let Some(Signal::App(_, signal)) = stream.next().await {
-                    let signal: SignalPayload = signal.into_inner().unwrap();
+                    let signal: SignalPayload = signal.into_inner().decode().unwrap();
                     if let SignalPayload::Message(SignalMessageData {
                         message_data:
                             MessageData {
@@ -140,7 +140,7 @@ async fn behavior() {
                     },
                 )
                 .await;
-            let r: SigResults = c
+            let _r: SigResults = c
                 .call(
                     &z,
                     "signal_chatters",
@@ -150,7 +150,6 @@ async fn behavior() {
                     },
                 )
                 .await;
-            debug!(total_sent = ?r.total);
         }
     }
     let mut done = 0;
@@ -173,6 +172,7 @@ async fn behavior() {
             warn!(?done, ?counts);
         }
     }
+    assert_eq!(done, NUM_MESSAGES * NUM_CONDUCTORS);
     let total_recv = total_recv.load(Ordering::Relaxed);
     debug!(?total_recv);
 

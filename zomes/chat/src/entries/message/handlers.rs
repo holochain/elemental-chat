@@ -220,10 +220,9 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
     for a in active_chatters.clone() {
         sent.push(format!("{}", a.to_string()));
     }
-    remote_signal(
-        &SignalPayload::Message(signal_message_data),
-        active_chatters,
-    )?;
+    let input = SignalPayload::Message(signal_message_data);
+    let payload = ExternIO::encode(input)?;
+    remote_signal(payload, active_chatters)?;
     Ok(SigResults { total, sent })
 }
 
