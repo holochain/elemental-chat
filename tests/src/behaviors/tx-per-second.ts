@@ -31,7 +31,7 @@ export const defaultConfig = {
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
 }
 
-type Agents = Array<{ hAppId: string, agent: Buffer, cell: Cell }>
+type Agents = Array<{ hAppId: string, agent: Buffer, cell: Cell, playerIdx: number }>
 type PlayerAgents = Array<Agents>
 
 const selectActiveAgents = (count: number, playerAgents: PlayerAgents): Agents => {
@@ -147,7 +147,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ activeAgents: 
         return agents.map((happs) => {
             const [{ hAppId, agent, cells: [cell] }] = happs;
             console.log(`DNA HASH: ${cell.cellId[0].toString('base64')}`)
-            return { hAppId, agent, cell }
+            return { hAppId, agent, cell, playerIdx: i }
         })
     }))
 
@@ -332,6 +332,13 @@ const signalTrial = async (period, activeAgents: Agents, allPlayers: Player[], c
         console.log(`Total messages created: ${messagesToSend}`)
         console.log(`Total signals sent: ${totalExpected}`)
         console.log(`Total signals received: ${totalReceived} (${(totalReceived / totalExpected * 100).toFixed(1)}%)`)
+        const numPeersPerActiveAgent = await Promise.all(activeAgents.map(async agent =>
+            parseStateDump(await allPlayers[agent.playerIdx].adminWs().dumpState({ cell_id: agent.cell.cellId })).numPeers))
+        const min = Math.min(...numPeersPerActiveAgent)
+        const max = Math.max(...numPeersPerActiveAgent)
+        const sum = numPeersPerActiveAgent.reduce((a, b) => a + b)
+        const avg = sum / numPeersPerActiveAgent.length
+        console.log(`Peers amongst active agents: Min: ${min} Max: ${max} Avg ${avg}`)
         return undefined
     }
 
