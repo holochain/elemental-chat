@@ -96,8 +96,36 @@ const parseStateDump = ([unused, stateDumpRelevant]: StateDump): StateDumpReleva
     }
 }
 
+const activateAgents = async (count: number, playerAgents: PlayerAgents): Promise<Agents> => {
+    const activeAgents = selectActiveAgents(count, playerAgents)
+    let now = Date.now()
 
-const setup = async (s: ScenarioApi, t, config, local): Promise<{ activeAgents: Agents, playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
+    console.log(`Start calling refresh chatter for ${count} agents at ${new Date(now).toLocaleString("en-US")}`)
+    await Promise.all(activeAgents.map(
+        agent => agent.cell.call('chat', 'refresh_chatter', null)));
+    console.log(`End calling refresh chatter at ${new Date(Date.now()).toLocaleString("en-US")}`)
+
+    now = Date.now()
+    console.log(`Start find agents at ${new Date(now).toLocaleString("en-US")}`)
+    // wait for all active agents to see all other active agents:
+    for (const agentIdx in activeAgents) {
+        while (true) {
+            const stats = await activeAgents[agentIdx].cell.call('chat', 'agent_stats', null);
+            console.log(`waiting for all agents are listed as active from perspective of agent #${agentIdx}`, stats)
+            if (stats.agents === count) {
+                break;
+            }
+            await delay(2000)
+        }
+    }
+    const endFindAgents = Date.now()
+    console.log(`Found agents at ${new Date(endFindAgents).toLocaleString("en-US")}`)
+    console.log(`Took: ${(endFindAgents - now) / 1000}s`)
+
+    return activeAgents
+}
+
+const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
     let network;
     if (local) {
         network = { transport_pool: [], bootstrap_service: undefined }
@@ -165,32 +193,8 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ activeAgents: 
     const createChannelResult = await playerAgents[0][0].cell.call('chat', 'create_channel', { name: `Test Channel`, channel });
     console.log(createChannelResult);
 
-    const activeAgents = selectActiveAgents(config.activeAgents, playerAgents)
+
     let now = Date.now()
-
-    console.log(`Start calling refresh chatter for ${config.activeAgents} agents at ${new Date(now).toLocaleString("en-US")}`)
-    await Promise.all(activeAgents.map(
-        agent => agent.cell.call('chat', 'refresh_chatter', null)));
-    console.log(`End calling refresh chatter at ${new Date(Date.now()).toLocaleString("en-US")}`)
-
-    now = Date.now()
-    console.log(`Start find agents at ${new Date(now).toLocaleString("en-US")}`)
-    // wait for all active agents to see all other active agents:
-    for (const agentIdx in activeAgents) {
-        while (true) {
-            const stats = await activeAgents[agentIdx].cell.call('chat', 'agent_stats', null);
-            console.log(`waiting for all agents are listed as active from perspective of agent #${agentIdx}`, stats)
-            if (stats.agents === config.activeAgents) {
-                break;
-            }
-            await delay(2000)
-        }
-    }
-    const endFindAgents = Date.now()
-    console.log(`Found agents at ${new Date(endFindAgents).toLocaleString("en-US")}`)
-    console.log(`Took: ${(endFindAgents - now) / 1000}s`)
-
-    now = Date.now()
     console.log(`Start waiting for peer stores at ${new Date(now).toLocaleString("en-US")}`)
     // Wait for all agents to have complete peer stores.
     // Should this just wait for active agents?
@@ -210,8 +214,12 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ activeAgents: 
             }
         }
     }
+    const endWiatPeers = Date.now()
+    console.log(`Finished waiting for peers at ${new Date(endWiatPeers).toLocaleString("en-US")}`)
+    console.log(`Took: ${(endWiatPeers - now) / 1000}s`)
 
-    return { activeAgents, playerAgents, allPlayers, channel: createChannelResult }
+
+    return { playerAgents, allPlayers, channel: createChannelResult }
 }
 
 const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
@@ -351,7 +359,8 @@ const signalTrial = async (period, activeAgents: Agents, allPlayers: Player[], c
 }
 
 export const gossipTx = async (s, t, config, txCount, local) => {
-    const { activeAgents: activeAgents, playerAgents, allPlayers, channel } = await setup(s, t, config, local)
+    const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
+    const activeAgents = await activateAgents(config.activeAgents, playerAgents)
     const actual = await gossipTrial(activeAgents, playerAgents, channel, txCount)
     await Promise.all(allPlayers.map(player => player.shutdown()))
     return actual
@@ -359,9 +368,19 @@ export const gossipTx = async (s, t, config, txCount, local) => {
 
 export const signalTx = async (s, t, config, period, txCount, local) => {
     // do the standard setup
-    const { activeAgents: activeAgents, allPlayers, channel } = await setup(s, t, config, local)
+    const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
+    const activeAgents = await activateAgents(config.activeAgents, playerAgents)
 
     const actual = await signalTrial(period, activeAgents, allPlayers, channel, txCount)
     await Promise.all(allPlayers.map(player => player.shutdown()))
     return actual
+}
+
+export const phasesTx = async (s, t, config, phases, local) => {
+    // do the standard setup
+    const { allPlayers, channel } = await setup(s, t, config, local)
+/*
+    const actual = await phasesTrial(period, activeAgents, allPlayers, channel, txCount)
+    await Promise.all(allPlayers.map(player => player.shutdown()))
+    return actual*/
 }
