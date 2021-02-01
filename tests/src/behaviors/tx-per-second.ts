@@ -77,7 +77,7 @@ type StateDumpRelevant = {
 
 
 const parseStateDump = ([unused, stateDumpRelevant]: StateDump): StateDumpRelevant => {
-    const regex = /^--- Cell State Dump Summary ---\nNumber of other peers in p2p store: (\d+),\nOps: Limbo \(validation: (\d+) integration: (\d+)\) Integrated: (\d+)\nElements authored: (\d+), Ops published: (\d+)$/
+    const regex = /^--- Cell State Dump Summary ---\nNumber of other peers in p2p store: (\d+),\nOps: Limbo \(validation: (\d+) integration: (\d+)\) Integrated: (\d+)\nElements authored: (\d+), Ops published: (\d+)/
 
     const groups = regex.exec(stateDumpRelevant)
 
@@ -199,8 +199,9 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ activeAgents: 
             const agent = playerAgents[playerIdx][agentIdx]
             while (true) {
                 const stateDumpRes = await player.adminWs().dumpState({ cell_id: agent.cell.cellId })
+                console.log('state dump:', stateDumpRes)
                 const stateDump = parseStateDump(stateDumpRes)
-                console.log(`waiting for all agents are present in peer store of player $${playerIdx} agent #${agentIdx}`, stateDump)
+                console.log(`waiting for all agents are present in peer store of player #${playerIdx} agent #${agentIdx}`, stateDump)
                 if (stateDump.numPeers === config.nodes * config.conductors * config.instances - 1) {
                     break
                 }
@@ -301,17 +302,19 @@ const signalTrial = async (period, activeAgents: Agents, allPlayers: Player[], c
 
     // setup the signal handler for all the players so we can check
     // if all the signals are returned
-    for (let i = 0; i < activeAgents.length; i++) {
+    for (let i = 0; i < allPlayers.length; i++) {
         const conductor = allPlayers[i]
         conductor.setSignalHandler((signal) => {
             const { data: { cellId: [dnaHash, agentKey], payload: any } } = signal
             const key = agentKey.toString('base64')
-            receipts[key] += 1
-            totalReceived += 1
-            // console.log(`${key} got signal. Total so far: ${totalReceived}`)
-            // console.log(`Received Signal for conductor #${i.toString()}, agentKey ${agentKey.toString('hex')}, agent #${idx}:`, signal.data.payload.signal_payload.messageData.message)
-            if (totalReceived === totalExpected) {
-                allReceiptsResolve(Date.now())
+            if (key in receipts) {
+                receipts[key] += 1
+                totalReceived += 1
+                // console.log(`${key} got signal. Total so far: ${totalReceived}`)
+                // console.log(`Received Signal for conductor #${i.toString()}, agentKey ${agentKey.toString('hex')}, agent #${idx}:`, signal.data.payload.signal_payload.messageData.message)
+                if (totalReceived === totalExpected) {
+                    allReceiptsResolve(Date.now())
+                }
             }
         })
     }
