@@ -54,6 +54,49 @@ const selectActiveAgents = (count: number, playerAgents: PlayerAgents): Agents =
     return res
 }
 
+type StateDump = [
+    any, // unused
+    string // summary data which we parse
+]
+
+type StateDumpRelevant = {
+    numPeers: number
+    opsIntegrated: number,
+    opsValidationLimbo: number,
+    opsIntegrationLimbo: number,
+    elementsAuthored: number,
+    opsPublished: number,
+}
+
+
+// Example state dump
+// [
+//     /*irrelevant json object omitted*/,
+//     "--- Cell State Dump Summary ---\nNumber of other peers in p2p store: 0,\nOps: Limbo (validation: 0 integration: 0) Integrated: 7\nElements authored: 3, Ops published: 7"
+// ]
+
+
+const parseStateDump = (stateDump: string): StateDumpRelevant => {
+    const [unused, stateDumpRelevant]: StateDump = JSON.parse(stateDump)
+
+    const regex = /^--- Cell State Dump Summary ---\nNumber of other peers in p2p store: (\d+),\nOps: Limbo \(validation: (\d+) integration: (\d+)\) Integrated: (\d+)\nElements authored: (\d+), Ops published: (\d+)$/
+
+    const groups = regex.exec(stateDumpRelevant)
+
+    if (groups === null) {
+        throw new Error("failed to parse state dump")
+    }
+
+    return {
+        numPeers: Number.parseInt(groups[1], 10),
+        opsValidationLimbo: Number.parseInt(groups[2], 10),
+        opsIntegrationLimbo: Number.parseInt(groups[3], 10),
+        opsIntegrated: Number.parseInt(groups[4], 10),
+        elementsAuthored: Number.parseInt(groups[5], 10),
+        opsPublished: Number.parseInt(groups[6], 10),
+    }
+}
+
 
 const setup = async (s: ScenarioApi, t, config, local): Promise<{ activeAgents: Agents, playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
     let network;
