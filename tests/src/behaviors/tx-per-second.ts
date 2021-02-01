@@ -11,7 +11,8 @@ export const defaultConfig = {
     trycpAddresses: [
         "172.26.136.38:9000", // zippy1
         "172.26.38.158:9000", // zippy2
-        "172.26.37.152:9000",
+        //"172.26.213.223:9000", // noah
+       // "172.26.37.152:9000", // alastair in use
         "172.26.55.252:9000",
         "172.26.223.202:9000", // alastar
         "172.26.160.247:9000",
@@ -23,8 +24,8 @@ export const defaultConfig = {
         //"172.26.156.115:9500" // timo2
     ],
     //trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
-    nodes: 10, // Number of machines
-    conductors: 1, // Conductors per machine
+    nodes: 2, // Number of machines
+    conductors: 5, // Conductors per machine
     instances: 1, // Instances per conductor
     activeAgents: 5, // Number of agents to consider "active" for chatting
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
@@ -310,7 +311,7 @@ const signalTrial = async (period, activeAgents: Agents, allPlayers: Player[], c
             if (key in receipts) {
                 receipts[key] += 1
                 totalReceived += 1
-                // console.log(`${key} got signal. Total so far: ${totalReceived}`)
+                console.log(`${key} got signal. Total so far: ${totalReceived}`)
                 // console.log(`Received Signal for conductor #${i.toString()}, agentKey ${agentKey.toString('hex')}, agent #${idx}:`, signal.data.payload.signal_payload.messageData.message)
                 if (totalReceived === totalExpected) {
                     allReceiptsResolve(Date.now())

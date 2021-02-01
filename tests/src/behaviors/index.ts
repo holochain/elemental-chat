@@ -43,7 +43,7 @@ if (trial === "gossip") {
 } else if (trial === "signal") {
     const period = 60 * 1000  // timeout
     orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
-        let txCount = 60
+        let txCount = 100
         let duration
         let txPerSecondAtMax = 0
         t.comment(`trial with a network of ${config.nodes} nodes, ${config.conductors} conductors per node, and ${config.instances} cells per conductor, but only ${config.activeAgents} active agents (cells)`)
