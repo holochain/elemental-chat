@@ -76,9 +76,7 @@ type StateDumpRelevant = {
 // ]
 
 
-const parseStateDump = (stateDump: string): StateDumpRelevant => {
-    const [unused, stateDumpRelevant]: StateDump = JSON.parse(stateDump)
-
+const parseStateDump = ([unused, stateDumpRelevant]: StateDump): StateDumpRelevant => {
     const regex = /^--- Cell State Dump Summary ---\nNumber of other peers in p2p store: (\d+),\nOps: Limbo \(validation: (\d+) integration: (\d+)\) Integrated: (\d+)\nElements authored: (\d+), Ops published: (\d+)$/
 
     const groups = regex.exec(stateDumpRelevant)
@@ -190,6 +188,26 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ activeAgents: 
     const endFindAgents = Date.now()
     console.log(`Found agents at ${new Date(endFindAgents).toLocaleString("en-US")}`)
     console.log(`Took: ${(endFindAgents - now) / 1000}s`)
+
+    now = Date.now()
+    console.log(`Start waiting for peer stores at ${new Date(now).toLocaleString("en-US")}`)
+    // Wait for all agents to have complete peer stores.
+    // Should this just wait for active agents?
+    for (const playerIdx in allPlayers) {
+        for (const agentIdx in playerAgents[playerIdx]) {
+            const player = allPlayers[playerIdx]
+            const agent = playerAgents[playerIdx][agentIdx]
+            while (true) {
+                const stateDumpRes = await player.adminWs().dumpState({ cell_id: agent.cell.cellId })
+                const stateDump = parseStateDump(stateDumpRes)
+                console.log(`waiting for all agents are present in peer store of player $${playerIdx} agent #${agentIdx}`, stateDump)
+                if (stateDump.numPeers === config.nodes * config.conductors * config.instances - 1) {
+                    break
+                }
+                await delay(2000)
+            }
+        }
+    }
 
     return { activeAgents, playerAgents, allPlayers, channel: createChannelResult }
 }
