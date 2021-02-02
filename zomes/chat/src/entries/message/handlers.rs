@@ -11,7 +11,7 @@ use metadata::EntryDetails;
 
 use super::{
     LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SigResults,
-    SignalMessageData,
+    SignalMessageData, SignalSpecificInput
 };
 
 /// Create a new message
@@ -207,6 +207,14 @@ fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)>
         })
         .collect();
     Ok((total, active))
+}
+
+pub(crate) fn signal_specific_chatters(input: SignalSpecificInput) -> ChatResult<()> {
+    remote_signal(
+        &SignalPayload::Message(input.signal_message_data),
+        input.chatters,
+    )?;
+    Ok(())
 }
 
 pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatResult<SigResults> {

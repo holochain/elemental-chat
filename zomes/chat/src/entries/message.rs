@@ -41,6 +41,14 @@ pub struct MessageData {
     created_at: Timestamp,
 }
 
+// Input to the signal_specific_chatters call
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct SignalSpecificInput {
+    signal_message_data: SignalMessageData,
+    chatters: Vec<AgentPubKey>
+}
+
+
 /// The message type that goes to the UI via emit_signal
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

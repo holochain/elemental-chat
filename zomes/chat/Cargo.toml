@@ -1,6 +1,6 @@
 [package]
 name = "elemental-chat"
-version = "0.0.1-alpha14"
+version = "0.0.1-alpha19"
 authors = [ "michael.dougherty@holo.host", "philip.beadle@holo.host", "david.meister@holo.host, tom.gowan@holo.host" ]
 edition = "2018"
 

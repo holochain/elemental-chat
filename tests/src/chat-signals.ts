@@ -18,11 +18,11 @@ module.exports = async (orchestrator) => {
       uuid: uuidv4(),
       content: "Hello from alice :)",
     }
-    let flag = false
+    let receivedCount = 0
     bob.setSignalHandler((signal) => {
-        console.log("Received Signal:",signal)
-        t.deepEqual(signal.data.payload.signal_payload.messageData.message, MESSAGE)
-        flag = true
+      console.log("Received Signal:",signal)
+      t.deepEqual(signal.data.payload.signal_payload.messageData.message, MESSAGE)
+      receivedCount += 1
     })
     const [[alice_chat_happ]] = await alice.installAgentsHapps(installation1agent)
     const [[bob_chat_happ]] = await bob.installAgentsHapps(installation1agent)
@@ -63,14 +63,27 @@ module.exports = async (orchestrator) => {
 
     // waiting for the signal to be received by bob.
     for (let i = 0; i < 5; i++) {
-      if (flag) break;
+      if (receivedCount > 0) break;
       console.log(`wating for signal: ${i}`)
       await delay(500)
     }
-    t.ok(flag)
+    t.equal(receivedCount, 1)
 
     stats = await alice_chat.call('chat', 'stats', {category: "General"});
     t.deepEqual(stats, {agents: 2, active: 2, channels: 1, messages: 1});
 
+    const r5 = await alice_chat.call('chat', 'signal_specific_chatters', {
+      signal_message_data: signalMessageData,
+      chatters: [bob_chat.cellId[1]]
+    }
+    );
+
+    // waiting for the signal to be received by bob.
+    for (let i = 0; i < 5; i++) {
+      if (receivedCount > 1) break;
+      console.log(`wating for signal: ${i}`)
+      await delay(500)
+    }
+    t.equal(receivedCount, 2)
   })
 }
