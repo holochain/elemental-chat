@@ -15,10 +15,20 @@ export const network = {
     type: TransportConfigType.Proxy,
     sub_transport: { type: TransportConfigType.Quic },
     proxy_config: {
-      type: ProxyConfigType.RemoteProxyClient,
+        type: ProxyConfigType.RemoteProxyClient,
+//        proxy_url: "kitsune-proxy://A7quSj_YTzwP1DF93QmErksPkDDuDSPT8zBGyhf7MPU/kitsune-quic/h/192.168.1.85/p/58451/--",
       proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/proxy.holochain.org/p/5778/--",
     }
   }],
+  tuning_params: {
+      gossip_loop_iteration_delay_ms: 200, //number // default 10
+      default_notify_remote_agent_count: 5, //number // default 5
+      default_notify_timeout_ms: 100, //number // default 1000
+      default_rpc_single_timeout_ms: 20000, // number // default 2000
+      default_rpc_multi_remote_agent_count: 2, //number // default 2
+      default_rpc_multi_timeout_ms: 2000, //number // default 2000
+      agent_info_expires_after_ms: 1000 * 60 * 20, //number // default 1000 * 60 * 20 (20 minutes)
+  }
 }
 
 export const networkedConductorConfig = Config.gen({ network })
