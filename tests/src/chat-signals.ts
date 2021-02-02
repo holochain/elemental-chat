@@ -81,7 +81,7 @@ module.exports = async (orchestrator) => {
     // waiting for the signal to be received by bob.
     for (let i = 0; i < 5; i++) {
       if (receivedCount > 1) break;
-      console.log(`wating for signal: ${i}`)
+      console.log(`waiting for signal: ${i}`)
       await delay(500)
     }
     t.equal(receivedCount, 2)
