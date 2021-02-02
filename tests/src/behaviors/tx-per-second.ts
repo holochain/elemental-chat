@@ -374,7 +374,7 @@ const sendOnInterval = async (agents: Agents, channel, period: number, sendInter
         console.log(`Took: ${intervalDuration}ms to send ${agents.length} messages`)
         totalSent += agents.length
         if (intervalDuration < sendInterval) {
-            console.log(`Waiting ${(sendInterval - intervalDuration}ms before sending again`)
+            console.log(`Waiting ${(sendInterval - intervalDuration)}ms before sending again`)
             await delay(sendInterval - intervalDuration)
         }
     } while((Date.now() - start) < period)

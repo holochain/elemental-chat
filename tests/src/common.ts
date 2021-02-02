@@ -28,6 +28,9 @@ export const network = {
       default_rpc_multi_remote_agent_count: 2, //number // default 2
       default_rpc_multi_timeout_ms: 2000, //number // default 2000
       agent_info_expires_after_ms: 1000 * 60 * 20, //number // default 1000 * 60 * 20 (20 minutes)
+      tls_in_mem_session_storage: 512, // default 512
+      proxy_keepalive_ms: 1000 * 60 * 2, // default 1000 * 60 * 2 (2 minutes)
+      proxy_to_expire_ms:  1000 * 6 * 5 // default 1000 * 6 * 5 (5 minutes)
   }
 }
 
