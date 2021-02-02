@@ -1,5 +1,5 @@
 import { Orchestrator, tapeExecutor, compose } from '@holochain/tryorama'
-import { defaultConfig, gossipTx, signalTx } from './tx-per-second'  // import config and runner here
+import { defaultConfig, gossipTx, signalTx, phasesTx } from './tx-per-second'  // import config and runner here
 import { v4 as uuidv4 } from "uuid";
 
 process.on('unhandledRejection', error => {
@@ -25,11 +25,11 @@ const middleware = /*config.endpoints
 
 const orchestrator = new Orchestrator({ middleware })
 
-const trial: string = "signal"
+const trial: string = "phases"
 
 if (trial === "gossip") {
     orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
-        let txCount = 10
+        let txCount = 1
         while (true) {
             t.comment(`trial with ${txCount} tx`)
             // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
@@ -61,6 +61,24 @@ if (trial === "gossip") {
             }
         } while (true)
     })
+} else if (trial === "phases") {
+    const phases = [
+        {
+            period: 1000 * 60 * 5,
+            sendInterval: 3000,
+            active: 75,
+        },
+        {
+            period: 1000 * 60 * 15,
+            sendInterval: 1000,
+            active: 200,
+        },
+    ]
+    orchestrator.registerScenario('Measuring messages per-second--phases', async (s, t) => {
+        t.comment(`trial with a network of ${config.nodes} nodes, ${config.conductors} conductors per node, and ${config.instances} cells per conductor, in the following phases: ${JSON.stringify(phases)}`)
+        s._uuid = uuidv4();
+        await phasesTx(s, t, config, phases, local);
+    });
 }
 
 orchestrator.run()
