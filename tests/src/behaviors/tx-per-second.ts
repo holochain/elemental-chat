@@ -216,9 +216,9 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
             }
         }
     }
-    const endWiatPeers = Date.now()
-    console.log(`Finished waiting for peers at ${new Date(endWiatPeers).toLocaleString("en-US")}`)
-    console.log(`Took: ${(endWiatPeers - now) / 1000}s`)
+    const endWaitPeers = Date.now()
+    console.log(`Finished waiting for peers at ${new Date(endWaitPeers).toLocaleString("en-US")}`)
+    console.log(`Took: ${(endWaitPeers - now) / 1000}s`)
 
 
     return { playerAgents, allPlayers, channel: createChannelResult }
