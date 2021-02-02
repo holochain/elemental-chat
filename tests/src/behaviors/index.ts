@@ -25,7 +25,7 @@ const middleware = /*config.endpoints
 
 const orchestrator = new Orchestrator({ middleware })
 
-const trial: string = "signal"
+const trial: string = "phases"
 
 if (trial === "gossip") {
     orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
@@ -64,14 +64,14 @@ if (trial === "gossip") {
 } else if (trial === "phases") {
     const phases = [
         {
-            period: 1000 * 60 * 1,
+            period: 1000 * 60 * 5,
             sendInterval: 3000,
             active: 75,
         },
         {
-            period: 1000 * 60 * 1,
+            period: 1000 * 60 * 15,
             sendInterval: 1000,
-            active: 2000,
+            active: 200,
         },
     ]
     orchestrator.registerScenario('Measuring messages per-second--phases', async (s, t) => {
