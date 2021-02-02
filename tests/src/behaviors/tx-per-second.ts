@@ -298,11 +298,11 @@ const gossipTrial = async (activeAgents: Agents, playerAgents: PlayerAgents, cha
 }
 
 const signalTrial = async (period, activeAgents: Agents, allPlayers: Player[], channel, messagesToSend) => {
-    let totalAgents = activeAgents.length
+    let totalActiveAgents = activeAgents.length
     // Track how many signals each agent has received.
     const receipts: Record<string, number> = {}
     let totalReceived = 0;
-    const totalExpected = messagesToSend * (totalAgents - 1) // sender doesn't receive signals
+    const totalExpected = messagesToSend * (totalActiveAgents - 1) // sender doesn't receive signals
     for (const agent of activeAgents) {
         receipts[agent.agent.toString('base64')] = 0
     }
@@ -341,8 +341,8 @@ const signalTrial = async (period, activeAgents: Agents, allPlayers: Player[], c
 
     if (finishTime === undefined) {
         console.log(`Didn't receive all messages in period (${period / 1000}s)!`)
-        console.log(`Total active agents: ${totalAgents}`)
-        //        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalAgents*100).toFixed(1)}%)`)
+        console.log(`Total active agents: ${totalActiveAgents}`)
+        //        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalActiveAgents*100).toFixed(1)}%)`)
         console.log(`Total messages created: ${messagesToSend}`)
         console.log(`Total signals sent: ${totalExpected}`)
         console.log(`Total signals received: ${totalReceived} (${(totalReceived / totalExpected * 100).toFixed(1)}%)`)
@@ -382,7 +382,7 @@ const sendOnInterval = async (agents: Agents, channel, period: number, sendInter
 }
 
 const phaseTrial = async (period: number, sendInterval: number, activeAgents: Agents, allPlayers: Player[], channel) => {
-    let totalAgents = activeAgents.length
+    let totalActiveAgents = activeAgents.length
     // Track how many signals each agent has received.
     const receipts: Record<string, number> = {}
     for (const agent of activeAgents) {
@@ -423,11 +423,11 @@ const phaseTrial = async (period: number, sendInterval: number, activeAgents: Ag
     console.log(`Waiting for signals ends at ${new Date(waitingEnd).toLocaleString("en-US")}`)
     console.log(`Took: ${(waitingEnd - phaseEnd) / 1000}s`)
 
-    const totalSignalsExpected = totalMessagesSent * (totalAgents - 1) // sender doesn't receive signals
+    const totalSignalsExpected = totalMessagesSent * (totalActiveAgents - 1) // sender doesn't receive signals
 
 
-    console.log(`Total active agents: ${totalAgents}`)
-    //        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalAgents*100).toFixed(1)}%)`)
+    console.log(`Total active agents: ${totalActiveAgents}`)
+    //        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalActiveAgents*100).toFixed(1)}%)`)
     console.log(`Total messages sent: ${totalMessagesSent}`)
     console.log(`Total signals sent: ${totalSignalsExpected}`)
     console.log(`Total signals received: ${totalSignalsReceived} (${(totalSignalsReceived / totalSignalsExpected * 100).toFixed(1)}%)`)
