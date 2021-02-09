@@ -9,24 +9,27 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
     trycpAddresses: [
-        "172.26.136.38:9000", // zippy1
-        "172.26.38.158:9000", // zippy2
-        //"172.26.213.223:9000", // noah
-       // "172.26.37.152:9000", // alastair in use
-        "172.26.55.252:9000", //?
-        "172.26.223.202:9000", // alastar
-        "172.26.160.247:9000",
+        "172.26.136.38:9000", // zippy1 (58f9o0jx7l73xu7vi13oi0yju06644xm5we2a7i8oqbt918o48)
+        "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
+        "172.26.146.6:9000", // zippy (noah's) 1l5nm0ylneapp0z7josuk56fivjly21pcwo0t4o86bhsosapla
+        "172.26.6.201:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
+        "172.26.55.252:9000", // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
+        "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)
+        "172.26.147.238:9000", // mary@marycamacho.com: (38oh2q63ob4w2q1783mir5muup993f2m8gk5kthi0w8ljrc4y4)
+        "172.26.208.174:9000", // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
+//        "172.26.181.23:9000", // mary.camacho@holo.host:  (5xvizkqpupjpu8ottk7sd9chc24k0otjkkv152756a8ph4p3ct)
+//        "172.26.57.175:9000", // rob.lyon+derecha@holo.host (4fx7rhi2i0v4nrvufpgdz31a5374jbvto6hkvo4fvl4f79g5dn)
         "172.26.84.233:9000", // katie
-        "172.26.187.15:9000", //bekah
-        "172.26.201.167:9000", // lucas
+        "172.26.2.147:9000", //bekah
+//        "172.26.201.167:9000", // lucas
         "172.26.44.116:9000" // peeech
         //"172.26.100.202:9000", // timo1
         //"172.26.156.115:9500" // timo2
     ],
     //trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
-    nodes: 9, // Number of machines
-    conductors: 8, // Conductors per machine
-    instances: 3, // Instances per conductor
+    nodes: 11, // Number of machines
+    conductors: 10, // Conductors per machine
+    instances: 6, // Instances per conductor
     activeAgents: 5, // Number of agents to consider "active" for chatting
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
@@ -96,35 +99,118 @@ const parseStateDump = ([unused, stateDumpRelevant]: StateDump): StateDumpReleva
     }
 }
 
+const waitAllPeers = async (totalPeers: number, playerAgents: PlayerAgents, allPlayers: Player[]) => {
+    let now = Date.now()
+    console.log(`Start waiting for peer stores at ${new Date(now).toLocaleString("en-US")}`)
+    // Wait for all agents to have complete peer stores.
+    for (const playerIdx in allPlayers) {
+        for (const agentIdx in playerAgents[playerIdx]) {
+            const player = allPlayers[playerIdx]
+            const agent = playerAgents[playerIdx][agentIdx]
+            while (true) {
+                const stateDumpRes = await player.adminWs().dumpState({ cell_id: agent.cell.cellId })
+                console.log('state dump:', stateDumpRes)
+                const stateDump = parseStateDump(stateDumpRes)
+                console.log(`waiting for all agents are present in peer store of player #${playerIdx} agent #${agentIdx}`, stateDump)
+                if (stateDump.numPeers === totalPeers-1) {
+                    break
+                }
+                await delay(5000)
+            }
+        }
+    }
+    const endWaitPeers = Date.now()
+    console.log(`Finished waiting for peers at ${new Date(endWaitPeers).toLocaleString("en-US")}`)
+    took(`Waiting for peer consistency`, now, endWaitPeers)
+}
+
+// wait until the active peers can see all the peers
+const waitActivePeers = async (percentNeeded: number, totalPeers: number, activeAgents: Agents, allPlayers: Player[]) : Promise<number> => {
+    let startWait = Date.now()
+    console.log(`Start waiting for peer stores at ${new Date(startWait).toLocaleString("en-US")}`)
+    let conductors = {}
+    for (const agent of activeAgents) {
+        if (!conductors[agent.playerIdx]) {
+            conductors[agent.playerIdx] = { cell_id: agent.cell.cellId }
+        }
+    }
+    for (const [playerIdx, param] of Object.entries(conductors)) {
+        while (true) {
+            const stateDumpRes = await allPlayers[playerIdx].adminWs().dumpState(param)
+            const stateDump = parseStateDump(stateDumpRes)
+            console.log('state dump:', stateDump)
+            console.log(`waiting for ${percentNeeded}% of peers to be present in peer store of player #${playerIdx}, ${time2text(Date.now() - startWait)} so far`, stateDump)
+            if (stateDump.numPeers > (totalPeers-1)*(percentNeeded/100)) {
+                break
+            }
+            await delay(5000)
+        }
+    }
+
+    const endWaitPeers = Date.now()
+    console.log(`Finished waiting for peers at ${new Date(endWaitPeers).toLocaleString("en-US")}`)
+    took(`Waiting for active peer consistency`, startWait, endWaitPeers)
+
+    return endWaitPeers - startWait
+}
+
 const activateAgents = async (count: number, playerAgents: PlayerAgents): Promise<Agents> => {
-    const activeAgents = selectActiveAgents(count, playerAgents)
+    const activeAgents = selectActiveAgents(count, playerAgents);
+    _activateAgents(activeAgents, playerAgents);
+    _waitAgentsActivated(activeAgents);
+    return activeAgents;
+}
+
+const _activateAgents = async (activeAgents: Agents, playerAgents: PlayerAgents) => {
     let now = Date.now()
 
-    console.log(`Start calling refresh chatter for ${count} agents at ${new Date(now).toLocaleString("en-US")}`)
+    console.log(`Start calling refresh chatter for ${activeAgents.length} agents at ${new Date(now).toLocaleString("en-US")}`)
     await Promise.all(activeAgents.map(
         agent => agent.cell.call('chat', 'refresh_chatter', null)));
     const endRefresh = Date.now();
     console.log(`End calling refresh chatter at ${new Date(endRefresh).toLocaleString("en-US")}`)
-    console.log(`Took: ${(endRefresh - now) / 1000}s`)
+    took(`Activating agents`, now, endRefresh)
+}
 
-    now = Date.now()
-    console.log(`Start find agents at ${new Date(now).toLocaleString("en-US")}`)
+const _waitAgentsActivated = async (activeAgents: Agents) : Promise<number> => {
+    let startWait = Date.now()
+    console.log(`Start find agents at ${new Date(startWait).toLocaleString("en-US")}`)
     // wait for all active agents to see all other active agents:
     for (const agentIdx in activeAgents) {
         while (true) {
             const stats = await activeAgents[agentIdx].cell.call('chat', 'agent_stats', null);
-            console.log(`waiting for #${agentIdx}'s agent_stats to show ${count} as active, got:`, stats)
-            if (stats.agents === count) {
+            console.log(`waiting for #${agentIdx}'s agent_stats to show ${activeAgents.length} as active (${time2text(Date.now() - startWait)} so far), got:`, stats)
+            if (stats.agents === activeAgents.length) {
                 break;
             }
-            await delay(2000)
+            await delay(5000)
         }
     }
     const endFindAgents = Date.now()
     console.log(`End find agents at ${new Date(endFindAgents).toLocaleString("en-US")}`)
-    console.log(`Took: ${(endFindAgents - now) / 1000}s`)
+    took(`Waiting for active agent consistency`, startWait, endFindAgents)
+    return endFindAgents - startWait
+}
 
-    return activeAgents
+const maxMinAvg = (counts) =>  {
+    let min = Math.min(...counts)
+    let max = Math.max(...counts)
+    let sum = counts.reduce((a, b) => a + b)
+    let avg = sum / counts.length
+    return {min, max, avg}
+}
+
+const doListMessages = async (msg, channel, activeAgents): Promise<Array<number>> => {
+    const counts : Array<number> = await Promise.all(
+        activeAgents.map(async agent => {
+            const r = await agent.cell.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
+            console.log("called list messages for: ", agent.agent.toString('base64'), r.messages.length)
+            return r.messages.length
+        }))
+
+    const m = maxMinAvg(counts)
+    console.log(`${msg}: Min: ${m.min} Max: ${m.max} Avg ${m.avg.toFixed(1)}`)
+    return counts
 }
 
 const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
@@ -158,6 +244,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
             }
             let players: Player[];
             try {
+                console.log("Starting players at trycp server:", config.trycpAddresses[i])
                 players = await s.players(conductorConfigsArray, false, config.trycpAddresses[i])
                 await Promise.all(players.map(player => player.startup(() => { })));
             } catch (e) {
@@ -194,32 +281,6 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     const channel = { category: "General", uuid: channel_uuid }
     const createChannelResult = await playerAgents[0][0].cell.call('chat', 'create_channel', { name: `Test Channel`, channel });
     console.log(createChannelResult);
-
-
-    let now = Date.now()
-    console.log(`Start waiting for peer stores at ${new Date(now).toLocaleString("en-US")}`)
-    // Wait for all agents to have complete peer stores.
-    // Should this just wait for active agents?
-    for (const playerIdx in allPlayers) {
-        for (const agentIdx in playerAgents[playerIdx]) {
-            const player = allPlayers[playerIdx]
-            const agent = playerAgents[playerIdx][agentIdx]
-            while (true) {
-                const stateDumpRes = await player.adminWs().dumpState({ cell_id: agent.cell.cellId })
-                console.log('state dump:', stateDumpRes)
-                const stateDump = parseStateDump(stateDumpRes)
-                console.log(`waiting for all agents are present in peer store of player #${playerIdx} agent #${agentIdx}`, stateDump)
-                if (stateDump.numPeers === config.nodes * config.conductors * config.instances - 1) {
-                    break
-                }
-                await delay(2000)
-            }
-        }
-    }
-    const endWaitPeers = Date.now()
-    console.log(`Finished waiting for peers at ${new Date(endWaitPeers).toLocaleString("en-US")}`)
-    console.log(`Took: ${(endWaitPeers - now) / 1000}s`)
-
 
     return { playerAgents, allPlayers, channel: createChannelResult }
 }
@@ -297,6 +358,27 @@ const gossipTrial = async (activeAgents: Agents, playerAgents: PlayerAgents, cha
     }
 }
 
+const took = (msg, start, end) => {
+    _took(msg, end - start)
+}
+
+const _took = (msg, ms) => {
+    const r = time2text(ms);
+    console.log(`${msg} took: ${r}`)
+}
+
+const time2text = (ms) => {
+    let r
+    if (ms < 1000) {
+        r = `${ms}ms`
+    } else if (ms < 60000) {
+        r = `${(ms/1000).toFixed(1)}s`
+    } else {
+        r = `${(ms/(60000)).toFixed(2)}m`
+    }
+    return r
+}
+
 const signalTrial = async (period, activeAgents: Agents, allPlayers: Player[], channel, messagesToSend) => {
     let totalActiveAgents = activeAgents.length
     // Track how many signals each agent has received.
@@ -360,19 +442,19 @@ const signalTrial = async (period, activeAgents: Agents, allPlayers: Player[], c
     return finishTime - start
 }
 
-const sendOnInterval = async (agents: Agents, channel, period: number, sendInterval: number) : Promise<number> => {
+const sendOnInterval = async (senders: number, agents: Agents, channel, period: number, sendInterval: number) : Promise<number> => {
     let totalSent = 0
     const start = Date.now()
     do {
         const intervalStart = Date.now()
-        let messagePromises = new Array(agents.length)
-        for (let i = 0; i < agents.length; i++) {
+        let messagePromises = new Array(senders)
+        for (let i = 0; i < senders; i++) {
             messagePromises[i] = send(i, agents[i].cell, channel, "signal" )
         }
         await Promise.all(messagePromises)
         const intervalDuration = (Date.now() - intervalStart)
-        console.log(`Took: ${intervalDuration}ms to send ${agents.length} messages`)
-        totalSent += agents.length
+        console.log(`Took: ${intervalDuration}ms to send ${senders} messages`)
+        totalSent += senders
         if (intervalDuration < sendInterval) {
             console.log(`Waiting ${(sendInterval - intervalDuration)}ms before sending again`)
             await delay(sendInterval - intervalDuration)
@@ -381,13 +463,22 @@ const sendOnInterval = async (agents: Agents, channel, period: number, sendInter
     return totalSent
 }
 
-const phaseTrial = async (period: number, sendInterval: number, activeAgents: Agents, allPlayers: Player[], channel) => {
+const PEER_CONSISTENCY_PERCENT = 75
+
+const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers: Player[], channel) => {
+    const period = phase.period
+    const messagesInPeriod = phase.messages
+    const senders = phase.senders
+
+    const totalPeers = config.nodes * config.conductors * config.instances
+    const activeAgents = selectActiveAgents(phase.active, playerAgents)
+    const peerConsistencyTook = await waitActivePeers(PEER_CONSISTENCY_PERCENT, totalPeers, activeAgents, allPlayers) // need 75% of peers for go
+    await _activateAgents(activeAgents, playerAgents)
+    const activationConsistencyTook = await _waitAgentsActivated(activeAgents)
+
     let totalActiveAgents = activeAgents.length
-    // Track how many signals each agent has received.
-    const receipts: Record<string, number> = {}
-    for (const agent of activeAgents) {
-        receipts[agent.agent.toString('base64')] = 0
-    }
+    // Track how many signals are received in various latencies
+    const receipts: { [key: number]: number; }  = {}
 
     let totalSignalsReceived = 0;
 
@@ -396,53 +487,145 @@ const phaseTrial = async (period: number, sendInterval: number, activeAgents: Ag
     for (let i = 0; i < allPlayers.length; i++) {
         const conductor = allPlayers[i]
         conductor.setSignalHandler((signal) => {
-            const { data: { cellId: [dnaHash, agentKey], payload: any } } = signal
-            const key = agentKey.toString('base64')
-            if (key in receipts) {
-                receipts[key] += 1
-                totalSignalsReceived += 1
-                console.log(`${key} got signal. Total so far: ${totalSignalsReceived}`)
+            const { data: { cellId: [dnaHash, agentKey], payload: payload } } = signal
+            const now = Date.now()
+            const latency = now - payload.signal_payload.messageData.createdAt[0]*1000
+            let tranch:number
+            if (latency < 30000) {
+                tranch = 30000
+            } else if (latency < 60000) {
+                tranch = 60000
+            } else {
+                tranch = 1000 * 60 * 3
             }
+
+            if (receipts[tranch] === undefined) {
+                receipts[tranch] = 1
+            } else {
+                receipts[tranch]+=1
+            }
+            const key = agentKey.toString('base64')
+            totalSignalsReceived += 1
+            console.log(`${key} got signal with latency ${latency}. Total so far: ${totalSignalsReceived}`)
         })
     }
+    const sendInterval = period/(messagesInPeriod/senders)
     const start = Date.now()
     console.log(`Phase begins at ${new Date(start).toLocaleString("en-US")}:`)
-    console.log(`   1 message per ${activeAgents.length} active nodes every ${sendInterval}ms for ${period}ms`)
-    const totalMessagesSent = await sendOnInterval(activeAgents, channel, period, sendInterval)
-    let phaseEnd = Date.now()
+    console.log(`   1 message per ${senders} sender ${sendInterval}ms for ${period}ms`)
+    const totalMessagesSent = await sendOnInterval(senders, activeAgents, channel, period, sendInterval)
+    const phaseEnd = Date.now()
     console.log(`Phase ends at ${new Date(phaseEnd).toLocaleString("en-US")}`)
-    console.log(`Took: ${(phaseEnd - start) / 1000}s to send ${totalMessagesSent} messages`)
-
-    let curArrived;
-    do {
-        console.log(`Waiting for 10 seconds for signals to finish arriving`)
-        curArrived = totalSignalsReceived
-        await delay(10000)
-    } while (curArrived != totalSignalsReceived)
-    let waitingEnd = Date.now()
-    console.log(`Waiting for signals ends at ${new Date(waitingEnd).toLocaleString("en-US")}`)
-    console.log(`Took: ${(waitingEnd - phaseEnd) / 1000}s`)
+    took(`Sending ${totalMessagesSent} messages`, start, phaseEnd)
 
     const totalSignalsExpected = totalMessagesSent * (totalActiveAgents - 1) // sender doesn't receive signals
+    let curArrived;
+    let threeMinListMessages;
+    const msToWaitBeforeCallingItQuits = 30000
+    do {
+        console.log(`Waiting for ${msToWaitBeforeCallingItQuits/1000}s for signals to finish arriving (expecting ${totalSignalsExpected})`)
+        curArrived = totalSignalsReceived
+        await delay(msToWaitBeforeCallingItQuits)
 
+        if (Date.now() - phaseEnd > (1000*60*3) && !threeMinListMessages) {
+            threeMinListMessages = await doListMessages("3 Minutes later: count of list_message of active peers", channel, activeAgents)
+        }
 
-    console.log(`Total active agents: ${totalActiveAgents}`)
-    //        console.log(`Total agents that received all signals: ${finishedCount} (${(finishedCount/totalActiveAgents*100).toFixed(1)}%)`)
+    } while (curArrived != totalSignalsReceived)
+
+    let waitingEnd = Date.now()
+
+    console.log(`Waiting for signals ends at ${new Date(waitingEnd).toLocaleString("en-US")}`)
+    took(`Waiting for signals`, phaseEnd, waitingEnd)
+
+    const postSignalWatingListMessages = await doListMessages("Post waiting count of list_message of active peers", channel, activeAgents)
+
+    const msWaitForFinalListMessages = 1000*60*5 // 5 min
+    console.log(`Waiting ${time2text(msWaitForFinalListMessages)} for final list message`)
+    await delay(msWaitForFinalListMessages)
+
+    const finalListMessages = await doListMessages("Final: count of list_message of active peers", channel, activeAgents)
+
+    console.log("----------------------------------------------------------")
+    console.log("Results ")
+    console.log("----------------------------------------------------------")
+    console.log(`Trial with a network of ${config.nodes} nodes, ${config.conductors} conductors per node, and ${config.instances} cells per conductor`)
+    console.log(`Total total peers in network: ${totalPeers}`)
+    console.log(`Total active peers: ${totalActiveAgents}`)
+    _took(`Waiting for ${PEER_CONSISTENCY_PERCENT}% peer consistency`, peerConsistencyTook)
+    _took("Waiting for active agent consistency", activationConsistencyTook)
+    console.log(`Sending 1 message per ${senders} sender ${(sendInterval/1000).toFixed(1)}s for ${(period/1000).toFixed(1)}s`)
+    took(`Sending ${totalMessagesSent} messages`, start, phaseEnd)
     console.log(`Total messages sent: ${totalMessagesSent}`)
     console.log(`Total signals sent: ${totalSignalsExpected}`)
-    console.log(`Total signals received: ${totalSignalsReceived} (${(totalSignalsReceived / totalSignalsExpected * 100).toFixed(1)}%)`)
+
+    took(`Waiting for signals after sending ended`, phaseEnd, waitingEnd)
+    took(`From start of sending till fished waiting for signals`, start, waitingEnd)
+
+
+    console.log(`Total signals received: ${totalSignalsReceived} (${(totalSignalsReceived / totalSignalsExpected * 100).toFixed(2)}%)`)
+
+    const latencies  = Object.keys(receipts)
+    latencies.sort((a, b) => parseInt(a) - parseInt(b));
+
+    for (let i = 0; i < latencies.length; i++) {
+        const l = latencies[i];
+        const count = receipts[l];
+        const percent = (count/totalSignalsReceived * 100).toFixed(1);
+        const tranch = parseInt(l)/1000
+        console.log(`Latencies in ${tranch}s: ${count} (${percent})%` )
+    }
+
+    if (threeMinListMessages) {
+        logCounts("threeMinListMessages", threeMinListMessages, totalMessagesSent)
+    }
+    logCounts("postSignalWatingListMessages", postSignalWatingListMessages, totalMessagesSent)
+    logCounts("finalListMessages", finalListMessages, totalMessagesSent)
+
     const numPeersPerActiveAgent = await Promise.all(activeAgents.map(async agent =>
                                                                       parseStateDump(await allPlayers[agent.playerIdx].adminWs().dumpState({ cell_id: agent.cell.cellId })).numPeers))
-    const min = Math.min(...numPeersPerActiveAgent)
-    const max = Math.max(...numPeersPerActiveAgent)
-    const sum = numPeersPerActiveAgent.reduce((a, b) => a + b)
-    const avg = sum / numPeersPerActiveAgent.length
-    console.log(`Peers amongst active agents: Min: ${min} Max: ${max} Avg ${avg}`)
 
+    const m = maxMinAvg(numPeersPerActiveAgent)
+    console.log(`Peers count in peer stores of active peers: Min: ${m.min} Max: ${m.max} Avg ${m.avg.toFixed(1)}`)
+
+}
+
+const logCounts = (msg, messagesByAgent, totalMessages) => {
+    const counts: Record<string, number> = {}
+    for (const c of messagesByAgent) {
+        let tranch:string
+        if (c < totalMessages*.25) {
+            tranch = "0-25%"
+        } else if (c < totalMessages*.75) {
+            tranch = "25-75%"
+        } else if (c < totalMessages*.99) {
+            tranch = "75-99%"
+        } else {
+            tranch = " 100%"
+        }
+
+        if (counts[tranch] === undefined) {
+            counts[tranch] = 1
+        } else {
+            counts[tranch]+=1
+        }
+
+    }
+    console.log(msg)
+    for (const tranch of [" 100%", "75-99%", "25-75%", "0-25%"]) {
+        let count = counts[tranch]
+        if (count === undefined) {
+            count = 0
+        }
+        const percent =  (count/messagesByAgent.length*100).toFixed(1)
+        console.log(`${tranch}: ${count} ${percent}%`)
+    }
 }
 
 export const gossipTx = async (s, t, config, txCount, local) => {
     const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
+    const totalPeers = config.nodes * config.conductors * config.instances
+    await waitAllPeers(totalPeers, playerAgents, allPlayers)
     const activeAgents = await activateAgents(config.activeAgents, playerAgents)
     const actual = await gossipTrial(activeAgents, playerAgents, channel, txCount)
     await Promise.all(allPlayers.map(player => player.shutdown()))
@@ -452,6 +635,8 @@ export const gossipTx = async (s, t, config, txCount, local) => {
 export const signalTx = async (s, t, config, period, txCount, local) => {
     // do the standard setup
     const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
+    const totalPeers = config.nodes * config.conductors * config.instances
+    await waitAllPeers(totalPeers, playerAgents, allPlayers)
     const activeAgents = await activateAgents(config.activeAgents, playerAgents)
 
     const actual = await signalTrial(period, activeAgents, allPlayers, channel, txCount)
@@ -462,10 +647,8 @@ export const signalTx = async (s, t, config, period, txCount, local) => {
 export const phasesTx = async (s, t, config, phases, local) => {
     // do the standard setup
     const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
-
     for (const phase of phases) {
-        const activeAgents = await activateAgents(phase.active, playerAgents)
-        await phaseTrial(phase.period, phase.sendInterval, activeAgents, allPlayers, channel)
+        await phaseTrial(config, phase, playerAgents, allPlayers, channel)
     }
     await Promise.all(allPlayers.map(player => player.shutdown()))
 }
