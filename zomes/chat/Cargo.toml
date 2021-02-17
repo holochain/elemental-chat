@@ -26,7 +26,7 @@ nanoid = "0.3"
 futures = "0.3.1"
 stream-cancel = "0.8.0"
 
-[patch.crates-io]
+# [patch.crates-io]
 # rkv = { git = "https://github.com/holochain/rkv.git", branch = "master" }
 # lmdb-rkv = { git = "https://github.com/holochain/lmdb-rs.git" }
 # observability = { git = "https://github.com/freesig/observability.git", branch = "metrics" }
