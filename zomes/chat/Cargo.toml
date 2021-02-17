@@ -9,9 +9,25 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-
-hdk3 = { git = "https://github.com/holochain/holochain.git", rev = "91d08f6574b2de41f5fcd27c23abfceeb54912a5" }
+# hdk3 = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file" }
+hdk3 = { path = "../../chain/crates/hdk3/"}
 serde = "=1.0.104"
 chrono = { version = "0.4", features = ['alloc', 'std']}
-derive_more = "0.99.9"
+derive_more = "0.99"
 thiserror = "1.0.20"
+
+[dev-dependencies]
+# holochain = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file", features = ["test_utils"] }
+holochain = { path = "../../chain/crates/holochain/"}
+holochain_types = { path = "../../chain/crates/holochain_types/"}
+tokio = { version = "0.2", features = ["full"]}
+observability = "0.1.2"
+nanoid = "0.3"
+futures = "0.3.1"
+stream-cancel = "0.8.0"
+
+# [patch.crates-io]
+# rkv = { git = "https://github.com/holochain/rkv.git", branch = "master" }
+# lmdb-rkv = { git = "https://github.com/holochain/lmdb-rs.git" }
+# observability = { git = "https://github.com/freesig/observability.git", branch = "metrics" }
+# tokio_safe_block_on = { git = "https://github.com/neonphog/tokio_safe_block_on.git", branch = "fix_holochain_bug" }

@@ -35,10 +35,10 @@ pub struct MessageInput {
 #[derive(Serialize, Deserialize, Clone, Debug, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageData {
-    message: Message,
-    entry_hash: EntryHash,
-    created_by: AgentPubKey,
-    created_at: Timestamp,
+    pub message: Message,
+    pub entry_hash: EntryHash,
+    pub created_by: AgentPubKey,
+    pub created_at: Timestamp,
 }
 
 /// The message type that goes to the UI via emit_signal
@@ -52,26 +52,26 @@ pub struct SignalMessageData {
 /// Input to the list messages call
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesInput {
-    channel: Channel,
-    chunk: Chunk,
-    active_chatter: bool,
+    pub channel: Channel,
+    pub chunk: Chunk,
+    pub active_chatter: bool,
 }
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct Chunk {
-    start: u32,
-    end: u32,
+    pub start: u32,
+    pub end: u32,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct SigResults {
     pub total: usize,
     pub sent: Vec<String>,
 }
 
 /// The messages returned from list messages
-#[derive(Serialize, Deserialize, SerializedBytes, derive_more::From)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, derive_more::From)]
 pub struct ListMessages {
-    messages: Vec<MessageData>,
+    pub messages: Vec<MessageData>,
 }
 
 impl MessageData {
