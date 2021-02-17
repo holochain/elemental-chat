@@ -39,10 +39,10 @@ pub enum SignalPayload {
 
 #[hdk_extern]
 fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
-    debug!(format!("Received remote signal"));
+    debug!("Received remote signal");
     let sig: SignalPayload = signal.decode()?;
     // // let sig: SignalPayload = SignalPayload::try_from(signal.clone())?;
-    debug!(format!("Received remote signal {:?}", sig));
+    debug!("Received remote signal {:?}", sig);
     Ok(emit_signal(&sig)?)
     // host_call::<AppSignal, ()>(__emit_signal, AppSignal::new(signal))
 

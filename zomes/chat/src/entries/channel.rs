@@ -6,7 +6,7 @@ pub mod handlers;
 /// This is the actual name of the channel that
 /// can change.
 #[hdk_entry(id = "channel_info")]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct ChannelInfo {
     pub name: String,
     pub created_by: AgentPubKey,
@@ -14,7 +14,7 @@ pub struct ChannelInfo {
 }
 
 /// Input to the create channel call
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelInput {
     pub name: String,
     pub channel: Channel,
@@ -50,7 +50,7 @@ pub struct ChannelData {
 }
 
 /// Input to the list channels call
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelListInput {
     pub category: String,
 }

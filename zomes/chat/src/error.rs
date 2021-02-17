@@ -13,6 +13,8 @@ pub enum ChatError {
     AgentTag,
     #[error(transparent)]
     Wasm(#[from] WasmError),
+    #[error(transparent)]
+    Timestamp(#[from] TimestampError),
     // #[error(transparent)]
     // WasmError(#[from] WasmError),
     #[error("Header that was just committed is missing. This means something went really wrong")]
@@ -29,6 +31,6 @@ pub type ChatResult<T> = Result<T, ChatError>;
 
 impl From<ChatError> for WasmError {
     fn from(c: ChatError) -> Self {
-        WasmError::Zome(c.to_string())
+        WasmError::Guest(c.to_string())
     }
 }

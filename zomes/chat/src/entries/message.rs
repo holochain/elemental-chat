@@ -7,7 +7,7 @@ pub mod handlers;
 
 /// The actual message data that is saved into the DHT
 #[hdk_entry(id = "message")]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Message {
     pub uuid: String,
     pub content: String,
@@ -16,14 +16,14 @@ pub struct Message {
 /// This allows the app to properly order messages.
 /// This message is either the first message of the time block
 /// or has another message that was observed at the time of sending.
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub enum LastSeen {
     First,
     Message(EntryHash),
 }
 
 /// Input to the create message call
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct MessageInput {
     pub last_seen: LastSeen,
     pub channel: Channel,
@@ -32,7 +32,7 @@ pub struct MessageInput {
 }
 
 /// The message type that goes to the UI
-#[derive(Serialize, Deserialize, Clone, Debug, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, Clone, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageData {
     pub message: Message,
@@ -42,7 +42,7 @@ pub struct MessageData {
 }
 
 /// The message type that goes to the UI via emit_signal
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SignalMessageData {
     pub message_data: MessageData,
@@ -50,13 +50,13 @@ pub struct SignalMessageData {
 }
 
 /// Input to the list messages call
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesInput {
     pub channel: Channel,
     pub chunk: Chunk,
     pub active_chatter: bool,
 }
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct Chunk {
     pub start: u32,
     pub end: u32,
