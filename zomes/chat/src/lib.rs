@@ -1,8 +1,8 @@
 pub use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
 pub use entries::{channel, message};
 pub use error::ChatResult;
-pub use hdk3::prelude::Path;
-pub use hdk3::prelude::*;
+pub use hdk::prelude::Path;
+pub use hdk::prelude::*;
 pub use message::{
     ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SigResults,
     SignalMessageData,

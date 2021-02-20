@@ -9,8 +9,8 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-# hdk3 = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file" }
-hdk3 = { path = "../../../chain/crates/hdk3/"}
+# hdk = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file" }
+hdk = { path = "../../../chain/crates/hdk/"}
 serde = "=1.0.123"
 chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99"

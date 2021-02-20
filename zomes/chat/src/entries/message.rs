@@ -1,5 +1,5 @@
 use crate::{error::ChatError, error::ChatResult, timestamp::Timestamp};
-use hdk3::prelude::*;
+use hdk::prelude::*;
 
 use super::channel::{Channel, ChannelData};
 

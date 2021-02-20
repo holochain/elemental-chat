@@ -1,5 +1,5 @@
 use crate::timestamp::Timestamp;
-use hdk3::{hash_path::path::Component, prelude::*};
+use hdk::{hash_path::path::Component, prelude::*};
 pub mod handlers;
 
 /// The actual channel data that is saved into the DHT

@@ -5,7 +5,7 @@ use crate::{
     utils::{get_local_header, to_date},
     SignalPayload,
 };
-use hdk3::prelude::*;
+use hdk::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
 
@@ -237,10 +237,10 @@ pub(crate) fn is_active_chatter(chatters_path: Path) -> ChatResult<bool> {
     let base = chatters_path.hash()?;
     let filter = QueryFilter::new();
     let header_filter = filter.header_type(HeaderType::CreateLink);
-    let query_result: ElementVec = query(header_filter)?;
+    let query_result: Vec<Element> = query(header_filter)?;
     let now = to_date(sys_time()?);
     let mut pass = false;
-    for x in query_result.0 {
+    for x in query_result {
         match x.header() {
             Header::CreateLink(c) => {
                 if c.base_address == base {

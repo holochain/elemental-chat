@@ -8,6 +8,7 @@
 SHELL		= bash
 DNANAME		= elemental-chat
 DNA		= $(DNANAME).dna
+HAPP		= $(DNANAME).happ
 WASM		= target/wasm32-unknown-unknown/release/chat.wasm
 
 # External targets; Uses a nix-shell environment to obtain Holochain runtimes, run tests, etc.
@@ -34,6 +35,7 @@ build:		$(DNA)
 $(DNA):		$(WASM) FORCE
 	@echo "Packaging DNA:"
 	@hc dna pack . -o $(DNA)
+	@hc app pack . -o $(HAPP)
 	@ls -l $@
 
 # Recompile the target release WASM

@@ -1,4 +1,4 @@
-use hdk3::prelude::*;
+use hdk::prelude::*;
 use std::convert::Infallible;
 
 #[derive(thiserror::Error, Debug)]
