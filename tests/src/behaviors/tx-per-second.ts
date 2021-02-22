@@ -1,4 +1,4 @@
-import { Player, DnaPath, Config, InstallAgentsHapps, InstalledAgentHapps, TransportConfigType, ProxyAcceptConfig, ProxyConfigType, Cell } from '@holochain/tryorama'
+import { Player, DnaPath, PlayerConfig, Config, InstallAgentsHapps, InstalledAgentHapps, TransportConfigType, ProxyAcceptConfig, ProxyConfigType, Cell } from '@holochain/tryorama'
 import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
@@ -12,24 +12,31 @@ export const defaultConfig = {
         "172.26.136.38:9000", // zippy1 (58f9o0jx7l73xu7vi13oi0yju06644xm5we2a7i8oqbt918o48)
         "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
         "172.26.146.6:9000", // zippy (noah's) 1l5nm0ylneapp0z7josuk56fivjly21pcwo0t4o86bhsosapla
-        "172.26.6.201:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
-        "172.26.55.252:9000", // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
-        "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)
+//        "172.26.6.201:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
+//        "172.26.55.252:9000", // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
+//        "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)
         "172.26.147.238:9000", // mary@marycamacho.com: (38oh2q63ob4w2q1783mir5muup993f2m8gk5kthi0w8ljrc4y4)
         "172.26.208.174:9000", // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
 //        "172.26.181.23:9000", // mary.camacho@holo.host:  (5xvizkqpupjpu8ottk7sd9chc24k0otjkkv152756a8ph4p3ct)
 //        "172.26.57.175:9000", // rob.lyon+derecha@holo.host (4fx7rhi2i0v4nrvufpgdz31a5374jbvto6hkvo4fvl4f79g5dn)
         "172.26.84.233:9000", // katie
-        "172.26.2.147:9000", //bekah
+        "172.26.201.167:9000", // lucas (3yk1vqbt914t4cou6lrascjr29h7xa36ucyho72adr3fu0h4f7)
+        "172.26.32.181:9000", //bekah
 //        "172.26.201.167:9000", // lucas
         "172.26.44.116:9000" // peeech
         //"172.26.100.202:9000", // timo1
         //"172.26.156.115:9500" // timo2
     ],
     //trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
-    nodes: 11, // Number of machines
+    proxys: [
+        "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/164.90.142.115/p/10000/--",
+        "kitsune-proxy://duArtq0LtFEUIDZreC2muXEN3ow_G8zISXKJI3hypCA/kitsune-quic/h/138.197.78.45/p/10000/--",
+        "kitsune-proxy://sbUgYILMN7QiHkZZAVjR9Njwlb_Fzb8UE0XsmeGEP48/kitsune-quic/h/161.35.182.155/p/10000/--"
+    ],
+    proxyCount: 2,
+    nodes: 7, // Number of machines
     conductors: 10, // Conductors per machine
-    instances: 6, // Instances per conductor
+    instances: 8, // Instances per conductor
     activeAgents: 5, // Number of agents to consider "active" for chatting
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
@@ -201,10 +208,12 @@ const maxMinAvg = (counts) =>  {
 }
 
 const doListMessages = async (msg, channel, activeAgents): Promise<Array<number>> => {
+    let i = 0;
     const counts : Array<number> = await Promise.all(
         activeAgents.map(async agent => {
             const r = await agent.cell.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
-            console.log("called list messages for: ", agent.agent.toString('base64'), r.messages.length)
+            i+=1;
+            console.log(`${i}--called list messages for: `, agent.agent.toString('base64'), r.messages.length)
             return r.messages.length
         }))
 
@@ -221,13 +230,20 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
         network = defaultNetworkConfig
     }
 
-    const conductorConfig = Config.gen({ network })
-
     t.comment(`Preparing playground: initializing conductors and spawning`)
 
     const installation: InstallAgentsHapps = _.times(config.instances, () => [[config.dnaSource]]);
-    const conductorConfigsArray = _.times(config.conductors, () => conductorConfig);
 
+    let conductorConfigsArray: Array<PlayerConfig>   = []
+    for (let i = 0; i < config.conductors; i++) {
+        network = _.cloneDeep(network)
+        network.transport_pool[0].proxy_config.proxy_url = config.proxys[i%config.proxyCount]
+        const conductorConfig = Config.gen({network})
+        conductorConfigsArray.push(conductorConfig)
+    }
+    for (let i = 0; i < config.conductors; i++) {
+//        console.log("C",conductorConfigsArray[i]())
+    }
     let allPlayers: Player[]
     let i = 0;
 
@@ -539,21 +555,25 @@ const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers:
     took(`Waiting for signals`, phaseEnd, waitingEnd)
 
     const postSignalWatingListMessages = await doListMessages("Post waiting count of list_message of active peers", channel, activeAgents)
+    let finalListMessages
+    if (maxMinAvg(postSignalWatingListMessages).min != totalMessagesSent) {
+        const msWaitForFinalListMessages = 1000*60*5 // 5 min
+        console.log(`Waiting ${time2text(msWaitForFinalListMessages)} for final list message`)
+        await delay(msWaitForFinalListMessages)
 
-    const msWaitForFinalListMessages = 1000*60*5 // 5 min
-    console.log(`Waiting ${time2text(msWaitForFinalListMessages)} for final list message`)
-    await delay(msWaitForFinalListMessages)
-
-    const finalListMessages = await doListMessages("Final: count of list_message of active peers", channel, activeAgents)
+        finalListMessages = await doListMessages("Final: count of list_message of active peers", channel, activeAgents)
+    }
 
     console.log("----------------------------------------------------------")
     console.log("Results ")
     console.log("----------------------------------------------------------")
-    console.log(`Trial with a network of ${config.nodes} nodes, ${config.conductors} conductors per node, and ${config.instances} cells per conductor`)
+    console.log(`Nodes: ${config.nodes}\nConductors/Node: ${config.conductors}\nCells/Conductor: ${config.instances}`)
+    console.log(`Proxys: ${config.proxyCount}`)
     console.log(`Total total peers in network: ${totalPeers}`)
     console.log(`Total active peers: ${totalActiveAgents}`)
     _took(`Waiting for ${PEER_CONSISTENCY_PERCENT}% peer consistency`, peerConsistencyTook)
     _took("Waiting for active agent consistency", activationConsistencyTook)
+    console.log(`Senders: ${senders}`)
     console.log(`Sending 1 message per ${senders} sender ${(sendInterval/1000).toFixed(1)}s for ${(period/1000).toFixed(1)}s`)
     took(`Sending ${totalMessagesSent} messages`, start, phaseEnd)
     console.log(`Total messages sent: ${totalMessagesSent}`)
@@ -580,13 +600,15 @@ const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers:
         logCounts("threeMinListMessages", threeMinListMessages, totalMessagesSent)
     }
     logCounts("postSignalWatingListMessages", postSignalWatingListMessages, totalMessagesSent)
-    logCounts("finalListMessages", finalListMessages, totalMessagesSent)
+    if (finalListMessages) {
+        logCounts("finalListMessages", finalListMessages, totalMessagesSent)
+    }
 
     const numPeersPerActiveAgent = await Promise.all(activeAgents.map(async agent =>
                                                                       parseStateDump(await allPlayers[agent.playerIdx].adminWs().dumpState({ cell_id: agent.cell.cellId })).numPeers))
 
     const m = maxMinAvg(numPeersPerActiveAgent)
-    console.log(`Peers count in peer stores of active peers: Min: ${m.min} Max: ${m.max} Avg ${m.avg.toFixed(1)}`)
+    console.log(`Final peers count in peer stores of active peers:\nMin: ${m.min}\nMax: ${m.max}\nAvg: ${m.avg.toFixed(1)}`)
 
 }
 
@@ -618,7 +640,7 @@ const logCounts = (msg, messagesByAgent, totalMessages) => {
             count = 0
         }
         const percent =  (count/messagesByAgent.length*100).toFixed(1)
-        console.log(`${tranch}: ${count} ${percent}%`)
+        console.log(`${tranch}: ${count} (${percent}%)`)
     }
 }
 
