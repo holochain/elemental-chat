@@ -9,17 +9,18 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-# hdk = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file" }
-hdk = { path = "../../../chain/crates/hdk/"}
+hdk = { git = "https://github.com/holochain/holochain.git", branch = "develop" }
+# hdk = { path = "../../../chain/crates/hdk/"}
 serde = "=1.0.123"
 chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99"
 thiserror = "1.0.20"
 
 [dev-dependencies]
-# holochain = { git = "https://github.com/holochain/holochain.git", branch = "sweet-dna-file", features = ["test_utils"] }
-holochain = { path = "../../../chain/crates/holochain/"}
-holochain_types = { path = "../../../chain/crates/holochain_types/"}
+holochain = { git = "https://github.com/holochain/holochain.git", branch = "develop", features = ["test_utils"] }
+holochain_types = { git = "https://github.com/holochain/holochain.git", branch = "develop", features = ["test_utils"] }
+# holochain = { path = "../../../chain/crates/holochain/"}
+# holochain_types = { path = "../../../chain/crates/holochain_types/"}
 tokio = { version = "0.2", features = ["full"]}
 observability = "0.1.2"
 nanoid = "0.3"
