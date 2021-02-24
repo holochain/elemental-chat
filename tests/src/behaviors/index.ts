@@ -64,15 +64,17 @@ if (trial === "gossip") {
 } else if (trial === "phases") {
     const phases = [
         {
-            period: 1000 * 60 * 5,
-            sendInterval: 3000,
-            active: 75,
+            period: 1000 * 60 * 1,
+            messages: 135,
+            active: 150,
+            senders: 15,
         },
-        {
-            period: 1000 * 60 * 15,
-            sendInterval: 1000,
-            active: 200,
-        },
+/*        {
+            period: 1000 * 60 * 1,
+            messages: 133,
+            active: 10,
+            senders: 1,
+        }*/
     ]
     orchestrator.registerScenario('Measuring messages per-second--phases', async (s, t) => {
         t.comment(`trial with a network of ${config.nodes} nodes, ${config.conductors} conductors per node, and ${config.instances} cells per conductor, in the following phases: ${JSON.stringify(phases)}`)
