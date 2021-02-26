@@ -8,7 +8,7 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = async (orchestrator) => {
 
-  orchestrator.registerScenario('test signal', async (s, t) => {
+  orchestrator.registerScenario('test stats', async (s, t) => {
     const config = localConductorConfig;
 
     const [alice, bob] = await s.players([config, config], false)
