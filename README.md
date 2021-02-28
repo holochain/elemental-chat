@@ -21,6 +21,9 @@ A fairly basic chat app.  Includes channels, and exercises various holochain fea
   - Clone this repo: `git clone https://github.com/holochain/elemental-chat && cd ./elemental-chat`
   - Build the wasm: `CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown`
   - Assemble the DNA: `dna-util -c elemental-chat.dna.workdir`
+- Set up Holochain environment:
+  - Run `holochain -i` and say yes at the prompts.
+  - Once it's done setting up, kill it with <kbd>Ctrl</kbd>+<kbd>C</kbd>
 
 ## Running
 
