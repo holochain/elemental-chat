@@ -85,5 +85,9 @@ module.exports = async (orchestrator) => {
       await delay(500)
     }
     t.equal(receivedCount, 2)
+
+    const result = await alice_chat.call('chat', 'get_active_chatters');
+    t.equal(result.chatters.length, 1)
+    t.equal(result.chatters[0].toString('base64'), bob_chat.cellId[1].toString('base64'))
   })
 }

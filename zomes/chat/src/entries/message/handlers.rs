@@ -11,7 +11,7 @@ use metadata::EntryDetails;
 
 use super::{
     LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SigResults,
-    SignalMessageData, SignalSpecificInput
+    SignalMessageData, SignalSpecificInput, ActiveChatters
 };
 
 /// Create a new message
@@ -153,7 +153,7 @@ pub fn add_chunk_path(path: Path, chunk: u32) -> ChatResult<Path> {
     Ok(components.into())
 }
 
-fn chatters_path() -> Path {
+pub fn chatters_path() -> Path {
     Path::from("chatters")
 }
 
@@ -207,6 +207,14 @@ fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)>
         })
         .collect();
     Ok((total, active))
+}
+
+pub(crate) fn get_active_chatters() -> ChatResult<ActiveChatters> {
+    let me = agent_info()?.agent_latest_pubkey;
+    let chatters_path: Path = chatters_path();
+    let (_total, mut chatters) = active_chatters(chatters_path)?;
+    chatters.retain(|a| *a != me);
+    Ok(ActiveChatters { chatters })
 }
 
 pub(crate) fn signal_specific_chatters(input: SignalSpecificInput) -> ChatResult<()> {

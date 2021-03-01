@@ -76,6 +76,11 @@ pub struct SigResults {
     pub sent: Vec<String>,
 }
 
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct ActiveChatters {
+    pub chatters: Vec<AgentPubKey>,
+}
+
 /// The messages returned from list messages
 #[derive(Serialize, Deserialize, SerializedBytes, derive_more::From)]
 pub struct ListMessages {
