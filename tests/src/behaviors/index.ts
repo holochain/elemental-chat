@@ -1,5 +1,5 @@
 import { Orchestrator, tapeExecutor, compose } from '@holochain/tryorama'
-import { defaultConfig, gossipTx, signalTx } from './tx-per-second'  // import config and runner here
+import { defaultConfig, gossipTx, signalTx, phasesTx } from './tx-per-second'  // import config and runner here
 import { v4 as uuidv4 } from "uuid";
 
 process.on('unhandledRejection', error => {
@@ -17,7 +17,7 @@ console.log(`Running behavior test id=${runName} with:\n`, config)
 
 config.numConductors = config.nodes * config.conductors
 
-const local = true
+const local = false
 
 const middleware = /*config.endpoints
   ? compose(tapeExecutor(require('tape')), groupPlayersByMachine(config.endpoints, config.conductors))
@@ -25,11 +25,11 @@ const middleware = /*config.endpoints
 
 const orchestrator = new Orchestrator({ middleware })
 
-const trial: "signal" | "gossip" = "gossip"
+const trial: string = "phases"
 
 if (trial === "gossip") {
     orchestrator.registerScenario('Measuring messages per-second--gossip', async (s, t) => {
-        let txCount = 4
+        let txCount = 1
         while (true) {
             t.comment(`trial with ${txCount} tx`)
             // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
@@ -41,32 +41,46 @@ if (trial === "gossip") {
         }
     })
 } else if (trial === "signal") {
+    const period = 60 * 1000  // timeout
     orchestrator.registerScenario('Measuring messages per-second--signals', async (s, t) => {
-        let txCount = 2
-        let actual
-        const period = 20 * 1000
+        let txCount = 100
+        let duration
         let txPerSecondAtMax = 0
-        let txAtMax = 0
+        t.comment(`trial with a network of ${config.nodes} nodes, ${config.conductors} conductors per node, and ${config.instances} cells per conductor, but only ${config.activeAgents} active agents (cells)`)
         do {
-            txCount *= 2
             t.comment(`trial with ${txCount} tx per ${period}ms`)
             // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
             s._uuid = uuidv4();
-            actual = await signalTx(s, t, config, period, txCount, local)
-            const txPerSecond = actual / period * 1000
-            if (txPerSecond > txPerSecondAtMax) {
-                txAtMax = txCount
-                txPerSecondAtMax = txPerSecond
+            duration = await signalTx(s, t, config, period, txCount, local)
+            if (!duration) {
+                t.comment(`failed when attempting ${txCount} messages`)
+                break;
+            } else {
+                t.comment(`succeeded when attempting ${txCount} messages in ${duration}`)
+                txCount *= 2
             }
-        } while (txCount === actual)
-
-        t.comment(`test context: ${config.numConductors} total conductors`)
-        t.comment(`maxed message per second when sending ${txAtMax}: ${txPerSecondAtMax.toFixed(1)} (sent over ${period / 1000}s)`)
-        t.comment(`failed when attempting ${txCount} messages`)
+        } while (true)
     })
+} else if (trial === "phases") {
+    const phases = [
+        {
+            period: 1000 * 60 * 1,
+            messages: 135,
+            active: 150,
+            senders: 15,
+        },
+/*        {
+            period: 1000 * 60 * 1,
+            messages: 133,
+            active: 10,
+            senders: 1,
+        }*/
+    ]
+    orchestrator.registerScenario('Measuring messages per-second--phases', async (s, t) => {
+        t.comment(`trial with a network of ${config.nodes} nodes, ${config.conductors} conductors per node, and ${config.instances} cells per conductor, in the following phases: ${JSON.stringify(phases)}`)
+        s._uuid = uuidv4();
+        await phasesTx(s, t, config, phases, local);
+    });
 }
-
-
-
 
 orchestrator.run()

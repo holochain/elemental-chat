@@ -7,7 +7,7 @@
     "test": "npm run test:setup && npm run test:standard",
     "test:standard": "TRYORAMA_LOG_LEVEL=info RUST_LOG=holochain::core::ribosome::host_fn::debug=debug RUST_BACKTRACE=1 ts-node src/index.ts | tap-diff",
     "test:setup": "CARGO_TARGET_DIR=../target cargo build --release --target wasm32-unknown-unknown && dna-util -c ../elemental-chat.dna.workdir",
-    "test:behavior": "TRYORAMA_LOG_LEVEL=debug RUST_BACKTRACE=1 ts-node src/behaviors/index.ts | tap-diff"
+    "test:behavior": "TRYORAMA_CONDUCTOR_TIMEOUT_MS=1450000 TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 ts-node src/behaviors/index.ts | tap-diff"
   },
   "author": "",
   "license": "ISC",
@@ -19,7 +19,7 @@
     "uuidv4": "^6.2.3"
   },
   "devDependencies": {
-    "@holochain/tryorama": "holochain/tryorama#use-admin-tunneling",
+    "@holochain/tryorama": "git://github.com/holochain/tryorama.git#074ad59276cd3cbe53ff2b8717a6f8bd6de14733",
     "@types/lodash": "^4.14.158",
     "@types/node": "^14.0.14",
     "tap-diff": "^0.1.1"
