@@ -218,9 +218,20 @@ pub(crate) fn get_active_chatters() -> ChatResult<ActiveChatters> {
 }
 
 pub(crate) fn signal_specific_chatters(input: SignalSpecificInput) -> ChatResult<()> {
+    let mut chatters = input.chatters;
+
+    if let Some(include_active_chatters) = input.include_active_chatters {
+      if include_active_chatters {
+        let active_chatters_result = get_active_chatters();
+        if let Ok(mut active_chatters) = active_chatters_result {
+          chatters.append(&mut active_chatters.chatters);
+        }
+      }
+    }
+
     remote_signal(
         &SignalPayload::Message(input.signal_message_data),
-        input.chatters,
+        chatters,
     )?;
     Ok(())
 }

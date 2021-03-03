@@ -45,7 +45,8 @@ pub struct MessageData {
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct SignalSpecificInput {
     signal_message_data: SignalMessageData,
-    chatters: Vec<AgentPubKey>
+    chatters: Vec<AgentPubKey>,
+    include_active_chatters: Option<bool>
 }
 
 
