@@ -35,7 +35,7 @@ pub struct MessageInput {
 #[derive(Serialize, Deserialize, Clone, Debug, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageData {
-    message: Message,
+    entry: Message,
     entry_hash: EntryHash,
     created_by: AgentPubKey,
     created_at: Timestamp,
@@ -94,7 +94,7 @@ impl MessageData {
             .ok_or(ChatError::WrongHeaderType)?
             .clone();
         Ok(Self {
-            message,
+            entry: message,
             entry_hash,
             created_by: header.author().to_owned(),
             created_at: header.timestamp().to_owned(),

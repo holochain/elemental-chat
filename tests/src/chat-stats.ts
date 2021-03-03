@@ -29,17 +29,20 @@ module.exports = async (orchestrator) => {
     // Create a channel
     const channel_uuid = uuidv4();
     const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
-    console.log("CHANNEL: >>>", channel);
+    console.log("CHANNEL: >>>", channel.entry);
 
     const msg1 = {
       last_seen: { First: null },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 0,
       message: {
         uuid: uuidv4(),
         content: "Hello from alice :)",
       }
     }
+
+    console.log('msg1', msg1)
+
     const r1 = await alice_chat.call('chat', 'create_message', msg1);
     t.deepEqual(r1.message, msg1.message);
 

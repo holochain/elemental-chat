@@ -103,7 +103,7 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
             if let Some(info) = element.into_inner().1.to_app_option()? {
                 // Construct the channel data from the channel and info
                 channels.push(ChannelData {
-                    channel,
+                    entry: channel,
                     info,
                     latest_chunk: chunk,
                 });

@@ -42,7 +42,7 @@ impl Channel {
 #[derive(Serialize, Deserialize, SerializedBytes, derive_more::Constructor, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelData {
-    pub channel: Channel,
+    pub entry: Channel,
     pub info: ChannelInfo,
     pub latest_chunk: u32,
 }
