@@ -28,8 +28,8 @@ export const defaultConfig = {
     conductors: 8, // Conductors per machine
     instances: 3, // Instances per conductor
     activeAgents: 5, // Number of agents to consider "active" for chatting
-    dnaSource: path.join(__dirname, '../../../elemental-chat.dna.gz'),
-    // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz" },
+    dnaSource: path.join(__dirname, '../../../elemental-chat.dna'),
+    // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna" },
 }
 
 type Agents = Array<{ hAppId: string, agent: Buffer, cell: Cell, playerIdx: number }>

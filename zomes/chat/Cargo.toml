@@ -9,9 +9,9 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-hdk = { git = "https://github.com/holochain/holochain.git", branch = "develop" }
+hdk = { version = "0.0.100-alpha.1", git = "https://github.com/holochain/holochain.git", rev = "5812b41398e857134f780621dc1aa7bc6c05c5f0" }
 # hdk = { path = "../../../chain/crates/hdk/"}
-serde = "=1.0.123"
+serde = "1.0.123"
 chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99"
 thiserror = "1.0.20"
@@ -26,9 +26,3 @@ observability = "0.1.2"
 nanoid = "0.3"
 futures = "0.3.1"
 stream-cancel = "0.8.0"
-
-# [patch.crates-io]
-# rkv = { git = "https://github.com/holochain/rkv.git", branch = "master" }
-# lmdb-rkv = { git = "https://github.com/holochain/lmdb-rs.git" }
-# observability = { git = "https://github.com/freesig/observability.git", branch = "metrics" }
-# tokio_safe_block_on = { git = "https://github.com/neonphog/tokio_safe_block_on.git", branch = "fix_holochain_bug" }

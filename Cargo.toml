@@ -8,3 +8,9 @@ opt-level = "z"
 
 [profile.release]
 opt-level = "z"
+
+[patch.crates-io]
+rkv = { git = "https://github.com/holochain/rkv.git", branch = "master" }
+lmdb-rkv = { git = "https://github.com/holochain/lmdb-rs.git" }
+observability = { git = "https://github.com/freesig/observability.git", branch = "metrics" }
+tokio_safe_block_on = { git = "https://github.com/neonphog/tokio_safe_block_on.git", branch = "fix_holochain_bug" }

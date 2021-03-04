@@ -1,4 +1,4 @@
-use chat::channel::Channel;
+/*use chat::channel::Channel;
 use chat::message::Chunk;
 use chat::ChannelData;
 use chat::ChannelInput;
@@ -35,7 +35,7 @@ async fn behavior() {
 
     let dna_path = std::env::current_dir()
         .unwrap()
-        .join("../../elemental-chat.dna.gz");
+        .join("../../elemental-chat.dna");
     let dna = SweetDnaFile::from_file(&dna_path).await.unwrap();
     let dna = dna.with_uuid(nanoid::nanoid!()).await.unwrap();
 
@@ -196,3 +196,4 @@ async fn behavior() {
         jh.await.unwrap();
     }
 }
+*/

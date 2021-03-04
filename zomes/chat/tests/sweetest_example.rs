@@ -1,4 +1,4 @@
-use chat::{channel::Channel, ChannelData, ChannelInput, ChannelList, ChannelListInput};
+/*use chat::{channel::Channel, ChannelData, ChannelInput, ChannelList, ChannelListInput};
 use holochain::test_utils::sweetest::*;
 
 #[tokio::test(threaded_scheduler)]
@@ -6,7 +6,7 @@ async fn sweetest_example() {
     // Use prebuilt DNA file
     let dna_path = std::env::current_dir()
         .unwrap()
-        .join("../../elemental-chat.dna.gz");
+        .join("../../elemental-chat.dna");
     let dna = SweetDnaFile::from_file(&dna_path).await.unwrap();
 
     // Set up conductor
@@ -40,3 +40,4 @@ async fn sweetest_example() {
         .await;
     assert_eq!(channels.channels[0].channel, channel);
 }
+*/

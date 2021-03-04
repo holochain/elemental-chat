@@ -19,7 +19,7 @@
     "uuidv4": "^6.2.3"
   },
   "devDependencies": {
-    "@holochain/tryorama": "git://github.com/holochain/tryorama.git#8e32511fa56db1a3394bd88841ba05fc9f30ffbc",
+    "@holochain/tryorama": "git://github.com/holochain/tryorama.git#17de9d0d5c64e75c47eb2a32b111358bb1a2425d",
     "@types/lodash": "^4.14.158",
     "@types/node": "^14.0.14",
     "tap-diff": "^0.1.1"

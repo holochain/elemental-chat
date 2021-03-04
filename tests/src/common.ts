@@ -28,6 +28,9 @@ export const network = {
       default_rpc_multi_remote_agent_count: 2, //number // default 2
       default_rpc_multi_timeout_ms: 2000, //number // default 2000
       agent_info_expires_after_ms: 1000 * 60 * 20, //number // default 1000 * 60 * 20 (20 minutes)
+      tls_in_mem_session_storage: 512, // default 512
+      proxy_keepalive_ms: 1000 * 30, // default 1000 * 60 * 2 (2 minutes)
+      proxy_to_expire_ms:  1000 * 60 * 5 // default 1000 * 60 * 5 (5 minutes)
   }
 }
 
@@ -35,7 +38,7 @@ export const networkedConductorConfig = Config.gen({ network })
 
 
 // Construct proper paths for your DNAs
-export const chatDna = path.join(__dirname, "../../elemental-chat.dna.gz")
+export const chatDna = path.join(__dirname, "../../elemental-chat.dna")
 
 // create an InstallAgentsHapps array with your DNAs to tell tryorama what
 // to install into the conductor.
