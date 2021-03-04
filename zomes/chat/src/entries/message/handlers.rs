@@ -305,11 +305,10 @@ pub(crate) fn agent_stats() -> ChatResult<(usize, usize)> {
     let agents = chatters
         .into_iter()
         .map(|l| l.tag)
-        .collect::<::std::collections::HashSet<_>>()
-        .len();
+        .collect::<::std::collections::HashSet<_>>();
 
     let (_, active_chatters) = active_chatters(chatters_path)?;
-    Ok((agents, active_chatters.len()))
+    Ok((agents.len(), active_chatters.len()))
 }
 
 /* old way using hours
