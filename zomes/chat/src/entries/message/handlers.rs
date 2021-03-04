@@ -23,6 +23,8 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
         chunk,
     } = message_input;
 
+    debug!("banana");
+
     // Commit the message
     let header_hash = create_entry(&message)?;
 

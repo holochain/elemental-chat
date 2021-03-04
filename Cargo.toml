@@ -13,3 +13,4 @@ opt-level = "z"
 rkv = { git = "https://github.com/holochain/rkv.git", branch = "master" }
 lmdb-rkv = { git = "https://github.com/holochain/lmdb-rs.git" }
 tokio_safe_block_on = { git = "https://github.com/neonphog/tokio_safe_block_on.git", branch = "fix_holochain_bug" }
+observability = { path = "../../rust/observability" }
