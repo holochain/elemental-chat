@@ -16,12 +16,12 @@ module.exports = async (orchestrator) => {
     })*/
 }
 
-const gotChannelsAndMessages = async(t, name, happ, channel, retry_count, retry_delay)  => {
+const gotChannelsAndMessages = async(t, name, happ, channelEntry, retry_count, retry_delay)  => {
   var retries = retry_count
   while (true) {
     const channel_list = await happ.call('chat', 'list_channels', { category: "General" });
     console.log(`${name}'s channel list:`, channel_list.channels);
-    const r = await happ.call('chat', 'list_messages', { channel, active_chatter: false, chunk: {start:0, end: 1} })
+    const r = await happ.call('chat', 'list_messages', { channel: channelEntry, active_chatter: false, chunk: {start:0, end: 1} })
     t.ok(r)
     console.log(`${name}'s message list:`, r);
     if (r.messages.length > 0) {
@@ -57,24 +57,23 @@ const doTransientNodes = async (s, t, local) => {
 
   // Create a channel
   const channel_uuid = uuidv4();
-  const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
+  const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", entry: { category: "General", uuid: channel_uuid } });
 
   const msg1 = {
     last_seen: { First: null },
-    channel: channel.channel,
+    channel: channel.entry,
     chunk: 0,
-    message: {
+    entry: {
       uuid: uuidv4(),
       content: "Hello from alice :)",
     }
   }
   const r1 = await alice_chat.call('chat', 'create_message', msg1);
-  t.deepEqual(r1.message, msg1.message);
-
+  t.deepEqual(r1.entry, msg1.entry);
 
   console.log("******************************************************************")
   console.log("checking to see if bob can see the message")
-  await gotChannelsAndMessages(t, "bob", bob_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
+  await gotChannelsAndMessages(t, "bob", bob_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
   console.log("waiting for bob to integrate the message not just see it via get")
   await delay(10000)
   console.log("shutting down alice")
@@ -89,7 +88,7 @@ const doTransientNodes = async (s, t, local) => {
 
   console.log("******************************************************************")
   console.log("checking to see if carol can see the message via bob")
-  await gotChannelsAndMessages(t, "carol", carol_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
+  await gotChannelsAndMessages(t, "carol", carol_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
 
   // This above loop SHOULD work because carol should get the message via bob, but it doesn't
   // So we try starting up alice and getting the message gossiped that way, but that also
@@ -100,6 +99,6 @@ const doTransientNodes = async (s, t, local) => {
   }
   console.log("******************************************************************")
   console.log("checking to see if carol can see the message via alice after back on")
-  await gotChannelsAndMessages(t, "carol", carol_chat, channel.channel, RETRY_COUNT, RETRY_DELAY)
+  await gotChannelsAndMessages(t, "carol", carol_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
 
 }

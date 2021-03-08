@@ -13,10 +13,10 @@ use super::{ChannelData, ChannelInfo, ChannelInfoTag, ChannelList, ChannelListIn
 /// This effectively just stores channel info on the
 /// path that is `category:channel_id`
 pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelData> {
-    let ChannelInput { name, channel } = channel_input;
+    let ChannelInput { name, entry } = channel_input;
 
     // Create the path for this channel
-    let path: Path = channel.clone().into();
+    let path: Path = entry.clone().into();
     path.ensure()?;
 
     // Create the channel info
@@ -36,7 +36,7 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     create_link(path.hash()?, info_hash, ChannelInfoTag::tag())?;
 
     // Return the channel and the info for the UI
-    Ok(ChannelData::new(channel, info, 0))
+    Ok(ChannelData::new(entry, info, 0))
 }
 
 pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {

@@ -17,7 +17,7 @@ pub struct ChannelInfo {
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelInput {
     name: String,
-    channel: Channel,
+    entry: Channel,
 }
 
 /// A channel is consists of the category it belongs to

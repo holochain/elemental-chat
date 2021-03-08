@@ -25,20 +25,20 @@ module.exports = async (orchestrator) => {
 
     // Create a channel
     const channel_uuid = uuidv4();
-    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
+    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", entry: { category: "General", uuid: channel_uuid } });
     console.log(channel);
 
     var sends: any[] = [];
     var recvs: any[] = [];
-    function just_msg(m) { return m.message }
+    function messageEntry(m) { return m.entry }
 
     let first_message = {
       last_seen: { First: null },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 0,
-      message: {
+      entry: {
         uuid: uuidv4(),
-          content: 'x'.repeat(1025),
+        content: 'x'.repeat(1025),
       }
     };
 
@@ -50,21 +50,21 @@ module.exports = async (orchestrator) => {
       t.deepEqual(e,{ type: 'error', data: { type: 'internal_error', data: 'Source chain error: InvalidCommit error: Message too long' } })
     }
 
-    first_message.message.content = "Hello from alice :)";
+    first_message.entry.content = "Hello from alice :)";
     // Alice send a message
     sends.push(first_message);
     console.log(sends[0]);
 
     recvs.push(await alice_chat.call('chat', 'create_message', sends[0]));
     console.log(recvs[0]);
-    t.deepEqual(sends[0].message, recvs[0].message);
+    t.deepEqual(sends[0].entry, recvs[0].entry);
 
     // Alice sends another message
     sends.push({
       last_seen: { Message: recvs[0].entryHash },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 0,
-      message: {
+      entry: {
         uuid: uuidv4(),
         content: "Is anybody out there?",
       }
@@ -72,56 +72,56 @@ module.exports = async (orchestrator) => {
     console.log(sends[1]);
     recvs.push(await alice_chat.call('chat', 'create_message', sends[1]));
     console.log(recvs[1]);
-    t.deepEqual(sends[1].message, recvs[1].message);
+    t.deepEqual(sends[1].entry, recvs[1].entry);
 
     const channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
     console.log(channel_list);
 
     // Alice lists the messages
     var msgs: any[] = [];
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
-    console.log(_.map(msgs[0].messages, just_msg));
-    t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[0].messages, just_msg));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} }));
+    console.log(_.map(msgs[0].messages, messageEntry));
+    t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[0].messages, messageEntry));
     // Bobbo lists the messages
     await delay(2000) // TODO add consistency instead
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
-    console.log('bobbo.list_messages: '+_.map(msgs[1].messages, just_msg));
-    t.deepEqual([sends[0].message, sends[1].message], _.map(msgs[1].messages, just_msg));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} }));
+    console.log('bobbo.list_messages: '+_.map(msgs[1].messages, messageEntry));
+    t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[1].messages, messageEntry));
 
     // Bobbo and Alice both reply to the same message
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 0,
-      message: {
+      entry: {
         uuid: uuidv4(),
         content: "I'm here",
       }
     });
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 0,
-      message: {
+      entry: {
         uuid: uuidv4(),
         content: "Anybody?",
       }
     });
     recvs.push(await bobbo_chat.call('chat', 'create_message', sends[2]));
     console.log(recvs[2]);
-    t.deepEqual(sends[2].message, recvs[2].message);
+    t.deepEqual(sends[2].entry, recvs[2].entry);
     recvs.push(await alice_chat.call('chat', 'create_message', sends[3]));
     console.log(recvs[3]);
-    t.deepEqual(sends[3].message, recvs[3].message);
+    t.deepEqual(sends[3].entry, recvs[3].entry);
     await delay(4000)
     // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
-    console.log(_.map(msgs[2].messages, just_msg));
-    t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[2].messages, just_msg));
+    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} }));
+    console.log(_.map(msgs[2].messages, messageEntry));
+    t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[2].messages, messageEntry));
     // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} }));
-    console.log(_.map(msgs[3].messages, just_msg));
-    t.deepEqual([sends[0].message, sends[1].message, sends[2].message, sends[3].message], _.map(msgs[3].messages, just_msg));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} }));
+    console.log(_.map(msgs[3].messages, messageEntry));
+    t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[3].messages, messageEntry));
   })
 
 }

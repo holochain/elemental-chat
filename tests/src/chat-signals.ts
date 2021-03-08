@@ -21,7 +21,7 @@ module.exports = async (orchestrator) => {
     let receivedCount = 0
     bob.setSignalHandler((signal) => {
       console.log("Received Signal:",signal)
-      t.deepEqual(signal.data.payload.signal_payload.messageData.message, MESSAGE)
+      t.deepEqual(signal.data.payload.signal_payload.messageData.entry, MESSAGE)
       receivedCount += 1
     })
     const [[alice_chat_happ]] = await alice.installAgentsHapps(installation1agent)
@@ -41,22 +41,23 @@ module.exports = async (orchestrator) => {
 
     // Create a channel
     const channel_uuid = uuidv4();
-    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
+    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", entry: { category: "General", uuid: channel_uuid } });
     console.log("CHANNEL: >>>", channel);
 
     const msg1 = {
       last_seen: { First: null },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 0,
-      message: MESSAGE
+      entry: MESSAGE
     }
     const r1 = await alice_chat.call('chat', 'create_message', msg1);
-    t.deepEqual(r1.message, msg1.message);
+    t.deepEqual(r1.entry, msg1.entry);
 
     const signalMessageData = {
       messageData: r1,
       channelData: channel,
     };
+
     const r4 = await alice_chat.call('chat', 'signal_chatters', signalMessageData);
     t.equal(r4.total, 2)
     t.equal(r4.sent.length, 1)

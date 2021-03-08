@@ -27,7 +27,7 @@ pub enum LastSeen {
 pub struct MessageInput {
     pub last_seen: LastSeen,
     pub channel: Channel,
-    pub message: Message,
+    pub entry: Message,
     pub chunk: u32,
 }
 

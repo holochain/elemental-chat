@@ -19,16 +19,16 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let MessageInput {
         last_seen,
         channel,
-        message,
+        entry,
         chunk,
     } = message_input;
 
     // Commit the message
-    let header_hash = create_entry(&message)?;
+    let header_hash = create_entry(&entry)?;
 
     // Get the local header and create the message type for the UI
     let header = get_local_header(&header_hash)?.ok_or(ChatError::MissingLocalHeader)?;
-    let message = MessageData::new(header, message)?;
+    let message = MessageData::new(header, entry)?;
 
     // Get the channel hash
     let path: Path = channel.clone().into();
