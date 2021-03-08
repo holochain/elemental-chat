@@ -11,7 +11,7 @@ use metadata::EntryDetails;
 
 use super::{
     LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData, SigResults,
-    SignalMessageData,
+    SignalMessageData, SignalSpecificInput, ActiveChatters
 };
 
 /// Create a new message
@@ -19,16 +19,16 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let MessageInput {
         last_seen,
         channel,
-        message,
+        entry,
         chunk,
     } = message_input;
 
     // Commit the message
-    let header_hash = create_entry(&message)?;
+    let header_hash = create_entry(&entry)?;
 
     // Get the local header and create the message type for the UI
     let header = get_local_header(&header_hash)?.ok_or(ChatError::MissingLocalHeader)?;
-    let message = MessageData::new(header, message)?;
+    let message = MessageData::new(header, entry)?;
 
     // Get the channel hash
     let path: Path = channel.clone().into();
@@ -153,7 +153,7 @@ pub fn add_chunk_path(path: Path, chunk: u32) -> ChatResult<Path> {
     Ok(components.into())
 }
 
-fn chatters_path() -> Path {
+pub fn chatters_path() -> Path {
     Path::from("chatters")
 }
 
@@ -207,6 +207,33 @@ fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)>
         })
         .collect();
     Ok((total, active))
+}
+
+pub(crate) fn get_active_chatters() -> ChatResult<ActiveChatters> {
+    let me = agent_info()?.agent_latest_pubkey;
+    let chatters_path: Path = chatters_path();
+    let (_total, mut chatters) = active_chatters(chatters_path)?;
+    chatters.retain(|a| *a != me);
+    Ok(ActiveChatters { chatters })
+}
+
+pub(crate) fn signal_specific_chatters(input: SignalSpecificInput) -> ChatResult<()> {
+    let mut chatters = input.chatters;
+
+    if let Some(include_active_chatters) = input.include_active_chatters {
+      if include_active_chatters {
+        let active_chatters_result = get_active_chatters();
+        if let Ok(mut active_chatters) = active_chatters_result {
+          chatters.append(&mut active_chatters.chatters);
+        }
+      }
+    }
+
+    remote_signal(
+        &SignalPayload::Message(input.signal_message_data),
+        chatters,
+    )?;
+    Ok(())
 }
 
 pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatResult<SigResults> {
@@ -278,11 +305,10 @@ pub(crate) fn agent_stats() -> ChatResult<(usize, usize)> {
     let agents = chatters
         .into_iter()
         .map(|l| l.tag)
-        .collect::<::std::collections::HashSet<_>>()
-        .len();
+        .collect::<::std::collections::HashSet<_>>();
 
     let (_, active_chatters) = active_chatters(chatters_path)?;
-    Ok((agents, active_chatters.len()))
+    Ok((agents.len(), active_chatters.len()))
 }
 
 /* old way using hours

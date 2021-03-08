@@ -27,7 +27,7 @@ pub enum LastSeen {
 pub struct MessageInput {
     pub last_seen: LastSeen,
     pub channel: Channel,
-    pub message: Message,
+    pub entry: Message,
     pub chunk: u32,
 }
 
@@ -35,11 +35,20 @@ pub struct MessageInput {
 #[derive(Serialize, Deserialize, Clone, Debug, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageData {
-    message: Message,
+    entry: Message,
     entry_hash: EntryHash,
     created_by: AgentPubKey,
     created_at: Timestamp,
 }
+
+// Input to the signal_specific_chatters call
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct SignalSpecificInput {
+    signal_message_data: SignalMessageData,
+    chatters: Vec<AgentPubKey>,
+    include_active_chatters: Option<bool>
+}
+
 
 /// The message type that goes to the UI via emit_signal
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
@@ -68,6 +77,11 @@ pub struct SigResults {
     pub sent: Vec<String>,
 }
 
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct ActiveChatters {
+    pub chatters: Vec<AgentPubKey>,
+}
+
 /// The messages returned from list messages
 #[derive(Serialize, Deserialize, SerializedBytes, derive_more::From)]
 pub struct ListMessages {
@@ -81,7 +95,7 @@ impl MessageData {
             .ok_or(ChatError::WrongHeaderType)?
             .clone();
         Ok(Self {
-            message,
+            entry: message,
             entry_hash,
             created_by: header.author().to_owned(),
             created_at: header.timestamp().to_owned(),

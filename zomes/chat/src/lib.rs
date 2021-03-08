@@ -5,7 +5,7 @@ use hdk3::prelude::Path;
 use hdk3::prelude::*;
 use message::{
     ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SigResults,
-    SignalMessageData,
+    SignalMessageData, SignalSpecificInput, ActiveChatters
 };
 
 mod entries;
@@ -103,6 +103,16 @@ fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
 fn signal_users_on_channel(message_data SignalMessageData) -> ChatResult<()> {
     message::handlers::signal_users_on_channel(message_data)
 }*/
+
+#[hdk_extern]
+fn get_active_chatters(_: ()) -> ChatResult<ActiveChatters> {
+    message::handlers::get_active_chatters()
+}
+
+#[hdk_extern]
+fn signal_specific_chatters(input: SignalSpecificInput) -> ChatResult<()> {
+    message::handlers::signal_specific_chatters(input)
+}
 
 #[hdk_extern]
 fn signal_chatters(message_data: SignalMessageData) -> ChatResult<SigResults> {

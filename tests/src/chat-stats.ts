@@ -28,47 +28,50 @@ module.exports = async (orchestrator) => {
 
     // Create a channel
     const channel_uuid = uuidv4();
-    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
-    console.log("CHANNEL: >>>", channel);
+    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", entry: { category: "General", uuid: channel_uuid } });
+    console.log("CHANNEL: >>>", channel.entry);
 
     const msg1 = {
       last_seen: { First: null },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 0,
-      message: {
+      entry: {
         uuid: uuidv4(),
         content: "Hello from alice :)",
       }
     }
+
+    console.log('msg1', msg1)
+
     const r1 = await alice_chat.call('chat', 'create_message', msg1);
-    t.deepEqual(r1.message, msg1.message);
+    t.deepEqual(r1.entry, msg1.entry);
 
     const msg2 = {
       last_seen: { First: null },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 1,
-      message: {
+      entry: {
         uuid: uuidv4(),
         content: "second messages",
       }
     }
     const r2 = await alice_chat.call('chat', 'create_message', msg2);
-    t.deepEqual(r2.message, msg2.message);
+    t.deepEqual(r2.entry, msg2.entry);
 
     const channel_uuid2 = uuidv4();
-    const channel2 = await alice_chat.call('chat', 'create_channel', { name: "Test2 Channel", channel: { category: "General", uuid: channel_uuid2 } });
+    const channel2 = await alice_chat.call('chat', 'create_channel', { name: "Test2 Channel", entry: { category: "General", uuid: channel_uuid2 } });
 
     const msg3 = {
       last_seen: { First: null },
-      channel: channel2.channel,
+      channel: channel2.entry,
       chunk: 0,
-      message: {
+      entry: {
         uuid: uuidv4(),
         content: "Hello from bob :)",
       }
     }
     const r3 = await alice_chat.call('chat', 'create_message', msg3);
-    t.deepEqual(r3.message, msg3.message);
+    t.deepEqual(r3.entry, msg3.entry);
 
     let stats = await alice_chat.call('chat', 'stats', {category: "General"});
     t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 3});
