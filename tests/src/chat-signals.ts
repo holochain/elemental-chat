@@ -68,16 +68,16 @@ module.exports = async (orchestrator) => {
       console.log(`waiting for signal: ${i}`)
       await delay(500)
     }
+    // bob should have gotten a signal becayse he's an active chatter
     t.equal(receivedCount, 1)
 
     stats = await alice_chat.call('chat', 'stats', {category: "General"});
     t.deepEqual(stats, {agents: 2, active: 2, channels: 1, messages: 1});
 
-    const r5 = await alice_chat.call('chat', 'signal_specific_chatters', {
+    await alice_chat.call('chat', 'signal_specific_chatters', {
       signal_message_data: signalMessageData,
       chatters: [bob_chat.cellId[1]]
-    }
-    );
+    })
 
     // waiting for the signal to be received by bob.
     for (let i = 0; i < 5; i++) {
@@ -85,10 +85,42 @@ module.exports = async (orchestrator) => {
       console.log(`waiting for signal: ${i}`)
       await delay(500)
     }
+    // bob should have gotten a 2nd signal because he's specified in the call
     t.equal(receivedCount, 2)
 
     const result = await alice_chat.call('chat', 'get_active_chatters');
     t.equal(result.chatters.length, 1)
     t.equal(result.chatters[0].toString('base64'), bob_chat.cellId[1].toString('base64'))
+
+    await alice_chat.call('chat', 'signal_specific_chatters', {
+      signal_message_data: signalMessageData,
+      chatters: [],
+      include_active_chatters: false
+    })
+
+    // waiting for the signal to be received by bob.
+    for (let i = 0; i < 5; i++) {
+      if (receivedCount > 2) break;
+      console.log(`waiting for signal: ${i}`)
+      await delay(500)
+    }
+    // bob should NOT have gotten a 3rd signal because he's not specified in the call
+
+    t.equal(receivedCount, 2)
+
+    await alice_chat.call('chat', 'signal_specific_chatters', {
+      signal_message_data: signalMessageData,
+      chatters: [],
+      include_active_chatters: true
+    })
+
+    // waiting for the signal to be received by bob.
+    for (let i = 0; i < 5; i++) {
+      if (receivedCount > 2) break;
+      console.log(`waiting for signal: ${i}`)
+      await delay(500)
+    }
+    // bob should now have gotten a 3rd signal because he's an active chatter and we included active chatters
+    t.equal(receivedCount, 3)
   })
 }
