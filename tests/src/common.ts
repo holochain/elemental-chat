@@ -1,4 +1,5 @@
-import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
+import { Orchestrator, Config, InstallAgentsHapps, InstalledHapp } from '@holochain/tryorama'
+import * as msgpack from '@msgpack/msgpack';
 import path from 'path'
 
 export const RETRY_DELAY = 1000
@@ -51,3 +52,26 @@ export const installation2agent: InstallAgentsHapps = [
   [[chatDna]],
   [[chatDna]],
 ]
+
+const dnas = [
+  {
+    path: chatDna,
+    nick: 'elemental-chat',
+    membrane_proof: Array.from(msgpack.encode("Testing...")),
+  }
+]
+
+export const installAgents = async (conductor, agentNames) => {
+  const admin = conductor.adminWs();
+  const agents: Array<InstalledHapp> = await Promise.all(agentNames.map(
+  async agent => {
+      const req = {
+        installed_app_id: `${agent}_chat`,
+        agent_key: await admin.generateAgentPubKey(),
+        dnas
+      }
+      return await conductor._installHapp(req)
+    }
+  ))
+  return agents
+}
