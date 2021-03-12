@@ -2,13 +2,13 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installation1agent, installation2agent } from './common'
+import { localConductorConfig, networkedConductorConfig, installation1agent, installation2agent } from './common'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = async (orchestrator) => {
 
-  await orchestrator.registerScenario('multi-chunk', async (s, t) => {
+  orchestrator.registerScenario('multi-chunk', async (s, t) => {
     const [conductor] = await s.players([localConductorConfig])
     const [
       [alice_chat_happ],

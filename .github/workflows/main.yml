@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+    - name: Fetch source code
+      uses: actions/checkout@v2
+    - name: Use Nix
+      uses: cachix/install-nix-action@v12
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Configure Nix substituters
+      run: |
+        set -xe
+        mkdir -p ~/.config/nix/
+        cp ./.github/nix.conf ~/.config/nix/
+    - name: Prepare Nix environment
+      run: nix-shell https://holochain.love --command "echo Completed"
+    - name: Install correct version of holochain
+      run: nix-shell  https://holochain.love  --command "cargo install --force holochain --git https://github.com/holochain/holochain.git --rev b77e4ae59a4d20a34e453ac0b878986173896838"
+#    - name: install correct version of dna_util
+#      run: nix-shell --command "cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 60da73e79397cbe21280edf9a3062ae325f0bf9a"
+    - name: Run all tests
+      run: nix-shell https://holochain.love --run 'make test'

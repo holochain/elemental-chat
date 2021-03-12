@@ -17,7 +17,7 @@ pub struct ChannelInfo {
 #[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct ChannelInput {
     pub name: String,
-    pub channel: Channel,
+    pub entry: Channel,
 }
 
 /// A channel is consists of the category it belongs to
@@ -44,7 +44,7 @@ impl Channel {
 )]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelData {
-    pub channel: Channel,
+    pub entry: Channel,
     pub info: ChannelInfo,
     pub latest_chunk: u32,
 }

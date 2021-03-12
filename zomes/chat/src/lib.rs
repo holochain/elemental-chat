@@ -5,7 +5,7 @@ pub use hdk::prelude::Path;
 pub use hdk::prelude::*;
 pub use message::{
     ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SigResults,
-    SignalMessageData,
+    SignalMessageData, SignalSpecificInput, ActiveChatters
 };
 
 pub mod entries;
@@ -39,13 +39,9 @@ pub enum SignalPayload {
 
 #[hdk_extern]
 fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
-    debug!("Received remote signal");
     let sig: SignalPayload = signal.decode()?;
-    // // let sig: SignalPayload = SignalPayload::try_from(signal.clone())?;
     debug!("Received remote signal {:?}", sig);
     Ok(emit_signal(&sig)?)
-    // host_call::<AppSignal, ()>(__emit_signal, AppSignal::new(signal))
-
 }
 
 entry_defs![
@@ -106,6 +102,16 @@ fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
 fn signal_users_on_channel(message_data SignalMessageData) -> ChatResult<()> {
     message::handlers::signal_users_on_channel(message_data)
 }*/
+
+#[hdk_extern]
+fn get_active_chatters(_: ()) -> ExternResult<ActiveChatters> {
+    Ok(message::handlers::get_active_chatters()?)
+}
+
+#[hdk_extern]
+fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
+    Ok(message::handlers::signal_specific_chatters(input)?)
+}
 
 #[hdk_extern]
 fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> {

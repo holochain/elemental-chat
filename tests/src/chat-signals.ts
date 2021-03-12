@@ -18,11 +18,11 @@ module.exports = async (orchestrator) => {
       uuid: uuidv4(),
       content: "Hello from alice :)",
     }
-    let flag = false
+    let receivedCount = 0
     bob.setSignalHandler((signal) => {
-        console.log("Received Signal:",signal)
-        t.deepEqual(signal.data.payload.signal_payload.messageData.message, MESSAGE)
-        flag = true
+      console.log("Received Signal:",signal)
+      t.deepEqual(signal.data.payload.signal_payload.messageData.entry, MESSAGE)
+      receivedCount += 1
     })
     const [[alice_chat_happ]] = await alice.installAgentsHapps(installation1agent)
     const [[bob_chat_happ]] = await bob.installAgentsHapps(installation1agent)
@@ -41,36 +41,86 @@ module.exports = async (orchestrator) => {
 
     // Create a channel
     const channel_uuid = uuidv4();
-    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
+    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", entry: { category: "General", uuid: channel_uuid } });
     console.log("CHANNEL: >>>", channel);
 
     const msg1 = {
       last_seen: { First: null },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 0,
-      message: MESSAGE
+      entry: MESSAGE
     }
     const r1 = await alice_chat.call('chat', 'create_message', msg1);
-    t.deepEqual(r1.message, msg1.message);
+    t.deepEqual(r1.entry, msg1.entry);
 
     const signalMessageData = {
       messageData: r1,
       channelData: channel,
     };
+
     const r4 = await alice_chat.call('chat', 'signal_chatters', signalMessageData);
     t.equal(r4.total, 2)
     t.equal(r4.sent.length, 1)
 
     // waiting for the signal to be received by bob.
     for (let i = 0; i < 5; i++) {
-      if (flag) break;
-      console.log(`wating for signal: ${i}`)
+      if (receivedCount > 0) break;
+      console.log(`waiting for signal: ${i}`)
       await delay(500)
     }
-    t.ok(flag)
+    // bob should have gotten a signal becayse he's an active chatter
+    t.equal(receivedCount, 1)
 
     stats = await alice_chat.call('chat', 'stats', {category: "General"});
     t.deepEqual(stats, {agents: 2, active: 2, channels: 1, messages: 1});
 
+    await alice_chat.call('chat', 'signal_specific_chatters', {
+      signal_message_data: signalMessageData,
+      chatters: [bob_chat.cellId[1]]
+    })
+
+    // waiting for the signal to be received by bob.
+    for (let i = 0; i < 5; i++) {
+      if (receivedCount > 1) break;
+      console.log(`waiting for signal: ${i}`)
+      await delay(500)
+    }
+    // bob should have gotten a 2nd signal because he's specified in the call
+    t.equal(receivedCount, 2)
+
+    const result = await alice_chat.call('chat', 'get_active_chatters');
+    t.equal(result.chatters.length, 1)
+    t.equal(result.chatters[0].toString('base64'), bob_chat.cellId[1].toString('base64'))
+
+    await alice_chat.call('chat', 'signal_specific_chatters', {
+      signal_message_data: signalMessageData,
+      chatters: [],
+      include_active_chatters: false
+    })
+
+    // waiting for the signal to be received by bob.
+    for (let i = 0; i < 5; i++) {
+      if (receivedCount > 2) break;
+      console.log(`waiting for signal: ${i}`)
+      await delay(500)
+    }
+    // bob should NOT have gotten a 3rd signal because he's not specified in the call
+
+    t.equal(receivedCount, 2)
+
+    await alice_chat.call('chat', 'signal_specific_chatters', {
+      signal_message_data: signalMessageData,
+      chatters: [],
+      include_active_chatters: true
+    })
+
+    // waiting for the signal to be received by bob.
+    for (let i = 0; i < 5; i++) {
+      if (receivedCount > 2) break;
+      console.log(`waiting for signal: ${i}`)
+      await delay(500)
+    }
+    // bob should now have gotten a 3rd signal because he's an active chatter and we included active chatters
+    t.equal(receivedCount, 3)
   })
 }
