@@ -53,11 +53,14 @@ export const installation2agent: InstallAgentsHapps = [
   [[chatDna]],
 ]
 
+// this mem_proof is a signature of the holo_agent key signing its public key
+// The current holo_hosting pub key is `uhCAk7wGO_N3Lm9-OU7mDhyLSTI4WBxHQ9pq98TQbwaqmxJkqbmFW`
+const MEM_PROOF = Buffer.from("oTKk4HcEesGjQgj4aBfIfy/iQlot+LOYlbtj8p/Sn/NNYSRJ9xmbbysEO6wKvfP2y1VGdpj4Y3gNHT7HGVEuDw==", 'base64')
 const dnas = [
   {
     path: chatDna,
     nick: 'elemental-chat',
-    membrane_proof: Array.from(msgpack.encode("Testing...")),
+    membrane_proof: Array.from(msgpack.encode(MEM_PROOF)),
   }
 ]
 

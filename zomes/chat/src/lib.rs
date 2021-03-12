@@ -11,6 +11,7 @@ use message::{
 mod entries;
 mod error;
 mod utils;
+mod validate;
 
 // signals:
 pub const NEW_MESSAGE_SIGNAL_TYPE: &str = "new_message";
@@ -45,6 +46,21 @@ fn recv_remote_signal(signal: SerializedBytes) -> ChatResult<()> {
     Ok(emit_signal(&signal)?)
 }
 
+#[hdk_extern]
+fn signing(_: ()) -> ChatResult<Signature> {
+    let me = agent_info()?.agent_latest_pubkey;
+    debug!("ME: {:?}", me);
+    let signature = sign(me.clone(), SerializedBytes::try_from(me.clone())?)?;
+    debug!("Signature: {:?}", signature);
+
+    let v = verify_signature(me.clone(), signature.clone(), SerializedBytes::try_from(me)?)?;
+    debug!("Verify: {:?}", v);
+
+
+    return Ok(signature)
+}
+
+
 entry_defs![
     Path::entry_def(),
     Message::entry_def(),
@@ -53,6 +69,9 @@ entry_defs![
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    // validate joining code
+    validate::joining_code().unwrap();
+
     // grant unrestricted access to accept_cap_claim so other agents can send us claims
     let mut functions: GrantedFunctions = HashSet::new();
     functions.insert((zome_info()?.zome_name, "recv_remote_signal".into()));
@@ -73,25 +92,7 @@ fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelData> {
 
 #[hdk_extern]
 fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
-    let element = data.element;
-    let entry = element.into_inner().1;
-    let entry = match entry {
-        ElementEntry::Present(e) => e,
-        _ => return Ok(ValidateCallbackResult::Valid),
-    };
-    if let Entry::Agent(_) = entry {
-        return Ok(ValidateCallbackResult::Valid);
-    }
-    Ok(match Message::try_from(&entry) {
-        Ok(message) => {
-            if message.content.len() <= 1024 {
-                ValidateCallbackResult::Valid
-            } else {
-                ValidateCallbackResult::Invalid("Message too long".to_string())
-            }
-        }
-        _ => ValidateCallbackResult::Valid,
-    })
+    validate::common_validatation(data)
 }
 
 #[hdk_extern]
