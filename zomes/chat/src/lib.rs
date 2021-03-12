@@ -48,15 +48,12 @@ fn recv_remote_signal(signal: SerializedBytes) -> ChatResult<()> {
 
 #[hdk_extern]
 fn signing(_: ()) -> ChatResult<Signature> {
+    // This function is just for testing
+    // Use it to create a signature of your own pub key
     let me = agent_info()?.agent_latest_pubkey;
     debug!("ME: {:?}", me);
     let signature = sign(me.clone(), SerializedBytes::try_from(me.clone())?)?;
     debug!("Signature: {:?}", signature);
-
-    let v = verify_signature(me.clone(), signature.clone(), SerializedBytes::try_from(me)?)?;
-    debug!("Verify: {:?}", v);
-
-
     return Ok(signature)
 }
 
