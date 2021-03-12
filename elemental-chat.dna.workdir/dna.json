@@ -5,6 +5,9 @@
   "zomes": {
     "chat": {
       "wasm_path": "../target/wasm32-unknown-unknown/release/chat.wasm"
+    },
+    "profile": {
+      "wasm_path": "../target/wasm32-unknown-unknown/release/profile.wasm"
     }
   }
 }
