@@ -2,7 +2,7 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installation1agent, installation2agent } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installation1agent, installation2agent, installAgents } from './common'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
@@ -46,8 +46,14 @@ const doTransientNodes = async (s, t, local) => {
   await alice.startup()
   await bob.startup()
 
-  const [[alice_chat_happ]] = await alice.installAgentsHapps(installation1agent)
-  const [[bob_chat_happ]] = await bob.installAgentsHapps(installation1agent)
+  // const [[alice_chat_happ]] = await alice.installAgentsHapps(installation1agent)
+  // const [[bob_chat_happ]] = await bob.installAgentsHapps(installation1agent)
+  // const [alice_chat] = alice_chat_happ.cells
+  // const [bob_chat] = bob_chat_happ.cells
+
+  let [alice_chat_happ] = await installAgents(alice,  ["alice"])
+  let [bob_chat_happ] = await installAgents(bob,  ['bob'])
+
   const [alice_chat] = alice_chat_happ.cells
   const [bob_chat] = bob_chat_happ.cells
 
@@ -78,8 +84,11 @@ const doTransientNodes = async (s, t, local) => {
   await delay(10000)
   console.log("shutting down alice")
   await alice.shutdown()
+
   await carol.startup()
-  const [[carol_chat_happ]] = await carol.installAgentsHapps(installation1agent)
+  // const [[carol_chat_happ]] = await carol.installAgentsHapps(installation1agent)
+  // const [carol_chat] = carol_chat_happ.cells
+  let [carol_chat_happ] = await installAgents(carol,  ["carol"])
   const [carol_chat] = carol_chat_happ.cells
 
   if (local) {
