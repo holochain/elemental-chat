@@ -9,7 +9,7 @@ name = "profile"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-profile = {git = "https://github.com/zo-el/hc-zomes", branch = "develop", package = "profile"}
+profile = {git = "https://github.com/zo-el/hc-zomes", branch = "main", package = "profile"}
 hdk3 = "0"
 holo_hash = "0"
 hc_utils = "0"
