@@ -21,3 +21,7 @@ orchestrator.run()
 orchestrator = new Orchestrator()
 require('./chat-stats')(orchestrator)
 orchestrator.run()
+
+orchestrator = new Orchestrator()
+require('./profile')(orchestrator)
+orchestrator.run()
