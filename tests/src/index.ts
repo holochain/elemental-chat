@@ -14,10 +14,14 @@ require('./multi-chunk')(orchestrator)
 orchestrator.run()
 */
 
-orchestrator = new Orchestrator()
+// orchestrator = new Orchestrator()
 require('./chat-signals')(orchestrator)
 orchestrator.run()
 
 orchestrator = new Orchestrator()
 require('./chat-stats')(orchestrator)
+orchestrator.run()
+
+orchestrator = new Orchestrator()
+require('./profile')(orchestrator)
 orchestrator.run()
