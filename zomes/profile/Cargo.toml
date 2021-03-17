@@ -7,6 +7,7 @@ edition = "2018"
 [lib]
 name = "profile"
 crate-type = [ "cdylib", "rlib" ]
+doctest = false
 
 [dependencies]
 profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "develop", package = "profile"}
