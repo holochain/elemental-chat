@@ -6,3 +6,5 @@ properties: ~
 zomes:
   - name: chat
     bundled: "target/wasm32-unknown-unknown/release/chat.wasm"
+  - name: profile
+    bundled: "target/wasm32-unknown-unknown/release/profile.wasm"

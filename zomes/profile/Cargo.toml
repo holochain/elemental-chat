@@ -1,0 +1,14 @@
+[package]
+name = "profile"
+version = "0.1.0"
+authors = ["zo-el <joel.ulahanna@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "profile"
+crate-type = [ "cdylib", "rlib" ]
+
+[dependencies]
+profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "develop", package = "profile"}
+hdk = "0"
+hc_utils = "0"

@@ -30,10 +30,6 @@ jobs:
         mkdir -p ~/.config/nix/
         cp ./.github/nix.conf ~/.config/nix/
     - name: Prepare Nix environment
-      run: nix-shell https://holochain.love --command "echo Completed"
-    - name: Install correct version of holochain
-      run: nix-shell  https://holochain.love  --command "cargo install --force holochain --git https://github.com/holochain/holochain.git --rev a82372a62d46a503e48f345360d0fb18cc5822d1"
-#    - name: install correct version of hc
-#      run: nix-shell  https://holochain.love  --command "cargo install --force --bin hc --git https://github.com/holochain/holochain.git --rev a82372a62d46a503e48f345360d0fb18cc5822d1"
+      run: nix-shell --command "echo Completed"
     - name: Run all tests
-      run: nix-shell https://holochain.love --run 'make test'
+      run: nix-shell --run 'make test'

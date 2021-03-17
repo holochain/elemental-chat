@@ -3,7 +3,7 @@ manifest_version: "1"
 name: elemental-chat
 description: ""
 slots:
-  - id: chat
+  - id: elemental-chat
     provisioning:
       strategy: create
       deferred: false
