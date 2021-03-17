@@ -9,6 +9,6 @@ name = "profile"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-profile = {git = "https://github.com/zo-el/hc-zomes", branch = "develop", package = "profile"}
+profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "develop", package = "profile"}
 hdk = "0"
 hc_utils = "0"
