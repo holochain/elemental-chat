@@ -9,20 +9,17 @@ pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackRes
         Header::AgentValidationPkg(pkg) => {
             match &pkg.membrane_proof {
                 Some(mem_proof) => {
-                    let joining_code: Element = Element::try_from(mem_proof.clone())?;
-                    debug!("Joining code provided: {:?}", joining_code);
+                    let mem_proof: Element = Element::try_from(mem_proof.clone())?;
+                    debug!("Joining code provided: {:?}", mem_proof);
 
-                    let _signature = joining_code.signature().clone();
-                    let author = joining_code.header().author().clone();
+                    let author = mem_proof.header().author().clone();
 
-                    if author == holo_agent {
-                        debug!("Joining code valadated");
-                        Ok(ValidateCallbackResult::Valid)
-                    } else {
+                    if author != holo_agent {
                         debug!("Joining code validation failed");
-                        Ok(ValidateCallbackResult::Invalid("Unable to validate".to_string()))
+                        return Ok(ValidateCallbackResult::Invalid(format!("Joining code created by incorect admin {:?}", author)))
                     }
 
+                    let _signature = mem_proof.signature().clone();
                     // if verify_signature(holo_agent.clone(), signature, SerializedBytes::try_from(joining_code.entry().clone())?)? {
                     //     debug!("Joining code valadated");
                     //     Ok(())
@@ -30,6 +27,8 @@ pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackRes
                     //     debug!("Joining code validation failed");
                     //     Ok(ValidateCallbackResult::Invalid("Unable to validate".to_string()))
                     // }
+                    debug!("Joining code create by the right agent");
+                    return Ok(ValidateCallbackResult::Valid)
                 }
                 None => Ok(ValidateCallbackResult::Invalid("Unable to validate".to_string()))
             }
