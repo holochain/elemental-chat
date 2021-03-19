@@ -50,7 +50,6 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
             Some(header) => {
                 match get(header.clone(), GetOptions::default())? {
                     Some(element_pkg) => {
-                        // debug!("AGENT.validation_package >> {:?}", element_pkg);
                         return joining_code(element_pkg)
                     },
                     None => return Ok(ValidateCallbackResult::Invalid("Unable to validate".to_string()))
