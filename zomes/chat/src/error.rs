@@ -25,6 +25,8 @@ pub enum ChatError {
     MissingChannel(String),
     #[error("Something is fatally wrong with this app\n Please post a bug report on the repo\n Error: {0}")]
     DataFormatError(&'static str),
+    #[error("Failed to validate membrane-proof")]
+    InitFailure,
 }
 
 pub type ChatResult<T> = Result<T, ChatError>;

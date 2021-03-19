@@ -55,14 +55,14 @@ export const installation2agent: InstallAgentsHapps = [
 
 // this mem_proof is a signature of the holo_agent key signing its public key
 // The current holo_hosting pub key is `uhCAk7wGO_N3Lm9-OU7mDhyLSTI4WBxHQ9pq98TQbwaqmxJkqbmFW`
-const MEM_PROOF = Buffer.from("oTKk4HcEesGjQgj4aBfIfy/iQlot+LOYlbtj8p/Sn/NNYSRJ9xmbbysEO6wKvfP2y1VGdpj4Y3gNHT7HGVEuDw==", 'base64')
+const MEM_PROOF = Buffer.from("3gACrXNpZ25lZF9oZWFkZXLeAAKmaGVhZGVy3gACp2NvbnRlbnTeAAekdHlwZaZDcmVhdGWmYXV0aG9yxCeEICR/PJxdzJx345LodAe+FOB4NWOWQV0Tb5cfP5/8AL/nF6VBfU2pdGltZXN0YW1wks5gUzqazhJyV9WqaGVhZGVyX3NlcQmrcHJldl9oZWFkZXLEJ4QpJEIwak+vC8awMx0vdAe8XSbRRage/CuXmCjRhkkTtWWAUUOp8qplbnRyeV90eXBl3gABo0FwcN4AA6JpZACnem9tZV9pZACqdmlzaWJpbGl0ed4AAaZQdWJsaWPAqmVudHJ5X2hhc2jEJ4QhJAf4ZKktdaQZ6JJj4l+UDRCTwspZSchRPYXtwbdRVvyQBnB8ZqRoYXNoxCeEKSSebKOWLx1D9uHxPBkzVjOgm3gtO6w8VkiiEvigSfgTeFWLVN+pc2lnbmF0dXJlxEC+3INgyz2PfsiwtpBpTZIcx0JYVy9t7rYp2HWnK5x9Vw/uITWUzfIO4uaNl6MQppfkraxHLeNZqamjyEtRWggApWVudHJ53gABp1ByZXNlbnTeAAKqZW50cnlfdHlwZaNBcHClZW50cnnEMoKkcm9sZalkZXZlbG9wZXKucmVjb3JkX2xvY2F0b3Kybmljb2xhc0BsdWNrc3VzLmV1", 'base64')
 
 export const installAgents = async (conductor, agentNames) => {
   const dnas = [
     {
       hash: await conductor.registerDna({path: chatDna}),
       nick: 'elemental-chat',
-      membrane_proof: Array.from(msgpack.encode(MEM_PROOF)),
+      membrane_proof: Array.from(MEM_PROOF),
     }
   ]
   const admin = conductor.adminWs();
