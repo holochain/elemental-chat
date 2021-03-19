@@ -1,8 +1,17 @@
 use hdk::prelude::*;
 use crate::message::Message;
 
+/// This is the current structure of the payload the holo signs
+#[hdk_entry(id = "joining_code_payload")]
+#[derive(Clone)]
+struct JoiningCodePayload {
+    role: String,
+    record_locator: String
+}
+
 /// Validate joining code from the membrane_proof
 pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackResult> {
+    // This is a hard coded holo agent public key
     let holo_agent = AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap();
 
     match element.signed_header().header() {
@@ -19,21 +28,25 @@ pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackRes
                         return Ok(ValidateCallbackResult::Invalid(format!("Joining code created by incorect admin {:?}", author)))
                     }
 
-                    let _signature = mem_proof.signature().clone();
-                    // if verify_signature(holo_agent.clone(), signature, SerializedBytes::try_from(joining_code.entry().clone())?)? {
-                    //     debug!("Joining code valadated");
-                    //     Ok(())
-                    // } else {
-                    //     debug!("Joining code validation failed");
-                    //     Ok(ValidateCallbackResult::Invalid("Unable to validate".to_string()))
-                    // }
-                    debug!("Joining code create by the right agent");
-                    return Ok(ValidateCallbackResult::Valid)
+                    let signature = mem_proof.signature().clone();
+                    if let ElementEntry::Present(entry) = mem_proof.entry() {
+                        let jcp = JoiningCodePayload::try_from(entry.clone())?;
+
+                        if verify_signature(holo_agent.clone(), signature, SerializedBytes::try_from(jcp.clone())?)? {
+                            debug!("Joining code valadated");
+                            return Ok(ValidateCallbackResult::Valid)
+                        } else {
+                            debug!("Joining code validation failed");
+                            return Ok(ValidateCallbackResult::Invalid("Joining code validation failed".to_string()))
+                        }
+                    } else {
+                        return Ok(ValidateCallbackResult::Invalid("Joining code invalid payload".to_string()));
+                    }
                 }
-                None => Ok(ValidateCallbackResult::Invalid("Unable to validate".to_string()))
+                None => Ok(ValidateCallbackResult::Invalid("No membrane proof found".to_string()))
             }
         },
-        _ => Ok(ValidateCallbackResult::Invalid("Unable to validate".to_string()))
+        _ => Ok(ValidateCallbackResult::Invalid("No Agent Validation Pkg found".to_string()))
     }
 }
 
