@@ -29,12 +29,13 @@ export const defaultConfig = {
     ],
     //trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
     proxys: [
-        "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/164.90.142.115/p/10000/--",
+        "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/165.227.194.75/p/5788/--",
+//        "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/164.90.142.115/p/10000/--",
         "kitsune-proxy://duArtq0LtFEUIDZreC2muXEN3ow_G8zISXKJI3hypCA/kitsune-quic/h/138.197.78.45/p/10000/--",
         "kitsune-proxy://sbUgYILMN7QiHkZZAVjR9Njwlb_Fzb8UE0XsmeGEP48/kitsune-quic/h/161.35.182.155/p/10000/--"
     ],
-    proxyCount: 2,
-    nodes: 7, // Number of machines
+    proxyCount: 1,
+    nodes: 2, // Number of machines
     conductors: 10, // Conductors per machine
     instances: 8, // Instances per conductor
     activeAgents: 5, // Number of agents to consider "active" for chatting
