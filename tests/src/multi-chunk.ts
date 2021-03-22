@@ -16,7 +16,7 @@ module.exports = async (orchestrator) => {
     const [alice_chat] = alice_chat_happ.cells
 
     const channel_uuid = uuidv4();
-    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", channel: { category: "General", uuid: channel_uuid } });
+    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", entry: { category: "General", uuid: channel_uuid } });
     console.log(channel);
 
     let channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
@@ -29,9 +29,9 @@ module.exports = async (orchestrator) => {
     // Alice send a message in two different chunks
     sends.push({
       last_seen: { First: null },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 0,
-      message: {
+      entry: {
         uuid: uuidv4(),
         content: "message in chunk 0",
       }
@@ -40,9 +40,9 @@ module.exports = async (orchestrator) => {
     recvs.push(await alice_chat.call('chat', 'create_message', sends[0]));
     sends.push({
       last_seen: { First: null },
-      channel: channel.channel,
+      channel: channel.entry,
       chunk: 10,
-      message: {
+      entry: {
         uuid: uuidv4(),
         content: "message in chunk 32",
       }
@@ -52,13 +52,13 @@ module.exports = async (orchestrator) => {
     t.deepEqual(sends[0].message, recvs[0].message);
 
     // list messages should return messages from the correct chunk
-    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
+    let msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} })
     t.deepEqual(msgs.messages[0].message, sends[0].message)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:1, end: 1} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:1, end: 1} })
     t.equal(msgs.messages.length, 0)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:10, end: 10} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:10, end: 10} })
     t.deepEqual(msgs.messages[0].message, sends[1].message)
-    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 10} })
+    msgs = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 10} })
     t.deepEqual(msgs.messages.length, 2)
 
     // list channels should have the latest chunk

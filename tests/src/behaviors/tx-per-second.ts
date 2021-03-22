@@ -212,7 +212,7 @@ const doListMessages = async (msg, channel, activeAgents): Promise<Array<number>
     let i = 0;
     const counts : Array<number> = await Promise.all(
         activeAgents.map(async agent => {
-            const r = await agent.cell.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: {start:0, end: 1} })
+            const r = await agent.cell.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} })
             i+=1;
             console.log(`${i}--called list messages for: `, agent.agent.toString('base64'), r.messages.length)
             return r.messages.length
@@ -295,8 +295,8 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
 
     console.log(`Creating channel for test:`)
     const channel_uuid = uuidv4();
-    const channel = { category: "General", uuid: channel_uuid }
-    const createChannelResult = await playerAgents[0][0].cell.call('chat', 'create_channel', { name: `Test Channel`, channel });
+    const entry = { category: "General", uuid: channel_uuid }
+    const createChannelResult = await playerAgents[0][0].cell.call('chat', 'create_channel', { name: `Test Channel`, entry });
     console.log(createChannelResult);
 
     return { playerAgents, allPlayers, channel: createChannelResult }
@@ -305,8 +305,8 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
 const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
     const msg = {
         last_seen: { First: null },
-        channel: channel.channel,
-        message: {
+        channel: channel.entry,
+        entry: {
             uuid: uuidv4(),
             content: `message ${i}`,
         },
@@ -358,7 +358,7 @@ const gossipTrial = async (activeAgents: Agents, playerAgents: PlayerAgents, cha
     while (true) {
         let justReceived = 0;
         try {
-            justReceived = (await receivingCell.call('chat', 'list_messages', { channel: channel.channel, active_chatter: false, chunk: { start: 0, end: 1 } })).messages.length
+            justReceived = (await receivingCell.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: { start: 0, end: 1 } })).messages.length
         } catch (e) {
             console.error("error while checking number of messages received", e)
         }

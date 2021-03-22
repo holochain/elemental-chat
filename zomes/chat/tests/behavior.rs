@@ -65,7 +65,7 @@ async fn behavior() {
             "create_channel",
             ChannelInput {
                 name: "name".into(),
-                channel: channel.clone(),
+                entry: channel.clone(),
             },
         )
         .await;
@@ -132,7 +132,7 @@ async fn behavior() {
                     MessageInput {
                         last_seen: chat::message::LastSeen::First,
                         channel: channel.clone(),
-                        message: Message {
+                        entry: Message {
                             uuid,
                             content: "Hey".to_string(),
                         },
