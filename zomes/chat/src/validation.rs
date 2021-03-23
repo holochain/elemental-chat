@@ -64,7 +64,7 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                     Some(element_pkg) => {
                         return joining_code(element_pkg)
                     },
-                    None => return Ok(ValidateCallbackResult::Invalid("Unable to validate".to_string()))
+                    None => return Ok(ValidateCallbackResult::Invalid("Agent validation failed: missing element".to_string()))
                 }
             },
             None => return Ok(ValidateCallbackResult::Invalid("Impossible state".to_string()))
