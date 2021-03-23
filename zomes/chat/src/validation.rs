@@ -37,7 +37,7 @@ pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackRes
                             return Ok(ValidateCallbackResult::Valid)
                         } else {
                             debug!("Joining code validation failed");
-                            return Ok(ValidateCallbackResult::Invalid("Joining code validation failed".to_string()))
+                            return Ok(ValidateCallbackResult::Invalid("Joining code invalid: incorrect signature".to_string()))
                         }
                     } else {
                         return Ok(ValidateCallbackResult::Invalid("Joining code invalid payload".to_string()));
