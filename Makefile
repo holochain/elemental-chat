@@ -7,7 +7,8 @@
 #
 SHELL		= bash
 DNANAME		= elemental-chat
-DNA		= $(DNANAME).dna.gz
+DNA		= $(DNANAME).dna
+HAPP		= $(DNANAME).happ
 WASM		= target/wasm32-unknown-unknown/release/chat.wasm
 
 # External targets; Uses a nix-shell environment to obtain Holochain runtimes, run tests, etc.
@@ -19,7 +20,7 @@ nix-%:
 	nix-shell --pure --run "make $*"
 
 # Internal targets; require a Nix environment in order to be deterministic.
-# - Uses the version of `dna-util`, `holochain` on the system PATH.
+# - Uses the version of `hc` and `holochain` on the system PATH.
 # - Normally called from within a Nix environment, eg. run `nix-shell`
 .PHONY:		rebuild install build build-cargo build-dna
 rebuild:	clean build
@@ -33,7 +34,8 @@ build:		$(DNA)
 # Package the DNA from the built target release WASM
 $(DNA):		$(WASM) FORCE
 	@echo "Packaging DNA:"
-	@dna-util -c $(DNANAME).dna.workdir
+	@hc dna pack . -o $(DNA)
+	@hc app pack . -o $(HAPP)
 	@ls -l $@
 
 # Recompile the target release WASM

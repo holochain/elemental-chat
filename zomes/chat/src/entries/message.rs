@@ -1,5 +1,5 @@
 use crate::{error::ChatError, error::ChatResult, timestamp::Timestamp};
-use hdk3::prelude::*;
+use hdk::prelude::*;
 
 use super::channel::{Channel, ChannelData};
 
@@ -7,7 +7,7 @@ pub mod handlers;
 
 /// The actual message data that is saved into the DHT
 #[hdk_entry(id = "message")]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Message {
     pub uuid: String,
     pub content: String,
@@ -16,14 +16,14 @@ pub struct Message {
 /// This allows the app to properly order messages.
 /// This message is either the first message of the time block
 /// or has another message that was observed at the time of sending.
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub enum LastSeen {
     First,
     Message(EntryHash),
 }
 
 /// Input to the create message call
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct MessageInput {
     pub last_seen: LastSeen,
     pub channel: Channel,
@@ -32,17 +32,17 @@ pub struct MessageInput {
 }
 
 /// The message type that goes to the UI
-#[derive(Serialize, Deserialize, Clone, Debug, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, Clone, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageData {
-    entry: Message,
-    entry_hash: EntryHash,
-    created_by: AgentPubKey,
-    created_at: Timestamp,
+    pub entry: Message,
+    pub entry_hash: EntryHash,
+    pub created_by: AgentPubKey,
+    pub created_at: Timestamp,
 }
 
 // Input to the signal_specific_chatters call
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct SignalSpecificInput {
     signal_message_data: SignalMessageData,
     chatters: Vec<AgentPubKey>,
@@ -51,7 +51,7 @@ pub struct SignalSpecificInput {
 
 
 /// The message type that goes to the UI via emit_signal
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SignalMessageData {
     pub message_data: MessageData,
@@ -59,33 +59,33 @@ pub struct SignalMessageData {
 }
 
 /// Input to the list messages call
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesInput {
-    channel: Channel,
-    chunk: Chunk,
-    active_chatter: bool,
+    pub channel: Channel,
+    pub chunk: Chunk,
+    pub active_chatter: bool,
 }
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct Chunk {
-    start: u32,
-    end: u32,
+    pub start: u32,
+    pub end: u32,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct SigResults {
     pub total: usize,
     pub sent: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct ActiveChatters {
     pub chatters: Vec<AgentPubKey>,
 }
 
 /// The messages returned from list messages
-#[derive(Serialize, Deserialize, SerializedBytes, derive_more::From)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, derive_more::From)]
 pub struct ListMessages {
-    messages: Vec<MessageData>,
+    pub messages: Vec<MessageData>,
 }
 
 impl MessageData {

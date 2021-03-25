@@ -5,7 +5,7 @@ use crate::{
     utils::{get_local_header, to_date},
     SignalPayload,
 };
-use hdk3::prelude::*;
+use hdk::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
 
@@ -104,10 +104,10 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
 }
 
 // pub(crate) fn _new_message_signal(message: SignalMessageData) -> ChatResult<()> {
-//     debug!(format!(
+//     debug!(
 //         "Received message: {:?}",
 //         message.message_data.message.content
-//     ));
+//     );
 // emit signal alerting all connected uis about new message
 // signal_ui(SignalPayload::Message(message))
 // }
@@ -184,27 +184,34 @@ use std::collections::HashSet;
 /// N.B.: assumes that the path has been ensured elsewhere.
 fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)> {
     let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
-    debug!(format!("num online chatters {}", chatters.len()));
+    debug!("num online chatters {}", chatters.len());
     let now = to_date(sys_time()?);
     let total = chatters.len();
     let mut agents = HashSet::new();
     let active: Vec<AgentPubKey> = chatters
         .into_iter()
-        .filter_map(|l| {
-            let link_time = chrono::DateTime::<chrono::Utc>::from(l.timestamp);
-            if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
+        .map(|l| {
+            let link_time: chrono::DateTime::<chrono::Utc> = l.timestamp.try_into()?;
+            let maybe_agent = if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
                 let tag = l.tag;
-                let agent = tag_to_agent(tag).ok()?;
-                if agents.contains(&agent) {
-                    None
+                if let Ok(agent) = tag_to_agent(tag) {
+                    if agents.contains(&agent) {
+                        None
+                    } else {
+                        agents.insert(agent.clone());
+                        Some(agent)
+                    }
                 } else {
-                    agents.insert(agent.clone());
-                    Some(agent)
+                    None
                 }
             } else {
                 None
-            }
+            };
+            ChatResult::Ok(maybe_agent)
         })
+        .collect::<Result<Vec<Option<AgentPubKey>>, _>>()?
+        .into_iter()
+        .flatten()
         .collect();
     Ok((total, active))
 }
@@ -228,11 +235,9 @@ pub(crate) fn signal_specific_chatters(input: SignalSpecificInput) -> ChatResult
         }
       }
     }
-
-    remote_signal(
-        &SignalPayload::Message(input.signal_message_data),
-        chatters,
-    )?;
+    let input = SignalPayload::Message(input.signal_message_data);
+    let payload = ExternIO::encode(input)?;
+    remote_signal( payload, chatters )?;
     Ok(())
 }
 
@@ -241,16 +246,15 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
     let chatters_path: Path = chatters_path();
     let (total, mut active_chatters) = active_chatters(chatters_path)?;
     active_chatters.retain(|a| *a != me);
-    debug!(format!("sending to {:?}", active_chatters));
+    debug!("sending to {:?}", active_chatters);
 
     let mut sent: Vec<String> = Vec::new();
     for a in active_chatters.clone() {
         sent.push(format!("{}", a.to_string()));
     }
-    remote_signal(
-        &SignalPayload::Message(signal_message_data),
-        active_chatters,
-    )?;
+    let input = SignalPayload::Message(signal_message_data);
+    let payload = ExternIO::encode(input)?;
+    remote_signal(payload, active_chatters)?;
     Ok(SigResults { total, sent })
 }
 
@@ -258,10 +262,10 @@ pub(crate) fn is_active_chatter(chatters_path: Path) -> ChatResult<bool> {
     let base = chatters_path.hash()?;
     let filter = QueryFilter::new();
     let header_filter = filter.header_type(HeaderType::CreateLink);
-    let query_result: ElementVec = query(header_filter)?;
+    let query_result: Vec<Element> = query(header_filter)?;
     let now = to_date(sys_time()?);
     let mut pass = false;
-    for x in query_result.0 {
+    for x in query_result {
         match x.header() {
             Header::CreateLink(c) => {
                 if c.base_address == base {
@@ -319,9 +323,9 @@ fn add_chatter(path: Path) -> ChatResult<()> {
     let hour_path = add_current_hour_path(path.clone())?;
     hour_path.ensure()?;
     let my_chatter = get_links(hour_path.hash()?, Some(agent_tag.clone()))?.into_inner();
-    debug!(format!("checking chatters"));
+    debug!("checking chatters");
     if my_chatter.is_empty() {
-        debug!(format!("adding chatters"));
+        debug!("adding chatters");
         create_link(hour_path.hash()?, agent.into(), agent_tag.clone())?;
         let hour_path = add_current_hour_minus_n_path(path, 1)?;
         hour_path.ensure()?;

@@ -2,6 +2,9 @@ Cargo.lock
 target/
 debug/
 .rustc_info.json
+*.dna
 *.dna.gz
+*.happ
 .cargo
 .todo.md
+.hc*

@@ -4,7 +4,7 @@ use crate::{
     message::handlers::add_chunk_path,
     utils::to_timestamp,
 };
-use hdk3::prelude::*;
+use hdk::prelude::*;
 use link::Link;
 
 use super::{ChannelData, ChannelInfo, ChannelInfoTag, ChannelList, ChannelListInput};
