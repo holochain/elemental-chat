@@ -25,9 +25,9 @@ async fn sweetest_example() {
             "create_channel",
             ChannelInput {
                 name: "name".into(),
-                channel: channel.clone(),
+                entry: channel.clone(),
             },
-        )
+        )g
         .await;
     let channels: ChannelList = conductor
         .call(
