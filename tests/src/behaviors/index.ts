@@ -33,7 +33,7 @@ if (trial === "gossip") {
         while (true) {
             t.comment(`trial with ${txCount} tx`)
             // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
-            s._uuid = uuidv4();
+            s._uid = uuidv4();
             const duration = await gossipTx(s, t, config, txCount, local)
             const txPerSecond = txCount / (duration * 1000)
             t.comment(`took ${duration}ms to receive ${txCount} messages through gossip. TPS: ${txPerSecond}`)
@@ -50,7 +50,7 @@ if (trial === "gossip") {
         do {
             t.comment(`trial with ${txCount} tx per ${period}ms`)
             // bump the scenario UUID for each run of the trial so a different DNA hash will be generated
-            s._uuid = uuidv4();
+            s._uid = uuidv4();
             duration = await signalTx(s, t, config, period, txCount, local)
             if (!duration) {
                 t.comment(`failed when attempting ${txCount} messages`)
@@ -78,7 +78,7 @@ if (trial === "gossip") {
     ]
     orchestrator.registerScenario('Measuring messages per-second--phases', async (s, t) => {
         t.comment(`trial with a network of ${config.nodes} nodes, ${config.conductors} conductors per node, and ${config.instances} cells per conductor, in the following phases: ${JSON.stringify(phases)}`)
-        s._uuid = uuidv4();
+        s._uid = uuidv4();
         await phasesTx(s, t, config, phases, local);
     });
 }

@@ -12,5 +12,5 @@ doctest = false
 [dependencies]
 profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "develop", package = "profile"}
 #hdk = "0"
-hdk = {  git = "https://github.com/holochain/holochain.git", rev = "e157f64b67d5352cfba396b8088f90073879c8e0" }
+hdk = {  git = "https://github.com/holochain/holochain.git", rev = "8d6c4cd29bd17e8224aeffb87dc03eaf3ff33508" }
 hc_utils = "0"
