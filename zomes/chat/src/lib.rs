@@ -11,6 +11,7 @@ pub use message::{
 pub mod entries;
 pub mod error;
 pub mod utils;
+pub mod validation;
 
 // signals:
 pub const NEW_MESSAGE_SIGNAL_TYPE: &str = "new_message";
@@ -72,25 +73,7 @@ fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
 
 #[hdk_extern]
 fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
-    let element = data.element;
-    let entry = element.into_inner().1;
-    let entry = match entry {
-        ElementEntry::Present(e) => e,
-        _ => return Ok(ValidateCallbackResult::Valid),
-    };
-    if let Entry::Agent(_) = entry {
-        return Ok(ValidateCallbackResult::Valid);
-    }
-    Ok(match Message::try_from(&entry) {
-        Ok(message) => {
-            if message.content.len() <= 1024 {
-                ValidateCallbackResult::Valid
-            } else {
-                ValidateCallbackResult::Invalid("Message too long".to_string())
-            }
-        }
-        _ => ValidateCallbackResult::Valid,
-    })
+    validation::common_validatation(data)
 }
 
 #[hdk_extern]
