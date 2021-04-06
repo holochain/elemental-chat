@@ -9,9 +9,10 @@ export const RETRY_COUNT = 10
 // Read the docs for more on configuration.
 export const localConductorConfig = Config.gen()
 
-import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from '@holochain/tryorama'
+import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType, NetworkType } from '@holochain/tryorama'
 export const network = {
-  bootstrap_service: "https://bootstrap.holo.host",
+  bootstrap_service: "https://bootstrap-staging.holo.host",
+  network_type: NetworkType.QuicBootstrap,
   transport_pool: [{
     type: TransportConfigType.Proxy,
     sub_transport: { type: TransportConfigType.Quic },
