@@ -27,7 +27,7 @@ pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackRes
                         return Ok(ValidateCallbackResult::Invalid(format!("Joining code invalid: unexpected author ({:?})", author)))
                     }
 
-                    let _signature = mem_proof.signature().clone();
+                    // let signature = mem_proof.signature().clone();
                     if let ElementEntry::Present(_entry) = mem_proof.entry() {
                         if *mem_proof.header().author() != holo_agent {
                             debug!("Joining code not created by holo_agent");
