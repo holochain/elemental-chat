@@ -17,5 +17,5 @@ opt-level = "z"
 #tokio_safe_block_on = { git = "https://github.com/neonphog/tokio_safe_block_on.git", branch = "fix_holochain_bug" }
 hc_utils = {git = "https://github.com/holochain/hc-utils", branch = "develop", package = "hc_utils"}
 # hdk = { path = "../holochain/crates/hdk" }
-hdk = {  git = "https://github.com/holochain/holochain.git", rev = "e157f64b67d5352cfba396b8088f90073879c8e0" }
+hdk = {  git = "https://github.com/holochain/holochain.git", rev = "8d6c4cd29bd17e8224aeffb87dc03eaf3ff33508" }
 # hdk = { path = "../holochain/crates/hdk" }
