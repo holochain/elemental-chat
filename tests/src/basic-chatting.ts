@@ -2,13 +2,19 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG } from './common'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = async (orchestrator) => {
 
-   orchestrator.registerScenario('chat away', async (s, t) => {
+  orchestrator.registerScenario('bad membrane proof', async (s, t) => {
+    const [conductor] = await s.players([localConductorConfig])
+    let [alice_chat_happ] = await installAgents(conductor,  ["alice"], MEM_PROOF_BAD_SIG)
+    //TODO: assert should fail
+  })
+
+  orchestrator.registerScenario('chat away', async (s, t) => {
     // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
     // note that the first argument to players is just an array conductor configs that that will
     // be used to spin up the conductor processes which are returned in a matching array.
