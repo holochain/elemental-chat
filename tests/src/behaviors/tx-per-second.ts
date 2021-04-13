@@ -2,15 +2,15 @@ import { Player, DnaPath, PlayerConfig, Config, InstallAgentsHapps, InstalledAge
 import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { network as defaultNetworkConfig } from '../common'
+import { network as defaultNetworkConfig, installAgents } from '../common'
 const path = require('path')
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
     trycpAddresses: [
-        "172.26.136.38:9000", // zippy1 (58f9o0jx7l73xu7vi13oi0yju06644xm5we2a7i8oqbt918o48)
         "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
+        "172.26.136.38:9000", // zippy1 (58f9o0jx7l73xu7vi13oi0yju06644xm5we2a7i8oqbt918o48
         "172.26.146.6:9000", // zippy (noah's) 1l5nm0ylneapp0z7josuk56fivjly21pcwo0t4o86bhsosapla
         "172.26.2.55:9000", // zippy (sj) 15jf0n4i50yy7tigsgq0vt8p6pi16y0rxpx3gwa5y2hpm3c1pm
 //        "172.26.6.201:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
@@ -30,15 +30,17 @@ export const defaultConfig = {
     ],
     //trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
     proxys: [
+//        "kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/5778/--",
+        "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/165.22.32.11/p/5778/--",
         "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/165.227.194.75/p/5788/--",
 //        "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/164.90.142.115/p/10000/--",
         "kitsune-proxy://duArtq0LtFEUIDZreC2muXEN3ow_G8zISXKJI3hypCA/kitsune-quic/h/138.197.78.45/p/10000/--",
         "kitsune-proxy://sbUgYILMN7QiHkZZAVjR9Njwlb_Fzb8UE0XsmeGEP48/kitsune-quic/h/161.35.182.155/p/10000/--"
     ],
     proxyCount: 1,
-    nodes: 7, // Number of machines
+    nodes: 4, // Number of machines
     conductors: 10, // Conductors per machine
-    instances: 8, // Instances per conductor
+    instances: 10, // Instances per conductor
     activeAgents: 5, // Number of agents to consider "active" for chatting
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna" },
@@ -279,9 +281,12 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     const playerAgents: PlayerAgents = await Promise.all(allPlayers.map(async (player, i) => {
         console.log("installing player", i)
         // console.log("installation", installation)
-        const agents = await player.installAgentsHapps(installation)
+        //        const agents = await player.installAgentsHapps(installation)
+        const agentNames = _.times(config.instances, (n) => `c${i}p${n}`)
+        const agents = await installAgents(player,agentNames)
+        //const installedAgentHapps: InstalledAgentHapps = agents.
         return agents.map((happs) => {
-            const [{ hAppId, agent, cells: [cell] }] = happs;
+            const [{ hAppId, agent, cells: [cell] }] = [happs];
             console.log(`DNA HASH: ${cell.cellId[0].toString('base64')}`)
             return { hAppId, agent, cell, playerIdx: i }
         })

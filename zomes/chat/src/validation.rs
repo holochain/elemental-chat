@@ -17,7 +17,11 @@ pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackRes
         Header::AgentValidationPkg(pkg) => {
             match &pkg.membrane_proof {
                 Some(mem_proof) => {
-                    let mem_proof: Element = Element::try_from(mem_proof.clone())?;
+                    let mem_proof = match Element::try_from(mem_proof.clone()) {
+                        Ok(m) => m,
+                        Err(e) => return Ok(ValidateCallbackResult::Invalid(format!("Joining code invalid: unable to deserialize into element ({:?})", e)))
+                    };
+
                     debug!("Joining code provided: {:?}", mem_proof);
 
                     let author = mem_proof.header().author().clone();
@@ -43,6 +47,7 @@ pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackRes
                     } else {
                         return Ok(ValidateCallbackResult::Invalid("Joining code invalid payload".to_string()));
                     }
+
                 }
                 None => Ok(ValidateCallbackResult::Invalid("No membrane proof found".to_string()))
             }
@@ -65,7 +70,7 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                     Some(element_pkg) => {
                         return joining_code(element_pkg)
                     },
-                    None => return Ok(ValidateCallbackResult::Invalid("Agent validation failed: missing element".to_string()))
+                    None => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
                 }
             },
             None => return Ok(ValidateCallbackResult::Invalid("Impossible state".to_string()))

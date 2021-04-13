@@ -17,10 +17,11 @@ export const network = {
     type: TransportConfigType.Proxy,
     sub_transport: { type: TransportConfigType.Quic },
     proxy_config: {
-        type: ProxyConfigType.RemoteProxyClient,
-        //        proxy_url: "kitsune-proxy://A7quSj_YTzwP1DF93QmErksPkDDuDSPT8zBGyhf7MPU/kitsune-quic/h/192.168.1.85/p/58451/--",
+      type: ProxyConfigType.RemoteProxyClient,
+      proxy_url: "kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/5778/--",
 //        proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/147.75.54.129/p/5778/--",
-        proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/165.22.32.11/p/5778/--",
+      //proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/165.22.32.11/p/5778/--",
+      //proxy_url:"kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/33679/--",
         //proxy_url: "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/164.90.142.115/p/10000/--"  // p1
     }
   }],
