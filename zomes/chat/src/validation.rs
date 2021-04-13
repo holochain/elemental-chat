@@ -17,31 +17,35 @@ pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackRes
         Header::AgentValidationPkg(pkg) => {
             match &pkg.membrane_proof {
                 Some(mem_proof) => {
-                    let mem_proof: Element = Element::try_from(mem_proof.clone())?;
-                    debug!("Joining code provided: {:?}", mem_proof);
+                    match Element::try_from(mem_proof.clone()) {
+                        Err(e) => return Ok(ValidateCallbackResult::Invalid(format!("Joining code invalid: unable to deserialize into element ({:?})", e))),
+                        Ok(mem_proof) => {
+                            debug!("Joining code provided: {:?}", mem_proof);
 
-                    let author = mem_proof.header().author().clone();
+                            let author = mem_proof.header().author().clone();
 
-                    if author != holo_agent {
-                        debug!("Joining code validation failed");
-                        return Ok(ValidateCallbackResult::Invalid(format!("Joining code invalid: unexpected author ({:?})", author)))
-                    }
+                            if author != holo_agent {
+                                debug!("Joining code validation failed");
+                                return Ok(ValidateCallbackResult::Invalid(format!("Joining code invalid: unexpected author ({:?})", author)))
+                            }
 
-                    if let ElementEntry::Present(_entry) = mem_proof.entry() {
-                        if *mem_proof.header().author() != holo_agent {
-                            debug!("Joining code not created by holo_agent");
-                            return Ok(ValidateCallbackResult::Invalid("Joining code invalid: incorrect holo agent".to_string()))
+                            if let ElementEntry::Present(_entry) = mem_proof.entry() {
+                                if *mem_proof.header().author() != holo_agent {
+                                    debug!("Joining code not created by holo_agent");
+                                    return Ok(ValidateCallbackResult::Invalid("Joining code invalid: incorrect holo agent".to_string()))
+                                }
+                                let signature = mem_proof.signature().clone();
+                                if verify_signature(holo_agent.clone(), signature, mem_proof.header())? {
+                                    debug!("Joining code validated");
+                                    return Ok(ValidateCallbackResult::Valid)
+                                } else {
+                                    debug!("Joining code validation failed: incorrect signature");
+                                    return Ok(ValidateCallbackResult::Invalid("Joining code invalid: incorrect signature".to_string()))
+                                }
+                            } else {
+                                return Ok(ValidateCallbackResult::Invalid("Joining code invalid payload".to_string()));
+                            }
                         }
-                        let signature = mem_proof.signature().clone();
-                        if verify_signature(holo_agent.clone(), signature, mem_proof.header())? {
-                            debug!("Joining code validated");
-                            return Ok(ValidateCallbackResult::Valid)
-                        } else {
-                            debug!("Joining code validation failed: incorrect signature");
-                            return Ok(ValidateCallbackResult::Invalid("Joining code invalid: incorrect signature".to_string()))
-                        }
-                    } else {
-                        return Ok(ValidateCallbackResult::Invalid("Joining code invalid payload".to_string()));
                     }
                 }
                 None => Ok(ValidateCallbackResult::Invalid("No membrane proof found".to_string()))
@@ -65,7 +69,7 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                     Some(element_pkg) => {
                         return joining_code(element_pkg)
                     },
-                    None => return Ok(ValidateCallbackResult::Invalid("Agent validation failed: missing element".to_string()))
+                    None => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
                 }
             },
             None => return Ok(ValidateCallbackResult::Invalid("Impossible state".to_string()))
