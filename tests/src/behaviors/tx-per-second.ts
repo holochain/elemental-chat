@@ -150,10 +150,12 @@ const waitActivePeers = async (percentNeeded: number, totalPeers: number, active
             const stateDumpRes = await allPlayers[playerIdx].adminWs().dumpState(param)
             const stateDump = parseStateDump(stateDumpRes)
             console.log('state dump:', stateDump)
-            console.log(`waiting for ${percentNeeded}% of peers to be present in peer store of player #${playerIdx}, ${time2text(Date.now() - startWait)} so far`, stateDump)
-            if (stateDump.numPeers > (totalPeers-1)*(percentNeeded/100)) {
+            const needed = (totalPeers-1)*(percentNeeded/100)
+            console.log(`got ${stateDump.numPeers} of ${needed} (${percentNeeded}% of ${totalPeers}) of peers to be present in peer store of player #${playerIdx}, ${time2text(Date.now() - startWait)} so far`, stateDump)
+            if (stateDump.numPeers > needed) {
                 break
             }
+            console.log(`waiting 5 seconds`)
             await delay(5000)
         }
     }
