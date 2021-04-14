@@ -66,11 +66,14 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
     if let Entry::Agent(_) = entry {
         match data.element.header().prev_header() {
             Some(header) => {
-                match get(header.clone(), GetOptions::default())? {
-                    Some(element_pkg) => {
-                        return joining_code(element_pkg)
+                match get(header.clone(), GetOptions::default()) {
+                    Ok(element_pkg) => match element_pkg {
+                        Some(element_pkg) => {
+                            return joining_code(element_pkg)
+                        },
+                        None => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
                     },
-                    None => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
+                    Err(_) => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
                 }
             },
             None => return Ok(ValidateCallbackResult::Invalid("Impossible state".to_string()))
