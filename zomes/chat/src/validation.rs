@@ -55,7 +55,13 @@ pub(crate) fn joining_code(element: Element) -> ExternResult<ValidateCallbackRes
         _ => Ok(ValidateCallbackResult::Invalid("No Agent Validation Pkg found".to_string()))
     }
 }
-
+pub(crate) fn get_my_agent_validation_pkg() -> ExternResult<Element> {
+    let filter = QueryFilter::new();
+    let header_filter = filter.header_type(HeaderType::AgentValidationPkg);
+    let query_result: Vec<Element> = query(header_filter)?;
+    // There should be only one AgentValidationPkg per source chain
+    Ok(query_result[0].clone())
+}
 pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
     let element = data.element.clone();
     let entry = element.into_inner().1;
@@ -66,12 +72,28 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
     if let Entry::Agent(_) = entry {
         match data.element.header().prev_header() {
             Some(header) => {
-                match get(header.clone(), GetOptions::default())? {
-                    Some(element_pkg) => {
-                        return joining_code(element_pkg)
-                    },
-                    None => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
-                }
+                let element_pkg = match agent_info() {
+                    Ok(ai) => {
+                        if ai.agent_initial_pubkey == *data.element.header().author() {
+                            debug!("Self Validating the AgentValidationPkg...");
+                            Some(get_my_agent_validation_pkg()?)
+                        } else {
+                            return match get(header.clone(), GetOptions::default()) {
+                                Ok(e) => e,
+                                Err(_) => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
+                            }
+                        }
+                    }
+                    _ => {
+                        Some(get_my_agent_validation_pkg()?)
+                    }
+                };
+                match element_pkg {
+                   Some(agent_validation_pkg) => {
+                       return joining_code(agent_validation_pkg)
+                   },
+                   None => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
+               }
             },
             None => return Ok(ValidateCallbackResult::Invalid("Impossible state".to_string()))
         }
