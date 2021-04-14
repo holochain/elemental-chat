@@ -69,7 +69,10 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                         },
                         None => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
                     },
-                    Err(_) => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
+                    Err(e) => {
+                        debug!("Error on get when validating agent entry: {:?}; treating as unresolved dependency",e);
+                        return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
+                    }
                 }
             },
             None => return Ok(ValidateCallbackResult::Invalid("Impossible state".to_string()))
