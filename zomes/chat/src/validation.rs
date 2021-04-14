@@ -78,9 +78,13 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                             debug!("Self Validating the AgentValidationPkg...");
                             Some(get_my_agent_validation_pkg()?)
                         } else {
-                            return match get(header.clone(), GetOptions::default()) {
-                                Ok(e) => e,
-                                Err(_) => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(header.clone()).into()]))
+                            match get(header.clone(), GetOptions::default()) {
+                                Ok(Some(e)) => Some(e),
+                                Ok(None) => None,
+                                Err(e) => {
+                                    debug!("Err while getting membrane proof: ({:?}), treating as unresolved.", e);
+                                    None
+                                }
                             }
                         }
                     }
