@@ -70,6 +70,7 @@ export const installAgents = async (conductor, agentNames, memProof?) => {
       hash: await conductor.registerDna({path: chatDna}),
       nick: 'elemental-chat',
       membrane_proof: Array.from(memProof),
+      uid: conductor.scenarioUID,
     }
   ]
   const admin = conductor.adminWs();
