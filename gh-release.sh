@@ -26,14 +26,6 @@ EOF
 
 echo "Create release $version for repo: $USER/$REPO branch: $branch"
 
-payload=$(
-  jq --null-input \
-     --arg tag "$version" \
-     --arg name "v$version" \
-     --arg body "$text" \
-     '{ tag_name: $tag, name: $name, body: $body, draft: true }'
-)
-
 response=$(
   curl --fail \
        --netrc \
