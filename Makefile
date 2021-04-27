@@ -84,7 +84,7 @@ update-hc:
 
 update-hc-sha:
 	@if [ $(HC_REV) ]; then\
-		echo "⚙️  Updating servicelogger using holochain rev: $(HC_REV)";\
+		echo "⚙️  Updating elemental-chat using holochain rev: $(HC_REV)";\
 		echo "✔  Updating hdk rev in Cargo.toml...";\
 		sed -i -e 's/^hdk = .*/hdk = {git ="https:\/\/github.com\/holochain\/holochain", rev = "$(HC_REV)", package = "hdk"}/' Cargo.toml;\
 		echo "✔  Replacing rev...";\
@@ -137,7 +137,7 @@ release-%:
 	git push origin HEAD
 	echo '⚙️  Making new release...'
 	make github-release-$*
-	echo '🚀  Successful release servicelogger '$*
+	echo '🚀  Successful release elemental-chat '$*
 
 
 # Generic targets; does not require a Nix environment
