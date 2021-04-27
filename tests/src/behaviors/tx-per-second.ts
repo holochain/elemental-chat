@@ -9,22 +9,24 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
     trycpAddresses: [
-        "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
+//        "localhost:9000",
         "172.26.136.38:9000", // zippy1 (58f9o0jx7l73xu7vi13oi0yju06644xm5we2a7i8oqbt918o48
+        "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
         "172.26.146.6:9000", // zippy (noah's) 1l5nm0ylneapp0z7josuk56fivjly21pcwo0t4o86bhsosapla
         "172.26.2.55:9000", // zippy (sj) 15jf0n4i50yy7tigsgq0vt8p6pi16y0rxpx3gwa5y2hpm3c1pm
-//        "172.26.6.201:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
-        "172.26.55.252:9000", // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
-//        "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)
-        "172.26.147.238:9000", // mary@marycamacho.com: (38oh2q63ob4w2q1783mir5muup993f2m8gk5kthi0w8ljrc4y4)
+        "172.26.32.181:9000", //bekah (5zmks2xs8r2gbazho8du7ic0rgp57bd03i9rcev4wtqeievexi)
+        "172.26.29.50:9000", // peeech
+
+        "172.26.93.179:9000", // mary@marycamacho.com: (38oh2q63ob4w2q1783mir5muup993f2m8gk5kthi0w8ljrc4y4)
+        "172.26.134.99:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
+//        "172.26.55.252:9000", // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
+//        "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)  DON'T USE
         "172.26.53.50:9000", // mary.camacho@holo.host:  (5xvizkqpupjpu8ottk7sd9chc24k0otjkkv152756a8ph4p3ct)
         "172.26.159.1:9000", // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
 //        "172.26.57.175:9000", // rob.lyon+derecha@holo.host (4fx7rhi2i0v4nrvufpgdz31a5374jbvto6hkvo4fvl4f79g5dn)
         "172.26.84.233:9000", // katie
         "172.26.201.167:9000", // lucas (3yk1vqbt914t4cou6lrascjr29h7xa36ucyho72adr3fu0h4f7)
-        "172.26.32.181:9000", //bekah
 //        "172.26.201.167:9000", // lucas
-        "172.26.44.116:9000" // peeech
         //"172.26.100.202:9000", // timo1
         //"172.26.156.115:9500" // timo2
     ],
@@ -289,7 +291,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
         //const installedAgentHapps: InstalledAgentHapps = agents.
         return agents.map((happs) => {
             const [{ hAppId, agent, cells: [cell] }] = [happs];
-            console.log(`DNA HASH: ${cell.cellId[0].toString('base64')}`)
+            console.log(`PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`)
             return { hAppId, agent, cell, playerIdx: i }
         })
     }))
@@ -389,7 +391,7 @@ const took = (msg, start, end) => {
 
 const _took = (msg, ms) => {
     const r = time2text(ms);
-    console.log(`${msg} took: ${r}`)
+    console.log(`${msg} took:	${r}`)
 }
 
 const time2text = (ms) => {
@@ -478,7 +480,7 @@ const sendOnInterval = async (senders: number, agents: Agents, channel, period: 
         }
         await Promise.all(messagePromises)
         const intervalDuration = (Date.now() - intervalStart)
-        console.log(`Took: ${intervalDuration}ms to send ${senders} messages`)
+        console.log(`took:	${intervalDuration}ms to send ${senders} messages`)
         totalSent += senders
         if (intervalDuration < sendInterval) {
             console.log(`Waiting ${(sendInterval - intervalDuration)}ms before sending again`)
@@ -488,7 +490,7 @@ const sendOnInterval = async (senders: number, agents: Agents, channel, period: 
     return totalSent
 }
 
-const PEER_CONSISTENCY_PERCENT = 75
+const PEER_CONSISTENCY_PERCENT = 90
 
 const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers: Player[], channel) => {
     const period = phase.period
@@ -507,6 +509,7 @@ const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers:
 
     let totalSignalsReceived = 0;
 
+    const latencyTranches = 5
     // setup the signal handler for all the players so we can check
     // if all the signals are returned
     for (let i = 0; i < allPlayers.length; i++) {
@@ -516,12 +519,16 @@ const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers:
             const now = Date.now()
             const latency = now - payload.signal_payload.messageData.createdAt[0]*1000
             let tranch:number
-            if (latency < 30000) {
+            if (latency < 5000) {
+                tranch = 5000
+            } else if (latency < 10000) {
+                tranch = 10000
+            } else if (latency < 20000) {
+                tranch = 20000
+            } else if (latency < 30000) {
                 tranch = 30000
-            } else if (latency < 60000) {
-                tranch = 60000
             } else {
-                tranch = 1000 * 60 * 3
+                tranch = 1000 * 60
             }
 
             if (receipts[tranch] === undefined) {
@@ -545,16 +552,11 @@ const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers:
 
     const totalSignalsExpected = totalMessagesSent * (totalActiveAgents - 1) // sender doesn't receive signals
     let curArrived;
-    let threeMinListMessages;
     const msToWaitBeforeCallingItQuits = 30000
     do {
         console.log(`Waiting for ${msToWaitBeforeCallingItQuits/1000}s for signals to finish arriving (expecting ${totalSignalsExpected})`)
         curArrived = totalSignalsReceived
         await delay(msToWaitBeforeCallingItQuits)
-
-        if (Date.now() - phaseEnd > (1000*60*3) && !threeMinListMessages) {
-            threeMinListMessages = await doListMessages("3 Minutes later: count of list_message of active peers", channel, activeAgents)
-        }
 
     } while (curArrived != totalSignalsReceived)
 
@@ -563,66 +565,77 @@ const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers:
     console.log(`Waiting for signals ends at ${new Date(waitingEnd).toLocaleString("en-US")}`)
     took(`Waiting for signals`, phaseEnd, waitingEnd)
 
-    const postSignalWatingListMessages = await doListMessages("Post waiting count of list_message of active peers", channel, activeAgents)
-    let finalListMessages
-    if (maxMinAvg(postSignalWatingListMessages).min != totalMessagesSent) {
-        const msWaitForFinalListMessages = 1000*60*5 // 5 min
-        console.log(`Waiting ${time2text(msWaitForFinalListMessages)} for final list message`)
-        await delay(msWaitForFinalListMessages)
-
-        finalListMessages = await doListMessages("Final: count of list_message of active peers", channel, activeAgents)
+    let listMessagesResults: Array<Array<number>> = []
+    let listMessagesMin = 0
+    let done = false
+    let maxMinutesForListMessages = 6
+    while (!done) {
+        const results = await doListMessages(`listMessages at min ${listMessagesMin} after waiting for signals`, channel, activeAgents)
+        listMessagesResults[listMessagesMin] = results
+        // stop waiting if all messages received or maxMinutesForListMessages min have passed
+        const minReceived = maxMinAvg(results).min
+        if ((minReceived == totalMessagesSent) ||
+            listMessagesMin == (maxMinutesForListMessages-1)) {
+            done = true
+        } else {
+            console.log(`minimun received: ${minReceived} waiting another minute`)
+            await delay(1000*60)
+            listMessagesMin += 1
+        }
     }
 
     console.log("----------------------------------------------------------")
     console.log("Results ")
     console.log("----------------------------------------------------------")
-    console.log(`Nodes: ${config.nodes}\nConductors/Node: ${config.conductors}\nCells/Conductor: ${config.instances}`)
-    console.log(`Proxys: ${config.proxyCount}`)
-    console.log(`Total total peers in network: ${totalPeers}`)
-    console.log(`Total active peers: ${totalActiveAgents}`)
+    console.log(`Nodes:	${config.nodes}\nConductors/Node:	${config.conductors}\nCells/Conductor:	${config.instances}`)
+    console.log(`Proxys:	${config.proxyCount}`)
+    console.log(`Total total peers in network:	${totalPeers}`)
+    console.log(`Total active peers:	${totalActiveAgents}`)
     _took(`Waiting for ${PEER_CONSISTENCY_PERCENT}% peer consistency`, peerConsistencyTook)
     _took("Waiting for active agent consistency", activationConsistencyTook)
-    console.log(`Senders: ${senders}`)
+    console.log(`Senders:	${senders}`)
     console.log(`Sending 1 message per ${senders} sender ${(sendInterval/1000).toFixed(1)}s for ${(period/1000).toFixed(1)}s`)
     took(`Sending ${totalMessagesSent} messages`, start, phaseEnd)
-    console.log(`Total messages sent: ${totalMessagesSent}`)
-    console.log(`Total signals sent: ${totalSignalsExpected}`)
+    console.log(`Total messages sent:	${totalMessagesSent}`)
+    console.log(`Total signals sent:	${totalSignalsExpected}`)
 
     took(`Waiting for signals after sending ended`, phaseEnd, waitingEnd)
     took(`From start of sending till fished waiting for signals`, start, waitingEnd)
 
 
-    console.log(`Total signals received: ${totalSignalsReceived} (${(totalSignalsReceived / totalSignalsExpected * 100).toFixed(2)}%)`)
+    console.log(`Total signals received:	${totalSignalsReceived} (${(totalSignalsReceived / totalSignalsExpected * 100).toFixed(2)}%)`)
 
     const latencies  = Object.keys(receipts)
     latencies.sort((a, b) => parseInt(a) - parseInt(b));
 
-    for (let i = 0; i < latencies.length; i++) {
-        const l = latencies[i];
-        const count = receipts[l];
-        const percent = (count/totalSignalsReceived * 100).toFixed(1);
-        const tranch = parseInt(l)/1000
-        console.log(`Latencies in ${tranch}s: ${count} (${percent})%` )
-    }
-
-    if (threeMinListMessages) {
-        logCounts("threeMinListMessages", threeMinListMessages, totalMessagesSent)
-    }
-    logCounts("postSignalWatingListMessages", postSignalWatingListMessages, totalMessagesSent)
-    if (finalListMessages) {
-        logCounts("finalListMessages", finalListMessages, totalMessagesSent)
+    for (let i = 0; i < latencyTranches; i++) {
+        if (i >= latencies.length) {
+            // empty line so things line up in the spreadsheet across runs
+            console.log(`Latencies in tranch:	--` )
+        } else {
+            const l = latencies[i];
+            const count = receipts[l];
+            const percent = (count/totalSignalsReceived * 100).toFixed(1);
+            const tranch = parseInt(l)/1000
+            console.log(`Latencies in ${tranch}s:	${count} (${percent})%` )
+        }
     }
 
     const numPeersPerActiveAgent = await Promise.all(activeAgents.map(async agent =>
-                                                                      parseStateDump(await allPlayers[agent.playerIdx].adminWs().dumpState({ cell_id: agent.cell.cellId })).numPeers))
+                                                                      parseStateDump(await allPlayers[agent.playerIdx].adminWs().dumpState({ cell_id:	agent.cell.cellId })).numPeers))
 
     const m = maxMinAvg(numPeersPerActiveAgent)
-    console.log(`Final peers count in peer stores of active peers:\nMin: ${m.min}\nMax: ${m.max}\nAvg: ${m.avg.toFixed(1)}`)
+    console.log(`Final peers count in peer stores of active peers:\nMin:	${m.min}\nMax:	${m.max}\nAvg:	${m.avg.toFixed(1)}`)
+
+    // print out list messages results at the bottom because the length is variable
+    for (let i = 0; i < listMessagesResults.length; i++) {
+        logCounts(`listMessages at min ${i}`,  listMessagesResults[i], totalMessagesSent)
+    }
 
 }
 
 const logCounts = (msg, messagesByAgent, totalMessages) => {
-    const counts: Record<string, number> = {}
+    const counts:	Record<string, number> = {}
     for (const c of messagesByAgent) {
         let tranch:string
         if (c < totalMessages*.25) {
@@ -649,7 +662,7 @@ const logCounts = (msg, messagesByAgent, totalMessages) => {
             count = 0
         }
         const percent =  (count/messagesByAgent.length*100).toFixed(1)
-        console.log(`${tranch}: ${count} (${percent}%)`)
+        console.log(`${tranch}:	${count} (${percent}%)`)
     }
 }
 
