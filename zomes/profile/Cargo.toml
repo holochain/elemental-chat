@@ -14,3 +14,5 @@ profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "develop",
 #hdk = "0"
 hdk = {  git = "https://github.com/holochain/holochain.git", rev = "8d6c4cd29bd17e8224aeffb87dc03eaf3ff33508" }
 hc_utils = "0"
+[dev-dependencies]
+paste = "1.0.5"

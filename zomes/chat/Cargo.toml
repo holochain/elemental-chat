@@ -10,7 +10,7 @@ crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
 #hdk = "0"
-hdk = {  git = "https://github.com/holochain/holochain.git", rev = "8d6c4cd29bd17e8224aeffb87dc03eaf3ff33508" }
+hdk = {  git = "https://github.com/holochain/holochain.git", rev = "a1ae76ecc1fc7dbd645fee3a8cb0df9f610be983" }
 serde = "1.0.123"
 chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99"
@@ -26,3 +26,4 @@ observability = "0.1.2"
 nanoid = "0.3"
 futures = "0.3.1"
 stream-cancel = "0.8.0"
+paste = "1.0.5"
