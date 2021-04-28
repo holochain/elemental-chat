@@ -9,13 +9,11 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-#hdk = "0"
-hdk = {  git = "https://github.com/holochain/holochain", rev = "a1ae76ecc1fc7dbd645fee3a8cb0df9f610be983", package = "hdk" }
+hdk = "0.0.101-alpha.0"
 serde = "1.0.123"
 chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99"
 thiserror = "1.0.20"
-paste = "=1.0.3"
 
 [dev-dependencies]
 #holochain = { git = "https://github.com/holochain/holochain.git", branch = "develop", features = ["test_utils"] }
