@@ -1,6 +1,5 @@
 use hdk::prelude::*;
 use crate::message::Message;
-pub use hdk::prelude::genesis::MembraneProof;
 /// This is the current structure of the payload the holo signs
 #[hdk_entry(id = "joining_code_payload")]
 #[derive(Clone)]
