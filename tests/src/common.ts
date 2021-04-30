@@ -12,7 +12,7 @@ export const localConductorConfig = Config.gen()
 import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType, NetworkType } from '@holochain/tryorama'
 export const network = {
   bootstrap_service: "https://bootstrap-staging.holo.host",
-  network_type: NetworkType.QuicBootstrap,
+    network_type: NetworkType.QuicBootstrap,
   transport_pool: [{
     type: TransportConfigType.Proxy,
     sub_transport: { type: TransportConfigType.Quic },
@@ -23,19 +23,68 @@ export const network = {
       //proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/165.22.32.11/p/5778/--",
       //proxy_url:"kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/33679/--",
         //proxy_url: "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/164.90.142.115/p/10000/--"  // p1
-    }
+   }
   }],
   tuning_params: {
-      gossip_loop_iteration_delay_ms: 200, //number // default 10
-      default_notify_remote_agent_count: 5, //number // default 5
-      default_notify_timeout_ms: 100, //number // default 1000
-      default_rpc_single_timeout_ms: 20000, // number // default 2000
-      default_rpc_multi_remote_agent_count: 2, //number // default 2
-      default_rpc_multi_timeout_ms: 2000, //number // default 2000
-      agent_info_expires_after_ms: 1000 * 60 * 20, //number // default 1000 * 60 * 20 (20 minutes)
-      tls_in_mem_session_storage: 512, // default 512
-      proxy_keepalive_ms: 1000 * 30, // default 1000 * 60 * 2 (2 minutes)
-      proxy_to_expire_ms:  1000 * 60 * 5 // default 1000 * 60 * 5 (5 minutes)
+      gossip_loop_iteration_delay_ms: 2000, //number // default 10
+
+        /// Default agent count for remote notify. [Default: 5]
+        default_notify_remote_agent_count:  5,
+
+        /// Default timeout for remote notify. [Default: 30s]
+        default_notify_timeout_ms: 1000 * 30,
+
+        /// Default timeout for rpc single. [Default: 30s]
+        default_rpc_single_timeout_ms: 1000 * 30,
+
+        /// Default agent count for rpc multi. [Default: 2]
+        default_rpc_multi_remote_agent_count: 2,
+
+        /// Default timeout for rpc multi. [Default: 30s]
+        default_rpc_multi_timeout_ms: 1000 * 30,
+
+        /// Default agent expires after milliseconds. [Default: 20 minutes]
+        agent_info_expires_after_ms: 1000 * 60 * 20,
+
+        /// Tls in-memory session storage capacity. [Default: 512]
+        tls_in_mem_session_storage: 512,
+
+        /// How often should NAT nodes refresh their proxy contract?
+        /// [Default: 2 minutes]
+        proxy_keepalive_ms: 1000 * 60 * 2,
+
+        /// How often should proxy nodes prune their ProxyTo list?
+        /// Note - to function this should be > proxy_keepalive_ms.
+        /// [Default: 5 minutes]
+        proxy_to_expire_ms: 1000 * 60 * 5,
+
+        /// Mainly used as the for_each_concurrent limit,
+        /// this restricts the number of active polled futures
+        /// on a single thread.
+        concurrent_limit_per_thread: 4096,
+
+        /// tx2 quic max_idle_timeout
+        /// [Default: 30 seconds]
+        tx2_quic_max_idle_timeout_ms: 1000 * 30,
+
+        /// tx2 pool max connection count
+        /// [Default: 4096]
+        tx2_pool_max_connection_count: 4096,
+
+        /// tx2 channel count per connection
+        /// [Default: 3]
+        tx2_channel_count_per_connection: 16,
+
+        /// tx2 timeout used for passive background operations
+        /// like reads / responds.
+        /// [Default: 30 seconds]
+        tx2_implicit_timeout_ms: 1000 * 30,
+
+        /// tx2 initial connect retry delay
+        /// (note, this delay is currenty exponentially backed off--
+        /// multiplied by 2x on every loop)
+        /// [Default: 200 ms]
+      tx2_initial_connect_retry_delay_ms: 200
   }
 }
 
@@ -67,20 +116,21 @@ export const installAgents = async (conductor, agentNames, memProof?) => {
   }
   const dnas = [
     {
-      hash: await conductor.registerDna({path: chatDna}),
+      hash: await conductor.registerDna({path: chatDna}, conductor.scenarioUID),
       nick: 'elemental-chat',
       membrane_proof: Array.from(memProof),
-      uid: conductor.scenarioUID,
     }
   ]
   const admin = conductor.adminWs();
   const agents: Array<InstalledHapp> = await Promise.all(agentNames.map(
-  async agent => {
+    async agent => {
+      console.log(`generating key for: ${agent}`)
       const req = {
         installed_app_id: `${agent}_chat`,
         agent_key: await admin.generateAgentPubKey(),
         dnas
       }
+      console.log(`installing happ for: ${agent}`)
       return await conductor._installHapp(req)
     }
   ))
