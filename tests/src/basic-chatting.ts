@@ -8,10 +8,14 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = async (orchestrator) => {
 
-  orchestrator.registerScenario('bad membrane proof', async (s, t) => {
+  orchestrator.registerScenario.only('bad membrane proof', async (s, t) => {
     const [conductor] = await s.players([localConductorConfig])
-    let [alice_chat_happ] = await installAgents(conductor,  ["alice"], MEM_PROOF_BAD_SIG)
-    //TODO: assert should fail
+    try {
+      let [alice_chat_happ] = await installAgents(conductor,  ["alice"], MEM_PROOF_BAD_SIG)
+      t.fail()
+    } catch(e) {
+      t.deepEqual(e, { type: 'error', data: { type: 'internal_error', data: 'Conductor returned an error while using a ConductorApi: GenesisFailed { errors: [ConductorApiError(WorkflowError(GenesisFailure("Joining code invalid: incorrect signature")))] }' } })
+    }
   })
 
   orchestrator.registerScenario('chat away', async (s, t) => {
