@@ -14,5 +14,6 @@ build () {
 VERSION=`grep -Po '^version = "\K([^"]+)' zomes/chat/Cargo.toml | sed -e "s/[.-]/_/g"`
 build $VERSION 0002
 build $VERSION 0001
+build $VERSION 0000
 build $VERSION develop
 build $VERSION "~"
