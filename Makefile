@@ -118,7 +118,6 @@ update-hc-cargoSha:
   fi
 
 github-release-%:
-	@echo "TODO";\
 	echo "Creating github-release for version $*"
 	cp elemental-chat.happ elemental-chat.$(shell echo $* | tr .- _).happ
 	cp elemental-chat.dna elemental-chat.$(shell echo $* | tr .- _).dna
