@@ -75,7 +75,7 @@ test-e2e:	test-dna
 # make HC_REV="HC_REV" release-0.0.0-alpha0
 
 update-release-%:
-	cd zomes/service/ && sed -i -e 's/^version = .*/version = "$*"/' Cargo.toml
+	cd zomes/chat/ && sed -i -e 's/^version = .*/version = "$*"/' Cargo.toml
 
 update-hc:
 	make HC_REV=$(HC_REV) update-hc-sha
