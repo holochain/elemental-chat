@@ -1,6 +1,6 @@
 pub use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
 pub use entries::{channel, message};
-pub use error::ChatResult;
+pub use error::{ChatResult, ChatError};
 pub use hdk::prelude::Path;
 pub use hdk::prelude::*;
 pub use message::{
@@ -50,8 +50,15 @@ entry_defs![
     ChannelInfo::entry_def()
 ];
 
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+struct JoiningCode {
+    role: String,
+    record_locator: String,
+}
+
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    debug!("INIT CALLED");
     // grant unrestricted access to accept_cap_claim so other agents can send us claims
     let mut functions = BTreeSet::new();
     functions.insert((zome_info()?.zome_name, "recv_remote_signal".into()));
@@ -61,6 +68,28 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
         access: ().into(),
         functions,
     })?;
+
+    let entries = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg))?;
+    if let Header::AgentValidationPkg(h) = entries[0].header() {
+        match &h.membrane_proof {
+            Some(mem_proof) => {
+                let mem_proof = match Element::try_from(mem_proof.clone()) {
+                    Ok(m) => m,
+                    Err(_e) => return  Err(ChatError::InitFailure.into())
+                };
+                let code = mem_proof.entry().to_app_option::<JoiningCode>()?.unwrap();
+
+                let path = Path::from(code.record_locator);
+                if path.exists()? {
+                    return Ok(InitCallbackResult::Fail("membrane proof already used".into()))
+                }
+                path.ensure()?;
+            },
+            None => return Err(ChatError::InitFailure.into()),
+        }
+    } else {
+        return Err(ChatError::InitFailure.into());
+    }
 
     Ok(InitCallbackResult::Pass)
 }

@@ -2,21 +2,44 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG, MEM_PROOF } from './common'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = async (orchestrator) => {
 
-  orchestrator.registerScenario.only('bad membrane proof', async (s, t) => {
+  orchestrator.registerScenario('bad membrane proof', async (s, t) => {
     const [conductor] = await s.players([localConductorConfig])
     try {
-      let [alice_chat_happ] = await installAgents(conductor,  ["alice"], MEM_PROOF_BAD_SIG)
+      let [alice_chat_happ] = await installAgents(conductor,  ["alice"], [MEM_PROOF_BAD_SIG])
       t.fail()
     } catch(e) {
       t.deepEqual(e, { type: 'error', data: { type: 'internal_error', data: 'Conductor returned an error while using a ConductorApi: GenesisFailed { errors: [ConductorApiError(WorkflowError(GenesisFailure("Joining code invalid: incorrect signature")))] }' } })
     }
   })
+
+  orchestrator.registerScenario('dup membrane proof', async (s, t) => {
+    const [conductor] = await s.players([localConductorConfig])
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(conductor,  ["alice", "bob"], [MEM_PROOF,  MEM_PROOF])
+    const [alice_chat] = alice_chat_happ.cells
+    const [bobbo_chat] = bobbo_chat_happ.cells
+    // zome call triggers init
+    let channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
+    await delay(2000) // TODO add consistency instead
+    // this second one should fail because it will find the first membrane proof
+    try {
+      channel_list = await bobbo_chat.call('chat', 'list_channels', { category: "General" });
+    } catch(e) {
+      t.deepEqual(e, {
+        type: 'error',
+        data: {
+          type: 'internal_error',
+          data: 'The cell tried to run the initialize zomes callback but failed because Fail(ZomeName("chat"), "membrane proof already used")'
+        }
+      })
+    }
+  })
+
 
   orchestrator.registerScenario('chat away', async (s, t) => {
     // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
