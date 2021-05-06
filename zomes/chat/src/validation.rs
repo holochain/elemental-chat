@@ -3,13 +3,13 @@ use crate::message::Message;
 /// This is the current structure of the payload the holo signs
 #[hdk_entry(id = "joining_code_payload")]
 #[derive(Clone)]
-struct JoiningCodePayload {
-    role: String,
-    record_locator: String
+pub(crate) struct JoiningCodePayload {
+    pub role: String,
+    pub record_locator: String
 }
 
 /// Validate joining code from the membrane_proof
-pub(crate) fn joining_code(membrane_proof: Option<MembraneProof>) -> ExternResult<ValidateCallbackResult> {
+pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneProof>, genesis: bool) -> ExternResult<ValidateCallbackResult> {
     // This is a hard coded holo agent public key
     let holo_agent = AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap();
     match membrane_proof {
@@ -19,22 +19,45 @@ pub(crate) fn joining_code(membrane_proof: Option<MembraneProof>) -> ExternResul
                 Err(e) => return Ok(ValidateCallbackResult::Invalid(format!("Joining code invalid: unable to deserialize into element ({:?})", e)))
             };
 
-            debug!("Joining code provided: {:?}", mem_proof);
+            trace!("Joining code provided: {:?}", mem_proof);
 
-            let author = mem_proof.header().author().clone();
+            let joining_code_author = mem_proof.header().author().clone();
 
-            if author != holo_agent {
-                debug!("Joining code validation failed");
-                return Ok(ValidateCallbackResult::Invalid(format!("Joining code invalid: unexpected author ({:?})", author)))
+            if joining_code_author != holo_agent {
+                trace!("Joining code validation failed");
+                return Ok(ValidateCallbackResult::Invalid(format!("Joining code invalid: unexpected author ({:?})", joining_code_author)))
             }
 
-            if let ElementEntry::Present(_entry) = mem_proof.entry() {
+            let e = mem_proof.entry();
+            if let ElementEntry::Present(_entry) = e {
                 let signature = mem_proof.signature().clone();
                 if verify_signature(holo_agent.clone(), signature, mem_proof.header())? {
-                    debug!("Joining code validated");
+                    trace!("Joining code validated");
+                    if !genesis {
+                        let code = e.to_app_option::<JoiningCodePayload>()?.unwrap();
+                        let path = Path::from(code.record_locator.clone());
+                        let path_entry_hash = path.hash()?;
+                        let maybe_details = get_details( path_entry_hash.clone(), GetOptions::default())?;
+                        match maybe_details {
+                            Some(details) => {
+                                if let Details::Entry(e) = details {
+                                    let mut deets:Vec<(Timestamp, AgentPubKey)> = e.headers.iter().map(|h| {
+                                        let header = h.header();
+                                        (header.timestamp(), header.author().clone())
+                                    }).collect();
+                                    deets.sort_by(|a, b| a.0.cmp(&b.0));
+                                    if deets[0].1 != author {
+                                        return Ok(ValidateCallbackResult::Invalid(format!("Earliest joining code for {} was by {} not {} as expected", code.record_locator, deets[0].1, author )))
+                                    }
+                                    debug!("DETAILS: {:?}", deets);
+                                }
+                            }
+                            None => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(path_entry_hash).into()]))
+                        };
+                    }
                     return Ok(ValidateCallbackResult::Valid)
                 } else {
-                    debug!("Joining code validation failed: incorrect signature");
+                    trace!("Joining code validation failed: incorrect signature");
                     return Ok(ValidateCallbackResult::Invalid("Joining code invalid: incorrect signature".to_string()))
                 }
             } else {
@@ -61,7 +84,7 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                         Some(element_pkg) => {
                             match element_pkg.signed_header().header() {
                                 Header::AgentValidationPkg(pkg) => {
-                                    return joining_code(pkg.membrane_proof.clone())
+                                    return joining_code(pkg.author.clone(), pkg.membrane_proof.clone(), false)
                                 }
                                 _ => return Ok(ValidateCallbackResult::Invalid("No Agent Validation Pkg found".to_string()))
                             }

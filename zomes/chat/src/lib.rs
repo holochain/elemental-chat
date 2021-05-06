@@ -40,7 +40,7 @@ pub enum SignalPayload {
 #[hdk_extern]
 fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
     let sig: SignalPayload = signal.decode()?;
-    debug!("Received remote signal {:?}", sig);
+    trace!("Received remote signal {:?}", sig);
     Ok(emit_signal(&sig)?)
 }
 
@@ -50,15 +50,8 @@ entry_defs![
     ChannelInfo::entry_def()
 ];
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
-struct JoiningCode {
-    role: String,
-    record_locator: String,
-}
-
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    debug!("INIT CALLED");
     // grant unrestricted access to accept_cap_claim so other agents can send us claims
     let mut functions = BTreeSet::new();
     functions.insert((zome_info()?.zome_name, "recv_remote_signal".into()));
@@ -77,7 +70,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
                     Ok(m) => m,
                     Err(_e) => return  Err(ChatError::InitFailure.into())
                 };
-                let code = mem_proof.entry().to_app_option::<JoiningCode>()?.unwrap();
+                let code = mem_proof.entry().to_app_option::<validation::JoiningCodePayload>()?.unwrap();
 
                 let path = Path::from(code.record_locator);
                 if path.exists()? {
@@ -95,7 +88,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 #[hdk_extern]
 fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallbackResult> {
-    validation::joining_code(data.membrane_proof)
+    validation::joining_code(data.agent_key, data.membrane_proof, true)
 }
 #[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
