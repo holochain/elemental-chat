@@ -2,7 +2,7 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF1, MEM_PROOF2 } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF1, MEM_PROOF2, MEM_PROOF3 } from './common'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
@@ -79,7 +79,7 @@ const doTransientNodes = async (s, t, local) => {
   console.log("shutting down alice")
   await alice.shutdown()
   await carol.startup()
-  let [carol_chat_happ] = await installAgents(carol, ["carol"])
+  let [carol_chat_happ] = await installAgents(carol, ["carol"], [ MEM_PROOF3])
   const [carol_chat] = carol_chat_happ.cells
 
   if (local) {
