@@ -72,9 +72,9 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
                 };
                 let code = mem_proof.entry().to_app_option::<validation::JoiningCodePayload>()?.unwrap();
 
-                let path = Path::from(code.record_locator);
+                let path = Path::from(code.record_locator.clone());
                 if path.exists()? {
-                    return Ok(InitCallbackResult::Fail("membrane proof already used".into()))
+                    return Ok(InitCallbackResult::Fail(format!("membrane proof for {} already used", code.record_locator)))
                 }
                 path.ensure()?;
             },
