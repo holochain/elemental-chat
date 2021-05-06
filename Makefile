@@ -85,8 +85,9 @@ update-hc:
 update-hc-sha:
 	@if [ $(HC_REV) ]; then\
 		echo "⚙️  Updating elemental-chat using holochain rev: $(HC_REV)";\
-		echo "✔  Updating hdk rev in Cargo.toml...";\
+		echo "✔  Updating hdk and holo_hash rev in Cargo.toml...";\
 		sed -i -e 's/^hdk = .*/hdk = {git ="https:\/\/github.com\/holochain\/holochain", rev = "$(HC_REV)", package = "hdk"}/' Cargo.toml;\
+		sed -i -e 's/^holo_hash = .*/holo_hash = {git ="https:\/\/github.com\/holochain\/holochain", rev = "$(HC_REV)", package = "holo_hash"}/' Cargo.toml;\
 		echo "✔  Replacing rev...";\
 		sed -i -e 's/^     rev = .*/     rev = "$(HC_REV)";/' default.nix;\
 		echo "✔  Replacing sha256...";\
