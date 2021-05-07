@@ -2,9 +2,8 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF1, MEM_PROOF2, MEM_PROOF3 } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF1, MEM_PROOF2, MEM_PROOF3, awaitIntegration, delay } from './common'
 
-const delay = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = async (orchestrator) => {
     orchestrator.registerScenario('transient nodes-local', async (s, t) => {
@@ -39,6 +38,9 @@ const gotChannelsAndMessages = async(t, name, happ, channelEntry, retry_count, r
     await delay( retry_delay )
   }
 }
+
+
+
 const doTransientNodes = async (s, t, local) => {
   const config = local ? localConductorConfig : networkedConductorConfig;
 
@@ -75,7 +77,7 @@ const doTransientNodes = async (s, t, local) => {
   console.log("checking to see if bob can see the message")
   await gotChannelsAndMessages(t, "bob", bob_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
   console.log("waiting for bob to integrate the message not just see it via get")
-  await delay(20000)
+  await awaitIntegration(bob_chat)
   console.log("shutting down alice")
   await alice.shutdown()
   await carol.startup()

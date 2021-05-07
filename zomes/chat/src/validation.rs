@@ -35,7 +35,7 @@ pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneP
                     trace!("Joining code validated");
                     if !genesis {
                         let code = e.to_app_option::<JoiningCodePayload>()?.unwrap();
-                        debug!("Checking for joining code: {:?}", code);
+                        trace!("Checking for joining code: {:?}", code);
                         let path = Path::from(code.record_locator.clone());
                         let path_entry_hash = path.hash()?;
                         let maybe_details = get_details( path_entry_hash.clone(), GetOptions::default())?;
@@ -52,7 +52,10 @@ pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneP
                                     }
                                 }
                             }
-                            None => return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(path_entry_hash).into()]))
+                            None => {
+                                trace!("Unresolved, waiting...");
+                                return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(path_entry_hash).into()]))
+                            }
                         };
                     }
                     return Ok(ValidateCallbackResult::Valid)

@@ -147,3 +147,18 @@ export const installAgents = async (conductor, agentNames, memProofArray?) => {
   ))
   return agents
 }
+
+export const delay = ms => new Promise(r => setTimeout(r, ms))
+
+export const awaitIntegration = async(cell) => {
+    while (true) {
+        const dump = await cell.stateDump()
+        console.log("integration dump was:", dump)
+        const idump = dump[0].integration_dump
+        if (idump.validation_limbo == 0 && idump.integration_limbo == 0) {
+            break
+        }
+        console.log("waiting 5 seconds for integration")
+        await delay(5000)
+    }
+}
