@@ -35,7 +35,7 @@ pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneP
                     trace!("Joining code validated");
                     if !genesis {
                         let code = e.to_app_option::<JoiningCodePayload>()?.unwrap();
-                        trace!("Checking for joining code: {:?}", code);
+                        debug!("Checking for joining code: {:?}", code);
                         let path = Path::from(code.record_locator.clone());
                         let path_entry_hash = path.hash()?;
                         let maybe_details = get_details( path_entry_hash.clone(), GetOptions::default())?;

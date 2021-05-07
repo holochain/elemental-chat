@@ -71,11 +71,12 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
                     Err(_e) => return  Err(ChatError::InitFailure.into())
                 };
                 let code = mem_proof.entry().to_app_option::<validation::JoiningCodePayload>()?.unwrap();
-
+                debug!("looking for {:?}", code.record_locator);
                 let path = Path::from(code.record_locator.clone());
                 if path.exists()? {
                     return Ok(InitCallbackResult::Fail(format!("membrane proof for {} already used", code.record_locator)))
                 }
+                debug!("creating {:?}", code.record_locator);
                 path.ensure()?;
             },
             None => return Err(ChatError::InitFailure.into()),
