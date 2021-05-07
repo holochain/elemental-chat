@@ -162,3 +162,16 @@ export const awaitIntegration = async(cell) => {
         await delay(5000)
     }
 }
+
+export const awaitPeers = async(cell, count) => {
+    while (true) {
+        const dump = await cell.stateDump()
+        console.log("peer dump was:", dump)
+        const peer_dump = dump[0].peer_dump
+        if (peer_dump.peers.length >= count) {
+            break
+        }
+        console.log("waiting 5 seconds for peers to reach", count)
+        await delay(5000)
+    }
+}
