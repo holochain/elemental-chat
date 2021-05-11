@@ -8,12 +8,22 @@ pub(crate) struct JoiningCodePayload {
     pub record_locator: String
 }
 
+/// check to see if this is the valid read_only membrane proof
+pub(crate) fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
+    let b = mem_proof.bytes();
+    b.len() == 1 && b[0] == 0
+}
+
 /// Validate joining code from the membrane_proof
 pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneProof>, genesis: bool) -> ExternResult<ValidateCallbackResult> {
+
     // This is a hard coded holo agent public key
     let holo_agent = AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap();
     match membrane_proof {
         Some(mem_proof) => {
+            if is_read_only_proof(&mem_proof) {
+                return Ok(ValidateCallbackResult::Valid)
+            };
             let mem_proof = match Element::try_from(mem_proof.clone()) {
                 Ok(m) => m,
                 Err(e) => return Ok(ValidateCallbackResult::Invalid(format!("Joining code invalid: unable to deserialize into element ({:?})", e)))
