@@ -176,6 +176,41 @@ fn list_messages(list_messages_input: ListMessagesInput) -> ExternResult<ListMes
     Ok(message::handlers::list_messages(list_messages_input)?)
 }
 
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ChannelMessages {
+    pub channel: ChannelData,
+    pub messages: Vec<MessageData>,
+}
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AllMessagesList {
+    pub channel_messages: Vec<ChannelMessages>,
+}
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ListAllMessagesInput {
+    pub category: String,
+    pub chunk: message::Chunk,
+}
+
+#[hdk_extern]
+fn list_all_messages(input: ListAllMessagesInput) -> ExternResult<AllMessagesList> {
+    let channels = channel::handlers::list_channels(ChannelListInput{category: input.category.clone()})?;
+    let all_messages: Result<Vec<ChannelMessages>, ChatError> = channels.channels.into_iter().map(|channel| {
+        let list_messages_input = ListMessagesInput {
+            channel: channel.entry.clone(),
+            chunk: input.chunk.clone(),
+            active_chatter: false,
+        };
+        let messages = message::handlers::list_messages(list_messages_input)?;
+        Ok(ChannelMessages{channel, messages: messages.messages})
+    }).collect();
+    Ok(AllMessagesList{channel_messages:all_messages?})
+}
+
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct Stats {
     agents: usize,

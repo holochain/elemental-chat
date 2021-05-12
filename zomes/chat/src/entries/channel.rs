@@ -55,7 +55,7 @@ pub struct ChannelListInput {
     pub category: String,
 }
 
-/// The channels returned from list messages
+/// The channels returned from list channels
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, derive_more::From)]
 pub struct ChannelList {
     pub channels: Vec<ChannelData>,
