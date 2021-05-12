@@ -1,5 +1,12 @@
 use hdk::prelude::*;
 use crate::message::Message;
+
+// TODO: add checking of property
+// This is useful for test cases where we don't want to provide a membrane proof
+pub(crate) fn skip_proof() -> bool {
+    return false
+}
+
 /// This is the current structure of the payload the holo signs
 #[hdk_entry(id = "joining_code_payload")]
 #[derive(Clone)]
@@ -10,12 +17,19 @@ pub(crate) struct JoiningCodePayload {
 
 /// check to see if this is the valid read_only membrane proof
 pub(crate) fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
+    if skip_proof() {
+        return false;
+    }
     let b = mem_proof.bytes();
     b.len() == 1 && b[0] == 0
 }
 
 /// Validate joining code from the membrane_proof
 pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneProof>, genesis: bool) -> ExternResult<ValidateCallbackResult> {
+
+    if skip_proof() {
+        return Ok(ValidateCallbackResult::Valid);
+    }
 
     // This is a hard coded holo agent public key
     let holo_agent = AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap();

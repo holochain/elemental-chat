@@ -74,30 +74,32 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
         access: ().into(),
         functions,
     })?;
-    let entries = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg))?;
-    if let Header::AgentValidationPkg(h) = entries[0].header() {
-        match &h.membrane_proof {
-            Some(mem_proof) => {
-                if validation::is_read_only_proof(&mem_proof) {
-                    return Ok(InitCallbackResult::Pass)
-                }
-                let mem_proof = match Element::try_from(mem_proof.clone()) {
-                    Ok(m) => m,
-                    Err(_e) => return  Err(ChatError::InitFailure.into())
-                };
-                let code = mem_proof.entry().to_app_option::<validation::JoiningCodePayload>()?.unwrap();
-                trace!("looking for {:?}", code.record_locator);
-                let path = Path::from(code.record_locator.clone());
-                if path.exists()? {
-                    return Ok(InitCallbackResult::Fail(format!("membrane proof for {} already used", code.record_locator)))
-                }
-                trace!("creating {:?}", code.record_locator);
-                path.ensure()?;
-            },
-            None => return Err(ChatError::InitFailure.into()),
+    if !validation::skip_proof() {
+        let entries = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg))?;
+        if let Header::AgentValidationPkg(h) = entries[0].header() {
+            match &h.membrane_proof {
+                Some(mem_proof) => {
+                    if validation::is_read_only_proof(&mem_proof) {
+                        return Ok(InitCallbackResult::Pass)
+                    }
+                    let mem_proof = match Element::try_from(mem_proof.clone()) {
+                        Ok(m) => m,
+                        Err(_e) => return  Err(ChatError::InitFailure.into())
+                    };
+                    let code = mem_proof.entry().to_app_option::<validation::JoiningCodePayload>()?.unwrap();
+                    trace!("looking for {:?}", code.record_locator);
+                    let path = Path::from(code.record_locator.clone());
+                    if path.exists()? {
+                        return Ok(InitCallbackResult::Fail(format!("membrane proof for {} already used", code.record_locator)))
+                    }
+                    trace!("creating {:?}", code.record_locator);
+                    path.ensure()?;
+                },
+                None => return Err(ChatError::InitFailure.into()),
+            }
+        } else {
+            return Err(ChatError::InitFailure.into());
         }
-    } else {
-        return Err(ChatError::InitFailure.into());
     }
 
     Ok(InitCallbackResult::Pass)
