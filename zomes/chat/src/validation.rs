@@ -26,7 +26,7 @@ pub(crate) fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
         return false;
     }
     let b = mem_proof.bytes();
-    b.len() == 1 && b[0] == 0
+    b == &[0]
 }
 
 
