@@ -63,6 +63,7 @@ module.exports = async (orchestrator) => {
     // sending a message should fail
     try {
       const x = await doug_chat.call('chat', 'create_message', first_message);
+      t.fail()
     } catch(e) {
       t.deepEqual(e, { type: 'error', data: { type: 'ribosome_error', data: 'Wasm error while working with Ribosome: Guest("Read only instance")' } })
     }

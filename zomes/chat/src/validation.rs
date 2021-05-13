@@ -11,7 +11,7 @@ pub(crate) struct JoiningCodePayload {
 /// check to see if this is the valid read_only membrane proof
 pub(crate) fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
     let b = mem_proof.bytes();
-    b.len() == 1 && b[0] == 0
+    b == &[0]
 }
 
 /// Validate joining code from the membrane_proof
