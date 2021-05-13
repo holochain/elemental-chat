@@ -120,8 +120,8 @@ module.exports = async (orchestrator) => {
     t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[3].messages, messageEntry));
 
     const allMessages = await bobbo_chat.call('chat', 'list_all_messages', { category: "General", chunk: {start:0, end: 1} })
-    t.equal(allMessages.channelMessages[0].channel.info.name, "Test Channel");
-    t.deepEqual(allMessages.channelMessages[0].messages.length, 4);
+    t.equal(allMessages[0].channel.info.name, "Test Channel");
+    t.deepEqual(allMessages[0].messages.length, 4);
   })
 
 }

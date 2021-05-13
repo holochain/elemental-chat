@@ -187,9 +187,7 @@ pub struct ChannelMessages {
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct AllMessagesList {
-    pub channel_messages: Vec<ChannelMessages>,
-}
+pub struct AllMessagesList(Vec<ChannelMessages>);
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -210,7 +208,7 @@ fn list_all_messages(input: ListAllMessagesInput) -> ExternResult<AllMessagesLis
         let messages = message::handlers::list_messages(list_messages_input)?;
         Ok(ChannelMessages{channel, messages: messages.messages})
     }).collect();
-    Ok(AllMessagesList{channel_messages:all_messages?})
+    Ok(AllMessagesList(all_messages?))
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
