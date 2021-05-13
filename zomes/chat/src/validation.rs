@@ -1,5 +1,12 @@
 use hdk::prelude::*;
 use crate::message::Message;
+
+// TODO: add checking of property
+// This is useful for test cases where we don't want to provide a membrane proof
+pub(crate) fn skip_proof() -> bool {
+    return false
+}
+
 /// This is the current structure of the payload the holo signs
 #[hdk_entry(id = "joining_code_payload")]
 #[derive(Clone)]
@@ -8,14 +15,27 @@ pub(crate) struct JoiningCodePayload {
     pub record_locator: String
 }
 
+pub(crate) fn joining_code_value(mem_proof: &Element) -> String {
+    //let code = mem_proof.entry().to_app_option::<validation::JoiningCodePayload>()?.unwrap();
+    mem_proof.header_address().to_string()
+}
+
 /// check to see if this is the valid read_only membrane proof
 pub(crate) fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
+    if skip_proof() {
+        return false;
+    }
     let b = mem_proof.bytes();
     b == &[0]
 }
 
+
 /// Validate joining code from the membrane_proof
 pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneProof>, genesis: bool) -> ExternResult<ValidateCallbackResult> {
+
+    if skip_proof() {
+        return Ok(ValidateCallbackResult::Valid);
+    }
 
     // This is a hard coded holo agent public key
     let holo_agent = AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap();
@@ -44,9 +64,9 @@ pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneP
                 if verify_signature(holo_agent.clone(), signature, mem_proof.header())? {
                     trace!("Joining code validated");
                     if !genesis {
-                        let code = e.to_app_option::<JoiningCodePayload>()?.unwrap();
-                        trace!("Checking for joining code: {:?}", code);
-                        let path = Path::from(code.record_locator.clone());
+                        let code = joining_code_value(&mem_proof);
+                        trace!("Checking for joining code: {}", code);
+                        let path = Path::from(code.clone());
                         let path_entry_hash = path.hash()?;
                         let maybe_details = get_details( path_entry_hash.clone(), GetOptions::default())?;
                         match maybe_details {
@@ -58,7 +78,7 @@ pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneP
                                     }).collect();
                                     deets.sort_by(|a, b| a.0.cmp(&b.0));
                                     if deets[0].1 != author {
-                                        return Ok(ValidateCallbackResult::Invalid(format!("Earliest joining code for {} was by {} not {} as expected", code.record_locator, deets[0].1, author )))
+                                        return Ok(ValidateCallbackResult::Invalid(format!("Earliest joining code for {} was by {} not {} as expected", code, deets[0].1, author )))
                                     }
                                 }
                             }

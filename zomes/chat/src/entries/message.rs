@@ -65,7 +65,7 @@ pub struct ListMessagesInput {
     pub chunk: Chunk,
     pub active_chatter: bool,
 }
-#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 pub struct Chunk {
     pub start: u32,
     pub end: u32,
@@ -83,7 +83,7 @@ pub struct ActiveChatters {
 }
 
 /// The messages returned from list messages
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, derive_more::From)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, derive_more::From, Clone)]
 pub struct ListMessages {
     pub messages: Vec<MessageData>,
 }

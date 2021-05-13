@@ -127,8 +127,9 @@ export const installAgents = async (conductor, agentNames, memProofArray?) => {
 
   const agents: Array<InstalledHapp> = await Promise.all(agentNames.map(
     async (agent, i) => {
-      console.log(`generating key for: ${agent}`)
+      console.log(`generating key for: ${agent}:`)
       const agent_key = await admin.generateAgentPubKey()
+      console.log(`${agent} pubkey:`, agent_key.toString('base64'))
 
       const dnas = [
         {
