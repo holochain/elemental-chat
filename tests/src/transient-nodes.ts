@@ -78,6 +78,7 @@ const doTransientNodes = async (s, t, local) => {
   await gotChannelsAndMessages(t, "bob", bob_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
   console.log("waiting for bob to integrate the message not just see it via get")
   await awaitIntegration(bob_chat)
+  await delay(10000)
   console.log("shutting down alice")
   await alice.shutdown()
   await carol.startup()
