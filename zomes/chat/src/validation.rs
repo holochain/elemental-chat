@@ -15,6 +15,11 @@ pub(crate) struct JoiningCodePayload {
     pub record_locator: String
 }
 
+pub(crate) fn joining_code_value(mem_proof: &Element) -> String {
+    //let code = mem_proof.entry().to_app_option::<validation::JoiningCodePayload>()?.unwrap();
+    mem_proof.header_address().to_string()
+}
+
 /// check to see if this is the valid read_only membrane proof
 pub(crate) fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
     if skip_proof() {
@@ -23,6 +28,7 @@ pub(crate) fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
     let b = mem_proof.bytes();
     b.len() == 1 && b[0] == 0
 }
+
 
 /// Validate joining code from the membrane_proof
 pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneProof>, genesis: bool) -> ExternResult<ValidateCallbackResult> {
@@ -58,9 +64,9 @@ pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneP
                 if verify_signature(holo_agent.clone(), signature, mem_proof.header())? {
                     trace!("Joining code validated");
                     if !genesis {
-                        let code = e.to_app_option::<JoiningCodePayload>()?.unwrap();
-                        trace!("Checking for joining code: {:?}", code);
-                        let path = Path::from(code.record_locator.clone());
+                        let code = joining_code_value(&mem_proof);
+                        trace!("Checking for joining code: {}", code);
+                        let path = Path::from(code.clone());
                         let path_entry_hash = path.hash()?;
                         let maybe_details = get_details( path_entry_hash.clone(), GetOptions::default())?;
                         match maybe_details {
@@ -72,7 +78,7 @@ pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneP
                                     }).collect();
                                     deets.sort_by(|a, b| a.0.cmp(&b.0));
                                     if deets[0].1 != author {
-                                        return Ok(ValidateCallbackResult::Invalid(format!("Earliest joining code for {} was by {} not {} as expected", code.record_locator, deets[0].1, author )))
+                                        return Ok(ValidateCallbackResult::Invalid(format!("Earliest joining code for {} was by {} not {} as expected", code, deets[0].1, author )))
                                     }
                                 }
                             }
