@@ -1,6 +1,6 @@
 pub use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
 pub use entries::{channel, message};
-pub use error::ChatResult;
+pub use error::{ChatResult, ChatError};
 pub use hdk::prelude::Path;
 pub use hdk::prelude::*;
 pub use message::{
@@ -40,7 +40,7 @@ pub enum SignalPayload {
 #[hdk_extern]
 fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
     let sig: SignalPayload = signal.decode()?;
-    debug!("Received remote signal {:?}", sig);
+    trace!("Received remote signal {:?}", sig);
     Ok(emit_signal(&sig)?)
 }
 
@@ -49,6 +49,19 @@ entry_defs![
     Message::entry_def(),
     ChannelInfo::entry_def()
 ];
+
+fn is_read_only_instance() -> bool {
+    if let Ok(entries) = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg)) {
+        if let Header::AgentValidationPkg(h) = entries[0].header() {
+            if let Some(mem_proof) = &h.membrane_proof {
+                if validation::is_read_only_proof(&mem_proof) {
+                    return true
+                }
+            }
+        }
+    };
+    false
+}
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
@@ -61,15 +74,43 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
         access: ().into(),
         functions,
     })?;
+    let entries = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg))?;
+    if let Header::AgentValidationPkg(h) = entries[0].header() {
+        match &h.membrane_proof {
+            Some(mem_proof) => {
+                if validation::is_read_only_proof(&mem_proof) {
+                    return Ok(InitCallbackResult::Pass)
+                }
+                let mem_proof = match Element::try_from(mem_proof.clone()) {
+                    Ok(m) => m,
+                    Err(_e) => return  Err(ChatError::InitFailure.into())
+                };
+                let code = mem_proof.entry().to_app_option::<validation::JoiningCodePayload>()?.unwrap();
+                trace!("looking for {:?}", code.record_locator);
+                let path = Path::from(code.record_locator.clone());
+                if path.exists()? {
+                    return Ok(InitCallbackResult::Fail(format!("membrane proof for {} already used", code.record_locator)))
+                }
+                trace!("creating {:?}", code.record_locator);
+                path.ensure()?;
+            },
+            None => return Err(ChatError::InitFailure.into()),
+        }
+    } else {
+        return Err(ChatError::InitFailure.into());
+    }
 
     Ok(InitCallbackResult::Pass)
 }
 #[hdk_extern]
 fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallbackResult> {
-    validation::joining_code(data.membrane_proof)
+    validation::joining_code(data.agent_key, data.membrane_proof, true)
 }
 #[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
+    if is_read_only_instance() {
+        return  Err(ChatError::ReadOnly.into())
+    }
     Ok(channel::handlers::create_channel(channel_input)?)
 }
 
@@ -80,6 +121,9 @@ fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
 
 #[hdk_extern]
 fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
+    if is_read_only_instance() {
+        return  Err(ChatError::ReadOnly.into())
+    }
     Ok(message::handlers::create_message(message_input)?)
 }
 
@@ -95,16 +139,25 @@ fn get_active_chatters(_: ()) -> ExternResult<ActiveChatters> {
 
 #[hdk_extern]
 fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
+    if is_read_only_instance() {
+        return  Err(ChatError::ReadOnly.into())
+    }
     Ok(message::handlers::signal_specific_chatters(input)?)
 }
 
 #[hdk_extern]
 fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> {
+    if is_read_only_instance() {
+        return  Err(ChatError::ReadOnly.into())
+    }
     Ok(message::handlers::signal_chatters(message_data)?)
 }
 
 #[hdk_extern]
 fn refresh_chatter(_: ()) -> ExternResult<()> {
+    if is_read_only_instance() {
+        return  Err(ChatError::ReadOnly.into())
+    }
     Ok(message::handlers::refresh_chatter()?)
 }
 

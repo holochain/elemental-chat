@@ -27,6 +27,8 @@ pub enum ChatError {
     DataFormatError(&'static str),
     #[error("Failed to validate membrane-proof")]
     InitFailure,
+    #[error("Read only instance")]
+    ReadOnly,
 }
 
 pub type ChatResult<T> = Result<T, ChatError>;

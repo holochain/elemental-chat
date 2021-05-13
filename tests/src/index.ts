@@ -25,3 +25,7 @@ orchestrator.run()
 orchestrator = new Orchestrator()
 require('./profile')(orchestrator)
 orchestrator.run()
+
+orchestrator = new Orchestrator()
+require('./membrane-proof')(orchestrator)
+orchestrator.run()

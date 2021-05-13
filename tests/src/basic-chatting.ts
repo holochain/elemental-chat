@@ -2,21 +2,9 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG } from './common'
-
-const delay = ms => new Promise(r => setTimeout(r, ms))
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG, MEM_PROOF1, MEM_PROOF2, awaitIntegration, delay } from './common'
 
 module.exports = async (orchestrator) => {
-
-  orchestrator.registerScenario.only('bad membrane proof', async (s, t) => {
-    const [conductor] = await s.players([localConductorConfig])
-    try {
-      let [alice_chat_happ] = await installAgents(conductor,  ["alice"], MEM_PROOF_BAD_SIG)
-      t.fail()
-    } catch(e) {
-      t.deepEqual(e, { type: 'error', data: { type: 'internal_error', data: 'Conductor returned an error while using a ConductorApi: GenesisFailed { errors: [ConductorApiError(WorkflowError(GenesisFailure("Joining code invalid: incorrect signature")))] }' } })
-    }
-  })
 
   orchestrator.registerScenario('chat away', async (s, t) => {
     // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
@@ -26,7 +14,7 @@ module.exports = async (orchestrator) => {
 
     // install your happs into the coductors and destructuring the returned happ data using the same
     // array structure as you created in your installation array.
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor,  ["alice", 'bobbo'])
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor,  ["alice", 'bobbo'], [MEM_PROOF1,  MEM_PROOF2])
     const [alice_chat] = alice_chat_happ.cells
     const [bobbo_chat] = bobbo_chat_happ.cells
 
