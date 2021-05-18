@@ -2,7 +2,7 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, consistency } from './common'
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
@@ -50,6 +50,7 @@ module.exports = async (orchestrator) => {
       chunk: 0,
       entry: MESSAGE
     }
+    await consistency([bob_chat, alice_chat]);
     const r1 = await alice_chat.call('chat', 'create_message', msg1);
     t.deepEqual(r1.entry, msg1.entry);
 
