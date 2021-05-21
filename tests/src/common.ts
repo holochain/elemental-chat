@@ -166,6 +166,36 @@ export const awaitIntegration = async(cell) => {
     }
 }
 
+export const consistency = async(cells) => {
+  // 20 Seconds.
+  const MAX_TIMEOUT = 1000 * 20;
+  var total_published = 0;
+  for (const cell of cells) {
+        const dump = await cell.stateDump()
+        const sdump = dump[0].source_chain_dump
+        total_published += sdump.published_ops_count;
+  }
+  while (true) {
+    var total_integrated = 0;
+    var total_missing = 0;
+    for (const cell of cells) {
+      const dump = await cell.stateDump()
+      console.log("integration dump was:", dump)
+      const idump = dump[0].integration_dump
+      if(idump.integrated >= total_published) {
+        total_integrated += 1;
+      } else {
+        total_missing += total_published - idump.integrated;
+      }
+      console.log("Missing ", total_missing, "ops. Waiting 0.5 seconds for integration")
+      await delay(500)
+    }
+    if(cells.length == total_integrated) {
+      return;
+    }
+  }
+}
+
 export const awaitPeers = async(cell, count) => {
     while (true) {
         const dump = await cell.stateDump()
