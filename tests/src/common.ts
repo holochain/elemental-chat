@@ -117,13 +117,10 @@ export const MEM_PROOF_BAD_SIG = Buffer.from("3gACrXNpZ25lZF9oZWFkZXLeAAKmaGVhZG
 export const MEM_PROOF_READ_ONLY = Buffer.from([0])
 
 export const installAgents = async (conductor, agentNames, memProofArray?) => {
-  if (!memProofArray) {
-    memProofArray = [MEM_PROOF1]
-  }
 
   const admin = conductor.adminWs()
   console.log(`registering dna for: ${chatDna}`)
-  const  dnaHash = await conductor.registerDna({path: chatDna}, conductor.scenarioUID)
+  const  dnaHash = await conductor.registerDna({path: chatDna}, conductor.scenarioUID, {skip_proof: !memProofArray})
 
   const agents: Array<InstalledHapp> = await Promise.all(agentNames.map(
     async (agent, i) => {
@@ -131,18 +128,19 @@ export const installAgents = async (conductor, agentNames, memProofArray?) => {
       const agent_key = await admin.generateAgentPubKey()
       console.log(`${agent} pubkey:`, agent_key.toString('base64'))
 
-      const dnas = [
-        {
-          hash: dnaHash,
-          nick: 'elemental-chat',
-          membrane_proof: Array.from(memProofArray[i]),
-        }
-      ]
+      let dna = {
+        hash: dnaHash,
+        nick: 'elemental-chat',
+      }
+      if (memProofArray) {
+        dna["membrane_proof"] = Array.from(memProofArray[i])
+      }
 
       const req = {
+        properties: {skip_proof: true},
         installed_app_id: `${agent}_chat`,
         agent_key,
-        dnas
+        dnas: [dna]
       }
       console.log(`installing happ for: ${agent}`)
       return await conductor._installHapp(req)
