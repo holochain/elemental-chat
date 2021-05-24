@@ -135,7 +135,7 @@ release-%:
 	make nix-test-dna-debug
 	echo '⚙️  Commit updates to current branch...'
 	git checkout -b release-$*
-	git add zomes/ Cargo.toml default.nix
+	git add .
 	git commit -m v$*
 	git push origin HEAD
 	echo '⚙️  Making new release...'

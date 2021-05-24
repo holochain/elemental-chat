@@ -16,18 +16,18 @@ module.exports = async (orchestrator) => {
     await awaitIntegration(alice_chat)
 
     // this second one should fail because it will find the first membrane proof
-    try {
-      channel_list = await bobbo_chat.call('chat', 'list_channels', { category: "General" });
-      t.fail()
-    } catch(e) {
-      t.deepEqual(e, {
-        type: 'error',
-        data: {
-          type: 'internal_error',
-          data: 'The cell tried to run the initialize zomes callback but failed because Fail(ZomeName("chat"), "membrane proof for uhCkknmyjli8dQ_bh8TwZM1YzoJt4LTusPFZIohL4oEn4E3hVi1Tf already used")'
-        }
-      })
-    }
+    // try {
+    //   channel_list = await bobbo_chat.call('chat', 'list_channels', { category: "General" });
+    //   t.fail()
+    // } catch(e) {
+    //   t.deepEqual(e, {
+    //     type: 'error',
+    //     data: {
+    //       type: 'internal_error',
+    //       data: 'The cell tried to run the initialize zomes callback but failed because Fail(ZomeName("chat"), "membrane proof for uhCkknmyjli8dQ_bh8TwZM1YzoJt4LTusPFZIohL4oEn4E3hVi1Tf already used")'
+    //     }
+    //   })
+    // }
 
     // now try and install carol with a bad membrane proof
     try {
