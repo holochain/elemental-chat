@@ -81,6 +81,7 @@ const doTransientNodes = async (s, t, local) => {
   await delay(10000)
   console.log("shutting down alice")
   await alice.shutdown()
+  await delay(10000)
   await carol.startup()
   let [carol_chat_happ] = await installAgents(carol, ["carol"], [ MEM_PROOF3])
   const [carol_chat] = carol_chat_happ.cells

@@ -78,6 +78,8 @@ module.exports = async (orchestrator) => {
     let stats = await alice_chat.call('chat', 'stats', {category: "General"});
     t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 3});
 
+    await delay(500)
+
     stats = await bob_chat.call('chat', 'stats', {category: "General"});
     t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 3});
 
