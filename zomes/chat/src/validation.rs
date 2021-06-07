@@ -4,7 +4,7 @@ use crate::message::Message;
 // TODO: add checking of property
 // This is useful for test cases where we don't want to provide a membrane proof
 pub(crate) fn skip_proof() -> bool {
-    return false
+    return true
 }
 
 /// This is the current structure of the payload the holo signs
