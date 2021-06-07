@@ -1,7 +1,8 @@
 [workspace]
+
 members = [
   "zomes/chat",
-  "zomes/profile",
+  "zomes/profile"
 ]
 
 [profile.dev]
@@ -11,11 +12,8 @@ opt-level = "z"
 opt-level = "z"
 
 [patch.crates-io]
-#rkv = { git = "https://github.com/holochain/rkv.git", branch = "master" }
-#lmdb-rkv = { git = "https://github.com/holochain/lmdb-rs.git" }
-#observability = { git = "https://github.com/freesig/observability.git", branch = "metrics" }
-#tokio_safe_block_on = { git = "https://github.com/neonphog/tokio_safe_block_on.git", branch = "fix_holochain_bug" }
-hc_utils = {git = "https://github.com/holochain/hc-utils", branch = "develop", package = "hc_utils"}
+# hc_utils = { path = "../hc-utils/crates/hc-utils" }
+hdk = {git = "https://github.com/holochain/holochain", rev = "24ceb63bdea374d1936b723e1966caf2e55ebfdc", package = "hdk"}
+hc_utils = {git = "https://github.com/holochain/hc-utils", branch = "0.0.101-alpha.0", package = "hc_utils"}
 # hdk = { path = "../holochain/crates/hdk" }
-hdk = {  git = "https://github.com/holochain/holochain.git", rev = "8d6c4cd29bd17e8224aeffb87dc03eaf3ff33508" }
-# hdk = { path = "../holochain/crates/hdk" }
+holo_hash = {git = "https://github.com/holochain/holochain.git", rev = "24ceb63bdea374d1936b723e1966caf2e55ebfdc", package = "holo_hash"}

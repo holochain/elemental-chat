@@ -2,17 +2,9 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG } from './common'
-
-const delay = ms => new Promise(r => setTimeout(r, ms))
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG, MEM_PROOF1, MEM_PROOF2, awaitIntegration, delay } from './common'
 
 module.exports = async (orchestrator) => {
-
-  orchestrator.registerScenario('bad membrane proof', async (s, t) => {
-    const [conductor] = await s.players([localConductorConfig])
-    let [alice_chat_happ] = await installAgents(conductor,  ["alice"], MEM_PROOF_BAD_SIG)
-    //TODO: assert should fail
-  })
 
   orchestrator.registerScenario('chat away', async (s, t) => {
     // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
@@ -22,7 +14,7 @@ module.exports = async (orchestrator) => {
 
     // install your happs into the coductors and destructuring the returned happ data using the same
     // array structure as you created in your installation array.
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor,  ["alice", 'bobbo'])
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor,  ["alice", 'bobbo'], [MEM_PROOF1,  MEM_PROOF2])
     const [alice_chat] = alice_chat_happ.cells
     const [bobbo_chat] = bobbo_chat_happ.cells
 
@@ -126,6 +118,10 @@ module.exports = async (orchestrator) => {
     msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} }));
     console.log(_.map(msgs[3].messages, messageEntry));
     t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[3].messages, messageEntry));
+
+    const allMessages = await bobbo_chat.call('chat', 'list_all_messages', { category: "General", chunk: {start:0, end: 1} })
+    t.equal(allMessages[0].channel.info.name, "Test Channel");
+    t.deepEqual(allMessages[0].messages.length, 4);
   })
 
 }
