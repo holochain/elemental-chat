@@ -114,7 +114,7 @@ export const MEM_PROOF_READ_ONLY = Buffer.from([0])
 
 export const installAgents = async (conductor, agentNames, memProofArray?) => {
   if (!memProofArray) {
-    memProofArray = [MEM_PROOF1]
+    memProofArray = [MEM_PROOF]
   }
 
   const admin = conductor.adminWs()
