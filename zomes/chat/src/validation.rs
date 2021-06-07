@@ -139,7 +139,7 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                         }
                     }
                 },
-                None => return Ok(ValidateCallbackResult::Invalid("Impossible state".to_string()))
+                None => unreachable!("This element will always have a prev_header")
             }
         }
     }
