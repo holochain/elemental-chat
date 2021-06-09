@@ -131,7 +131,7 @@ export const installAgents = async (conductor, agentNames, memProofArray?) => {
         {
           hash: dnaHash,
           nick: 'elemental-chat',
-          membrane_proof: Array.from(memProofArray[i]),
+          membrane_proof: Array.from(memProofArray[0]), // Currently hardcoded since we don't have an array of unique membrane proofs
         }
       ]
 
