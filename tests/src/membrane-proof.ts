@@ -15,8 +15,9 @@ module.exports = async (orchestrator) => {
     let channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
     await awaitIntegration(alice_chat)
 
-    // this second one should fail because it will find the first membrane proof
-    try {
+    // this second one should fail because the membrane proofs are agent specific
+    // TODO: add back in when the proofs carry that agent ID
+/*    try {
       channel_list = await bobbo_chat.call('chat', 'list_channels', { category: "General" });
       t.fail()
     } catch(e) {
@@ -27,7 +28,7 @@ module.exports = async (orchestrator) => {
           data: 'The cell tried to run the initialize zomes callback but failed because Fail(ZomeName("chat"), "membrane proof for uhCkknmyjli8dQ_bh8TwZM1YzoJt4LTusPFZIohL4oEn4E3hVi1Tf already used")'
         }
       })
-    }
+    }*/
 
     // now try and install carol with a bad membrane proof
     try {

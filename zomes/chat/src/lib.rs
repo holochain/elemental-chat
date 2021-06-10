@@ -114,7 +114,7 @@ fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallba
     if validation::skip_proof_sb(data.dna_def.properties) {
         return Ok(ValidateCallbackResult::Valid);
     }
-    validation::joining_code(data.agent_key, data.membrane_proof, true)
+    validation::joining_code(data.agent_key, data.membrane_proof)
 }
 #[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
