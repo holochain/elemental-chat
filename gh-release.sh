@@ -4,7 +4,7 @@
 # https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token
 # git config --global github .token YOUR_TOKEN
 
-version=$1
+version="v"$1
 text=$2
 branch=$(git rev-parse --abbrev-ref HEAD)
 token=$(git config --global github.token)
@@ -16,7 +16,7 @@ generate_post_data()
 {
   "tag_name": "$version",
   "target_commitish": "$branch",
-  "name": "v$version",
+  "name": "$version",
   "body": "$text",
   "draft": true,
   "prerelease": false
