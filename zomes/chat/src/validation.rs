@@ -8,8 +8,8 @@ pub struct Props {
     pub holo_agent_override: Option<WrappedAgentPubKey>,
 }
 
-pub(crate) fn skip_proof_sb(encoded_props: SerializedBytes) -> bool {
-    let maybe_props = Props::try_from(encoded_props);
+pub(crate) fn skip_proof_sb(encoded_props: &SerializedBytes) -> bool {
+    let maybe_props = Props::try_from(encoded_props.to_owned());
     if let Ok(props) = maybe_props {
         return props.skip_proof;
     }
@@ -19,7 +19,7 @@ pub(crate) fn skip_proof_sb(encoded_props: SerializedBytes) -> bool {
 // This is useful for test cases where we don't want to provide a membrane proof
 pub(crate) fn skip_proof() -> bool {
     if let Ok(info) = zome_info() {
-        return skip_proof_sb(info.properties);
+        return skip_proof_sb(&info.properties);
     }
     return false
 }
@@ -43,8 +43,8 @@ pub(crate) fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
     b == &[0]
 }
 // zome_info()?.properties
-pub(crate) fn holo_agent(encoded_props: SerializedBytes) -> ExternResult<AgentPubKey> {
-    let maybe_props = Props::try_from(encoded_props);
+pub(crate) fn holo_agent(encoded_props: &SerializedBytes) -> ExternResult<AgentPubKey> {
+    let maybe_props = Props::try_from(encoded_props.to_owned());
     if let Ok(props) = maybe_props {
         if let Some(a) = props.holo_agent_override {
             return Ok(AgentPubKey::try_from(a).unwrap())
@@ -115,7 +115,7 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                             Some(element_pkg) => {
                                 match element_pkg.signed_header().header() {
                                     Header::AgentValidationPkg(pkg) => {
-                                        return joining_code(pkg.author.clone(), pkg.membrane_proof.clone(), holo_agent(zome_info()?.properties)?)
+                                        return joining_code(pkg.author.clone(), pkg.membrane_proof.clone(), holo_agent(&zome_info()?.properties)?)
                                     }
                                     _ => return Ok(ValidateCallbackResult::Invalid("No Agent Validation Pkg found".to_string()))
                                 }
