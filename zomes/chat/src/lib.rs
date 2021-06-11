@@ -111,10 +111,11 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 
 #[hdk_extern]
 fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallbackResult> {
-    if validation::skip_proof_sb(data.dna_def.properties) {
+    if validation::skip_proof_sb(&data.dna_def.properties) {
         return Ok(ValidateCallbackResult::Valid);
     }
-    validation::joining_code(data.agent_key, data.membrane_proof)
+    let holo_agent_key = validation::holo_agent(&data.dna_def.properties)?;
+    validation::joining_code(data.agent_key, data.membrane_proof, holo_agent_key)
 }
 #[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {

@@ -116,11 +116,11 @@ export const MEM_PROOF_BAD_SIG = Buffer.from("3gACrXNpZ25lZF9oZWFkZXLeAAKmaGVhZG
 
 export const MEM_PROOF_READ_ONLY = Buffer.from([0])
 
-export const installAgents = async (conductor, agentNames, memProofArray?) => {
+export const installAgents = async (conductor, agentNames, memProofArray?, holo_agent_override?) => {
 
   const admin = conductor.adminWs()
   console.log(`registering dna for: ${chatDna}`)
-  const  dnaHash = await conductor.registerDna({path: chatDna}, conductor.scenarioUID, {skip_proof: !memProofArray})
+  const  dnaHash = await conductor.registerDna({path: chatDna}, conductor.scenarioUID, {skip_proof: !memProofArray, holo_agent_override})
 
   const agents: Array<InstalledHapp> = await Promise.all(agentNames.map(
     async (agent, i) => {
@@ -137,7 +137,6 @@ export const installAgents = async (conductor, agentNames, memProofArray?) => {
       }
 
       const req = {
-        properties: {skip_proof: true},
         installed_app_id: `${agent}_chat`,
         agent_key,
         dnas: [dna]
