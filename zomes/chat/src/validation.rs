@@ -50,14 +50,12 @@ pub(crate) fn holo_agent(encoded_props: SerializedBytes) -> ExternResult<AgentPu
             return Ok(AgentPubKey::try_from(a).unwrap())
         }
     }
+    // This is a hard coded holo agent public key
     return Ok(AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap())
 }
 
 /// Validate joining code from the membrane_proof
 pub(crate) fn joining_code(_author: AgentPubKey, membrane_proof: Option<MembraneProof>, holo_agent: AgentPubKey) -> ExternResult<ValidateCallbackResult> {
-
-    // This is a hard coded holo agent public key
-    // let holo_agent = AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap();
     match membrane_proof {
         Some(mem_proof) => {
             if is_read_only_proof(&mem_proof) {
