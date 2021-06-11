@@ -114,7 +114,7 @@ fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallba
     if validation::skip_proof_sb(data.dna_def.properties.clone()) {
         return Ok(ValidateCallbackResult::Valid);
     }
-    let host_agent = validation::holo_agent(data.dna_def.properties)?;
+    let holo_agent_key = validation::holo_agent(data.dna_def.properties)?;
     validation::joining_code(data.agent_key, data.membrane_proof, holo_agent_key)
 }
 #[hdk_extern]
