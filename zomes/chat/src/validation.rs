@@ -1,10 +1,11 @@
 use hdk::prelude::*;
 use crate::message::Message;
-
+pub use hc_utils::WrappedAgentPubKey;
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 pub struct Props {
     pub skip_proof: bool,
+    pub holo_agent_override: Option<WrappedAgentPubKey>,
 }
 
 pub(crate) fn skip_proof_sb(encoded_props: SerializedBytes) -> bool {
@@ -41,12 +42,22 @@ pub(crate) fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
     let b = mem_proof.bytes();
     b == &[0]
 }
+// zome_info()?.properties
+pub(crate) fn holo_agent(encoded_props: SerializedBytes) -> ExternResult<AgentPubKey> {
+    let maybe_props = Props::try_from(encoded_props);
+    if let Ok(props) = maybe_props {
+        if let Some(a) = props.holo_agent_override {
+            return Ok(AgentPubKey::try_from(a).unwrap())
+        }
+    }
+    return Ok(AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap())
+}
 
 /// Validate joining code from the membrane_proof
-pub(crate) fn joining_code(_author: AgentPubKey, membrane_proof: Option<MembraneProof>) -> ExternResult<ValidateCallbackResult> {
+pub(crate) fn joining_code(_author: AgentPubKey, membrane_proof: Option<MembraneProof>, holo_agent: AgentPubKey) -> ExternResult<ValidateCallbackResult> {
 
     // This is a hard coded holo agent public key
-    let holo_agent = AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap();
+    // let holo_agent = AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap();
     match membrane_proof {
         Some(mem_proof) => {
             if is_read_only_proof(&mem_proof) {
@@ -106,7 +117,7 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                             Some(element_pkg) => {
                                 match element_pkg.signed_header().header() {
                                     Header::AgentValidationPkg(pkg) => {
-                                        return joining_code(pkg.author.clone(), pkg.membrane_proof.clone())
+                                        return joining_code(pkg.author.clone(), pkg.membrane_proof.clone(), holo_agent(zome_info()?.properties)?)
                                     }
                                     _ => return Ok(ValidateCallbackResult::Invalid("No Agent Validation Pkg found".to_string()))
                                 }
