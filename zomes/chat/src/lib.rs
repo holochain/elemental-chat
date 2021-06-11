@@ -115,7 +115,7 @@ fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallba
         return Ok(ValidateCallbackResult::Valid);
     }
     let host_agent = validation::holo_agent(data.dna_def.properties)?;
-    validation::joining_code(data.agent_key, data.membrane_proof, host_agent)
+    validation::joining_code(data.agent_key, data.membrane_proof, holo_agent_key)
 }
 #[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
