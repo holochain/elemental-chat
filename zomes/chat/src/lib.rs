@@ -1,13 +1,13 @@
 pub use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
 pub use entries::{channel, message};
 pub use error::{ChatError, ChatResult};
+pub use hc_joining_code;
 pub use hdk::prelude::Path;
 pub use hdk::prelude::*;
 pub use message::{
     ActiveChatters, ListMessages, ListMessagesInput, Message, MessageData, MessageInput,
     SigResults, SignalMessageData, SignalSpecificInput,
 };
-pub use hc_joining_code;
 pub mod entries;
 pub mod error;
 pub mod utils;
@@ -55,7 +55,8 @@ fn is_read_only_instance() -> bool {
     if hc_joining_code::skip_proof() {
         return false;
     }
-    if let Ok(entries) = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg)) {
+    if let Ok(entries) = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg))
+    {
         if let Header::AgentValidationPkg(h) = entries[0].header() {
             if let Some(mem_proof) = &h.membrane_proof {
                 if hc_joining_code::is_read_only_proof(&mem_proof) {
@@ -90,8 +91,7 @@ fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallba
     if hc_joining_code::skip_proof_sb(&data.dna_def.properties) {
         return Ok(ValidateCallbackResult::Valid);
     }
-    let holo_agent_key = hc_joining_code::holo_agent(&data.dna_def.properties)?;
-    hc_joining_code::validate_joining_code(holo_agent_key, data.agent_key, data.membrane_proof)
+    hc_joining_code::validate_joining_code(data.agent_key, data.membrane_proof)
 }
 
 #[hdk_extern]

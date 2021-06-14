@@ -16,7 +16,6 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
                         Some(element_pkg) => match element_pkg.signed_header().header() {
                             Header::AgentValidationPkg(pkg) => {
                                 return hc_joining_code::validate_joining_code(
-                                    hc_joining_code::holo_agent(&zome_info()?.properties)?,
                                     pkg.author.clone(),
                                     pkg.membrane_proof.clone(),
                                 )
