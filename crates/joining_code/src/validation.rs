@@ -1,7 +1,5 @@
 use hdk::prelude::*;
 
-use crate::holo_agent;
-
 /// check to see if this is the valid read_only membrane proof
 pub fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
     let b = mem_proof.bytes();
@@ -10,11 +8,10 @@ pub fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
 
 /// Validate joining code from the membrane_proof
 pub fn validate_joining_code(
+    progenitor_agent: AgentPubKey,
     _author: AgentPubKey,
     membrane_proof: Option<MembraneProof>,
 ) -> ExternResult<ValidateCallbackResult> {
-    let progenitor_agent: AgentPubKey = holo_agent(&zome_info()?.properties)?;
-
     match membrane_proof {
         Some(mem_proof) => {
             if is_read_only_proof(&mem_proof) {
