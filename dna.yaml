@@ -2,9 +2,7 @@
 manifest_version: "1"
 name: elemental-chat
 uid: 9a28aac8-337c-11eb-adc1-0Z02acw20115
-properties: 
-  skip_proof: false
-  holo_agent_override: uhCAkRHEsXSAebzKJtPsLY1XcNePAFIieFBtz2ATanlokxnSC1Kkz
+properties: ~
 zomes:
   - name: chat
     bundled: "target/wasm32-unknown-unknown/release/chat.wasm"
