@@ -10,6 +10,7 @@ DNANAME		= elemental-chat
 DNA		= $(DNANAME).dna
 HAPP		= $(DNANAME).happ
 WASM		= target/wasm32-unknown-unknown/release/chat.wasm
+WASM2		= target/wasm32-unknown-unknown/release/profile.wasm
 
 # External targets; Uses a nix-shell environment to obtain Holochain runtimes, run tests, etc.
 .PHONY: all FORCE
@@ -43,6 +44,9 @@ $(WASM): FORCE
 	@echo "Building  DNA WASM:"
 	@RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown
+	@echo "Optimizing wasms:"
+	@wasm-opt -Oz $(WASM) --output $(WASM)
+	@wasm-opt -Oz $(WASM2) --output $(WASM2)
 
 .PHONY: test test-all test-unit test-e2e test-dna test-dna-debug test-stress test-sim2h test-node
 test-all:	test
