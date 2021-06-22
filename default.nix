@@ -18,4 +18,10 @@ let
     };
     holochainOtherDepsNames = ["lair-keystore"];
   };
-in holonix.main
+  nixpkgs = holonix.pkgs;
+in nixpkgs.mkShell {
+  inputsFrom = [ holonix.main ];
+  buildInputs = with nixpkgs; [
+    binaryien
+  ];
+}
