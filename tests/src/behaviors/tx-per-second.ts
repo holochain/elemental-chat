@@ -242,8 +242,14 @@ const _activateAgents = async (
       activeAgents.length
     } agents at ${new Date(now).toLocaleString('en-US')}`
   )
+  let name = 0;
   await Promise.all(
-    activeAgents.map(agent => agent.cell.call('chat', 'refresh_chatter', null))
+    activeAgents.map(agent =>  agent.cell.call('chat', 'refresh_chatter', null))
+      .concat(
+        activeAgents.map((agent, i) =>  agent.cell.call('profile', 'update_my_profile', {nickname: `${name + i}`}))
+      ).concat(
+        activeAgents.map(agent =>  agent.cell.call('profile', 'get_my_profile', null))
+      )
   )
   const endRefresh = Date.now()
   console.log(
