@@ -722,14 +722,16 @@ const phaseTrial = async (
 
   const totalPeers = config.nodes * config.conductors * config.instances
   const activeAgents = selectActiveAgents(phase.active, playerAgents)
-  const peerConsistencyTook = await waitActivePeers(
-    PEER_CONSISTENCY_PERCENT,
-    totalPeers,
-    activeAgents,
-    allPlayers
-  ) // need 75% of peers for go
+  const peerConsistencyTook = "N/A"
+  // await waitActivePeers(
+  //   PEER_CONSISTENCY_PERCENT,
+  //   totalPeers,
+  //   activeAgents,
+  //   allPlayers
+  // ) // need 75% of peers for go
   await _activateAgents(activeAgents, playerAgents)
-  const activationConsistencyTook = await _waitAgentsActivated(activeAgents)
+  const activationConsistencyTook = "N/A"
+  // await _waitAgentsActivated(activeAgents)
 
   let totalActiveAgents = activeAgents.length
   // Track how many signals are received in various latencies
