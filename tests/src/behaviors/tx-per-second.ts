@@ -8,12 +8,13 @@ import {
   TransportConfigType,
   ProxyAcceptConfig,
   ProxyConfigType,
+  InstalledHapp,
   Cell
 } from '@holochain/tryorama'
 import { ScenarioApi } from '@holochain/tryorama/lib/api'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
-import { network as defaultNetworkConfig, installAgents } from '../common'
+import { network as defaultNetworkConfig, chatDna } from '../common'
 const path = require('path')
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
@@ -243,20 +244,20 @@ const _activateAgents = async (
     } agents at ${new Date(now).toLocaleString('en-US')}`
   )
   let name = 0;
-  await Promise.all(
-    activeAgents.map(agent =>  agent.cell.call('chat', 'refresh_chatter', null))
-      .concat(
-        activeAgents.map((agent, i) =>  agent.cell.call('profile', 'update_my_profile', {nickname: `${name + i}`}))
-      ).concat(
-        activeAgents.map(agent =>  agent.cell.call('profile', 'get_my_profile', null))
-      )
-  )
-  const endRefresh = Date.now()
-  console.log(
-    `End calling refresh chatter at ${new Date(endRefresh).toLocaleString(
-      'en-US'
-    )}`
-  )
+  // await Promise.all(
+  //   activeAgents.map(agent =>  agent.cell.call('chat', 'refresh_chatter', null))
+  //     .concat(
+  //       activeAgents.map((agent, i) =>  agent.cell.call('profile', 'update_my_profile', {nickname: `${name + i}`}))
+  //     ).concat(
+  //       activeAgents.map(agent =>  agent.cell.call('profile', 'get_my_profile', null))
+  //     )
+  // )
+  // const endRefresh = Date.now()
+  // console.log(
+  //   `End calling refresh chatter at ${new Date(endRefresh).toLocaleString(
+  //     'en-US'
+  //   )}`
+  // )
   took(`Activating agents`, now, endRefresh)
 }
 
@@ -987,4 +988,42 @@ export const phasesTx = async (s, t, config, phases, local) => {
     await phaseTrial(config, phase, playerAgents, allPlayers, channel)
   }
   await Promise.all(allPlayers.map(player => player.shutdown()))
+}
+
+export const installAgents = async (conductor, agentNames) => {
+  const admin = conductor.adminWs()
+  console.log(`registering dna for: ${chatDna}`)
+  const  dnaHash = await conductor.registerDna({path: chatDna}, conductor.scenarioUID)
+
+  const agents: Array<InstalledHapp> = await Promise.all(agentNames.map(
+    async (agent, i) => {
+      console.log(`generating key for: ${agent}:`)
+      const agent_key = await admin.generateAgentPubKey()
+      console.log(`${agent} pubkey:`, agent_key.toString('base64'))
+
+      const dnas = [
+        {
+          hash: dnaHash,
+          nick: 'elemental-chat',
+          // membrane_proof: Array.from(memProofArray[0]), // Currently hardcoded since we don't have an array of unique membrane proofs
+        }
+      ]
+
+      const req = {
+        installed_app_id: `${agent}_chat`,
+        agent_key,
+        dnas
+      }
+      console.log(`installing happ for: ${agent}`)
+      let a = await conductor._installHapp(req)
+      // Making zomeCalls as soon as the instance is activated
+      await Promise.all([
+        a.cells[0].call('chat', 'refresh_chatter', null),
+        a.cells[0].call('profile', 'update_my_profile', {nickname: `${i}`}),
+        a.cells[0].call('profile', 'get_my_profile', null)
+      ])
+      return a
+    }
+  ))
+  return agents
 }
