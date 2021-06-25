@@ -70,25 +70,30 @@ pub(crate) fn joining_code(author: AgentPubKey, membrane_proof: Option<MembraneP
                                 trace!("Checking for joining code: {}", code);
                                 let path = Path::from(code.clone());
                                 let path_entry_hash = path.hash()?;
-                                let maybe_details = get_details(path_entry_hash.clone(), GetOptions::default())?;
-                                match maybe_details {
-                                    Some(details) => {
-                                        if let Details::Entry(e) = details {
-                                            let mut deets:Vec<(Timestamp, AgentPubKey)> = e.headers.iter().map(|h| {
-                                                let header = h.header();
-                                                (header.timestamp(), header.author().clone())
-                                            }).collect();
-                                            deets.sort_by(|a, b| a.0.cmp(&b.0));
-                                            if deets[0].1 != author.clone() {
-                                                return Ok(ValidateCallbackResult::Invalid(format!("Earliest joining code for {} was by {} not {} as expected", code, deets[0].1, author )))
+                                if let Ok(maybe_details) = get_details(path_entry_hash.clone(), GetOptions::default()) {
+                                    match maybe_details {
+                                        Some(details) => {
+                                            if let Details::Entry(e) = details {
+                                                let mut deets:Vec<(Timestamp, AgentPubKey)> = e.headers.iter().map(|h| {
+                                                    let header = h.header();
+                                                    (header.timestamp(), header.author().clone())
+                                                }).collect();
+                                                deets.sort_by(|a, b| a.0.cmp(&b.0));
+                                                if deets[0].1 != author.clone() {
+                                                    return Ok(ValidateCallbackResult::Invalid(format!("Earliest joining code for {} was by {} not {} as expected", code, deets[0].1, author )))
+                                                }
                                             }
                                         }
-                                    }
-                                    None => {
-                                        trace!("Unresolved, waiting...");
-                                        return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(path_entry_hash).into()]))
-                                    }
-                                };
+                                        None => {
+                                            trace!("Unresolved, waiting...");
+                                            return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(path_entry_hash).into()]))
+                                        }
+                                    };
+                                }
+                                else {
+                                    trace!("Unresolved, waiting...");
+                                    return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(path_entry_hash).into()]))
+                                }
                             }
                             return Ok(ValidateCallbackResult::Valid)
                         } else {
