@@ -8,9 +8,9 @@ let
     holochainVersionId = "custom";
 
     holochainVersion = {
-     rev = "24ceb63bdea374d1936b723e1966caf2e55ebfdc";
-     sha256 = "16hsikyasi0zbh7gfrpzlahydx7csnvshz421sx56f0jpwvi2g80";
-     cargoSha256 = "sha256:0w29y8w5k5clq74k84ksj5aqxbxhqxh2djhll6vv694djw277rpj";
+     rev = "f4f1c074020a4e97ea4fc877c5b102cd347d72a3";
+     sha256 = "005inh7l3kf8sd1cqda47k0bhn9pq4nycl6prh4wz03683hcdvq5";
+     cargoSha256 = "1phciznm7xs82s0hqv49lw2q4k5bpz8x60czj5cpb9964qncik3q";
      bins = {
        holochain = "holochain";
        hc = "hc";

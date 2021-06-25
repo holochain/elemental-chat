@@ -111,10 +111,10 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 
 #[hdk_extern]
 fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallbackResult> {
-    if validation::skip_proof_sb(&data.dna_def.properties) {
+    if validation::skip_proof() {
         return Ok(ValidateCallbackResult::Valid);
     }
-    let holo_agent_key = validation::holo_agent(&data.dna_def.properties)?;
+    let holo_agent_key = validation::holo_agent()?;
     validation::joining_code(data.agent_key, data.membrane_proof, holo_agent_key)
 }
 #[hdk_extern]
