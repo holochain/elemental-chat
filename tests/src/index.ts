@@ -29,3 +29,7 @@ orchestrator.run()
 orchestrator = new Orchestrator()
 require('./membrane-proof')(orchestrator)
 orchestrator.run()
+
+orchestrator = new Orchestrator()
+require('./unique-registration-code')(orchestrator)
+orchestrator.run()
