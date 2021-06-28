@@ -51,7 +51,7 @@ pub(crate) fn holo_agent() -> ExternResult<AgentPubKey> {
     //     }
     // }
     // This is a hard coded holo agent public key
-    return Ok(AgentPubKey::try_from("uhCAkRHEsXSAebzKJtPsLY1XcNePAFIieFBtz2ATanlokxnSC1Kkz").unwrap())
+    return Ok(AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap())
 }
 
 /// Validate joining code from the membrane_proof
