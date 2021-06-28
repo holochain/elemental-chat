@@ -55,7 +55,7 @@ export const defaultConfig = {
   proxyCount: 1,
   nodes: 4, // Number of machines
   conductors: 1, // Conductors per machine
-  instances: 11, // Instances per conductor
+  instances: 10, // Instances per conductor
   activeAgents: 20, // Number of agents to consider "active" for chatting
   dnaSource: path.join(__dirname, '../../../elemental-chat.dna')
   // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna" },
