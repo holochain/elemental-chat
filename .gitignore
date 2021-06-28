@@ -9,3 +9,4 @@ debug/
 .todo.md
 .hc*
 nix.log
+memproofs.js
