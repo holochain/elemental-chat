@@ -3,7 +3,7 @@ import * as msgpack from '@msgpack/msgpack';
 import path from 'path'
 
 export const RETRY_DELAY = 1000
-export const RETRY_COUNT = 10
+export const RETRY_COUNT = 16
 
 // Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
