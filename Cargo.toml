@@ -2,7 +2,8 @@
 
 members = [
   "zomes/chat",
-  "zomes/profile"
+  "zomes/profile",
+  "crates/joining_code",
 ]
 
 [profile.dev]
@@ -17,3 +18,4 @@ hdk = {git = "https://github.com/holochain/holochain", rev = "24ceb63bdea374d193
 hc_utils = {git = "https://github.com/holochain/hc-utils", branch = "0.0.101-alpha.0", package = "hc_utils"}
 # hdk = { path = "../holochain/crates/hdk" }
 holo_hash = {git = "https://github.com/holochain/holochain.git", rev = "24ceb63bdea374d1936b723e1966caf2e55ebfdc", package = "holo_hash"}
+

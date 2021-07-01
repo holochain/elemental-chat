@@ -1,12 +1,13 @@
 pub use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
 pub use entries::{channel, message};
-pub use error::{ChatResult, ChatError};
+pub use error::{ChatError, ChatResult};
 pub use hdk::prelude::Path;
 pub use hdk::prelude::*;
 pub use message::{
-    ListMessages, ListMessagesInput, Message, MessageData, MessageInput, SigResults,
-    SignalMessageData, SignalSpecificInput, ActiveChatters
+    ActiveChatters, ListMessages, ListMessagesInput, Message, MessageData, MessageInput,
+    SigResults, SignalMessageData, SignalSpecificInput,
 };
+pub use hc_joining_code;
 pub mod entries;
 pub mod error;
 pub mod utils;
@@ -51,11 +52,14 @@ entry_defs![
 ];
 
 fn is_read_only_instance() -> bool {
+    if hc_joining_code::skip_proof() {
+        return false;
+    }
     if let Ok(entries) = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg)) {
         if let Header::AgentValidationPkg(h) = entries[0].header() {
             if let Some(mem_proof) = &h.membrane_proof {
-                if validation::is_read_only_proof(&mem_proof) {
-                    return true
+                if hc_joining_code::is_read_only_proof(&mem_proof) {
+                    return true;
                 }
             }
         }
@@ -74,45 +78,26 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
         access: ().into(),
         functions,
     })?;
-    if !validation::skip_proof() {
-        let entries = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg))?;
-        if let Header::AgentValidationPkg(h) = entries[0].header() {
-            match &h.membrane_proof {
-                Some(mem_proof) => {
-                    if validation::is_read_only_proof(&mem_proof) {
-                        return Ok(InitCallbackResult::Pass)
-                    }
-                    let mem_proof = match Element::try_from(mem_proof.clone()) {
-                        Ok(m) => m,
-                        Err(_e) => return  Err(ChatError::InitFailure.into())
-                    };
-                    let code = validation::joining_code_value(&mem_proof);
-
-                    trace!("looking for {}", code);
-                    let path = Path::from(code.clone());
-                    if path.exists()? {
-                        return Ok(InitCallbackResult::Fail(format!("membrane proof for {} already used", code)))
-                    }
-                    trace!("creating {:?}", code);
-                    path.ensure()?;
-                },
-                None => return Err(ChatError::InitFailure.into()),
-            }
-        } else {
-            return Err(ChatError::InitFailure.into());
-        }
+    if hc_joining_code::skip_proof() {
+        Ok(InitCallbackResult::Pass)
+    } else {
+        return hc_joining_code::init_validate_and_create_joining_code();
     }
-
-    Ok(InitCallbackResult::Pass)
 }
+
 #[hdk_extern]
 fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallbackResult> {
-    validation::joining_code(data.agent_key, data.membrane_proof, true)
+    if hc_joining_code::skip_proof_sb(&data.dna_def.properties) {
+        return Ok(ValidateCallbackResult::Valid);
+    }
+    let holo_agent_key = hc_joining_code::holo_agent(&data.dna_def.properties)?;
+    hc_joining_code::validate_joining_code(holo_agent_key, data.agent_key, data.membrane_proof)
 }
+
 #[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
     if is_read_only_instance() {
-        return  Err(ChatError::ReadOnly.into())
+        return Err(ChatError::ReadOnly.into());
     }
     Ok(channel::handlers::create_channel(channel_input)?)
 }
@@ -125,7 +110,7 @@ fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
 #[hdk_extern]
 fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
     if is_read_only_instance() {
-        return  Err(ChatError::ReadOnly.into())
+        return Err(ChatError::ReadOnly.into());
     }
     Ok(message::handlers::create_message(message_input)?)
 }
@@ -143,7 +128,7 @@ fn get_active_chatters(_: ()) -> ExternResult<ActiveChatters> {
 #[hdk_extern]
 fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
     if is_read_only_instance() {
-        return  Err(ChatError::ReadOnly.into())
+        return Err(ChatError::ReadOnly.into());
     }
     Ok(message::handlers::signal_specific_chatters(input)?)
 }
@@ -151,7 +136,7 @@ fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
 #[hdk_extern]
 fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> {
     if is_read_only_instance() {
-        return  Err(ChatError::ReadOnly.into())
+        return Err(ChatError::ReadOnly.into());
     }
     Ok(message::handlers::signal_chatters(message_data)?)
 }
@@ -159,7 +144,7 @@ fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> 
 #[hdk_extern]
 fn refresh_chatter(_: ()) -> ExternResult<()> {
     if is_read_only_instance() {
-        return  Err(ChatError::ReadOnly.into())
+        return Err(ChatError::ReadOnly.into());
     }
     Ok(message::handlers::refresh_chatter()?)
 }
@@ -199,16 +184,25 @@ pub struct ListAllMessagesInput {
 
 #[hdk_extern]
 fn list_all_messages(input: ListAllMessagesInput) -> ExternResult<AllMessagesList> {
-    let channels = channel::handlers::list_channels(ChannelListInput{category: input.category.clone()})?;
-    let all_messages: Result<Vec<ChannelMessages>, ChatError> = channels.channels.into_iter().map(|channel| {
-        let list_messages_input = ListMessagesInput {
-            channel: channel.entry.clone(),
-            chunk: input.chunk.clone(),
-            active_chatter: false,
-        };
-        let messages = message::handlers::list_messages(list_messages_input)?;
-        Ok(ChannelMessages{channel, messages: messages.messages})
-    }).collect();
+    let channels = channel::handlers::list_channels(ChannelListInput {
+        category: input.category.clone(),
+    })?;
+    let all_messages: Result<Vec<ChannelMessages>, ChatError> = channels
+        .channels
+        .into_iter()
+        .map(|channel| {
+            let list_messages_input = ListMessagesInput {
+                channel: channel.entry.clone(),
+                chunk: input.chunk.clone(),
+                active_chatter: false,
+            };
+            let messages = message::handlers::list_messages(list_messages_input)?;
+            Ok(ChannelMessages {
+                channel,
+                messages: messages.messages,
+            })
+        })
+        .collect();
     Ok(AllMessagesList(all_messages?))
 }
 
