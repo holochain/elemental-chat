@@ -1,5 +1,5 @@
 use hdk::prelude::*;
-use holo_hash::AgentPubKeyB64;
+use self::holo_hash::AgentPubKeyB64;
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 pub struct Props {
