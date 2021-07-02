@@ -1,16 +1,16 @@
 let
   holonixPath = builtins.fetchTarball {
-    url = "https://github.com/holochain/holonix/archive/3e94163765975f35f7d8ec509b33c3da52661bd1.tar.gz";
-    sha256 = "sha256:07sl281r29ygh54dxys1qpjvlvmnh7iv1ppf79fbki96dj9ip7d2";
+    url = "https://github.com/holochain/holonix/archive/014d28000c8ed021eb84000edfe260c22e90af8c.tar.gz";
+    sha256 = "sha256:0hl5xxxjg2a6ymr44rf5dfvsb0c33dq4s6vibva6yb76yvl6gwfi";
   };
   holonix = import (holonixPath) {
     includeHolochainBinaries = true;
     holochainVersionId = "custom";
 
     holochainVersion = {
-     rev = "1d70a7c76ce73d065083a90753d8fdb2ea61bf3d";
-     sha256 = "1jx5f10q5zdsin0f59wflbxff963276bfpwr9nmrwf7ili716lrx";
-     cargoSha256 = "1yfm7k1f2ibbwvai30jvlqi36ak3v6jgwr7jwgg11z72xiby71gw";
+     rev = "8c85ba9629631a17b59b77b9a5a0d5f24c700d11";
+     sha256 = "1rflpzkb3vpvkx833mdm2mp2h3hgd7f2hk9444vjrhbvjgqr8i3n";
+     cargoSha256 = "19h9lh26sayg3kpl6mcyidgg4lwh2xpiyk9157p8phsia7rn4bzr";
      bins = {
        holochain = "holochain";
        hc = "hc";
