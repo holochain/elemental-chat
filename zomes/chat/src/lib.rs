@@ -158,9 +158,6 @@ fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> 
 
 #[hdk_extern]
 fn refresh_chatter(_: ()) -> ExternResult<()> {
-    if is_read_only_instance() {
-        return  Err(ChatError::ReadOnly.into())
-    }
     Ok(message::handlers::refresh_chatter()?)
 }
 
