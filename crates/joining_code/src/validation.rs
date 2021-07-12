@@ -17,15 +17,7 @@ pub fn validate_joining_code(
             if is_read_only_proof(&mem_proof) {
                 return Ok(ValidateCallbackResult::Valid);
             };
-            let mem_proof = match Element::try_from(mem_proof.clone()) {
-                Ok(m) => m,
-                Err(e) => {
-                    return Ok(ValidateCallbackResult::Invalid(format!(
-                        "Joining code invalid: unable to deserialize into element ({:?})",
-                        e
-                    )))
-                }
-            };
+            let mem_proof = Element::try_from(mem_proof.clone())?;
 
             trace!("Joining code provided: {:?}", mem_proof);
 
