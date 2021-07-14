@@ -23,24 +23,26 @@ export const defaultConfig = {
   trycpAddresses: [
     //        "localhost:9000",
     // '172.26.136.38:9000', // zippy1 (58f9o0jx7l73xu7vi13oi0yju06644xm5we2a7i8oqbt918o48
-    "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
+    // "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
     // '172.26.146.6:9000', // zippy (noah's) 1l5nm0ylneapp0z7josuk56fivjly21pcwo0t4o86bhsosapla
     // "172.26.2.55:9000", // zippy (sj) 15jf0n4i50yy7tigsgq0vt8p6pi16y0rxpx3gwa5y2hpm3c1pm
     // "172.26.32.181:9000", //bekah (5zmks2xs8r2gbazho8du7ic0rgp57bd03i9rcev4wtqeievexi)
     // "172.26.29.50:9000", // peeech
     '172.26.250.75:9000', // Matt's
     // "172.26.93.179:9000", // mary@marycamacho.com: (38oh2q63ob4w2q1783mir5muup993f2m8gk5kthi0w8ljrc4y4)
-    "172.26.134.99:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
-    '172.26.55.252:9000' // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
-    //        "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)  DON'T USE
+    // "172.26.134.99:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
+    '172.26.55.252:9000', // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
+    // "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)  DON'T USE
     // "172.26.53.50:9000", // mary.camacho@holo.host:  (5xvizkqpupjpu8ottk7sd9chc24k0otjkkv152756a8ph4p3ct)
     // "172.26.159.1:9000", // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
     //        "172.26.57.175:9000", // rob.lyon+derecha@holo.host (4fx7rhi2i0v4nrvufpgdz31a5374jbvto6hkvo4fvl4f79g5dn)
     // "172.26.84.233:9000", // katie
     // "172.26.201.167:9000", // lucas (3yk1vqbt914t4cou6lrascjr29h7xa36ucyho72adr3fu0h4f7)
     //        "172.26.201.167:9000", // lucas
+    '172.26.195.64:9000', // lucas.tauil@holo.host (5mw5siehdr44zj6bafmy684s54zvkvvbh6v4u36w5ki90qyz51)
     //"172.26.100.202:9000", // timo1
     //"172.26.156.115:9500" // timo2
+    '172.26.90.91:9000' // jarod
   ],
   //trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
   proxys: [
@@ -53,10 +55,12 @@ export const defaultConfig = {
     // "kitsune-proxy://sbUgYILMN7QiHkZZAVjR9Njwlb_Fzb8UE0XsmeGEP48/kitsune-quic/h/161.35.182.155/p/10000/--"
   ],
   proxyCount: 1,
-  nodes: 4, // Number of machines
+  nodes: 2, // Number of machines
   conductors: 1, // Conductors per machine
   instances: 10, // Instances per conductor
   activeAgents: 20, // Number of agents to consider "active" for chatting
+  anonymousInstances: 1,
+  anonymousUsersPerInstance: 1,
   dnaSource: path.join(__dirname, '../../../elemental-chat.dna')
   // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna" },
 }
@@ -243,7 +247,6 @@ const _activateAgents = async (
       activeAgents.length
     } agents at ${new Date(now).toLocaleString('en-US')}`
   )
-  let name = 0;
   // await Promise.all(
   //   activeAgents.map(agent =>  agent.cell.call('chat', 'refresh_chatter', null))
   //     .concat(
@@ -429,6 +432,28 @@ const setup = async (
         )
         return { hAppId, agent, cell, playerIdx: i }
       })
+    })
+  )
+
+  // install anonymous agents on all the conductors
+  await Promise.all(
+    allPlayers.map(async (player, i) => {
+      const name = `c${i}an`
+      const happs = await installAnonAgent(player, name)
+      const [
+        {
+          hAppId,
+          agent,
+          cells: [cell]
+        }
+      ] = [happs]
+      console.log(
+        `PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`
+      )
+      for (let i = 0; i < config.anonymousUsersPerInstance; i++) {
+        await cell.call('chat', 'refresh_chatter', null)
+      }
+      return { hAppId, agent, cell, playerIdx: i }
     })
   )
 
@@ -722,7 +747,7 @@ const phaseTrial = async (
 
   const totalPeers = config.nodes * config.conductors * config.instances
   const activeAgents = selectActiveAgents(phase.active, playerAgents)
-  const peerConsistencyTook = "N/A"
+  const peerConsistencyTook = 'N/A'
   // await waitActivePeers(
   //   PEER_CONSISTENCY_PERCENT,
   //   totalPeers,
@@ -730,7 +755,7 @@ const phaseTrial = async (
   //   allPlayers
   // ) // need 75% of peers for go
   await _activateAgents(activeAgents, playerAgents)
-  const activationConsistencyTook = "N/A"
+  const activationConsistencyTook = 'N/A'
   // await _waitAgentsActivated(activeAgents)
 
   let totalActiveAgents = activeAgents.length
@@ -995,21 +1020,27 @@ export const phasesTx = async (s, t, config, phases, local) => {
 export const installAgents = async (conductor, agentNames, player_num) => {
   const admin = conductor.adminWs()
   console.log(`registering dna for: ${chatDna}`)
-  const  dnaHash = await conductor.registerDna({path: chatDna}, conductor.scenarioUID)
+  const dnaHash = await conductor.registerDna(
+    { path: chatDna },
+    conductor.scenarioUID
+  )
 
-  const agents: Array<InstalledHapp> = await Promise.all(agentNames.map(
-    async (agent, i) => {
+  const agents: Array<InstalledHapp> = await Promise.all(
+    agentNames.map(async (agent, i) => {
       console.log(`generating key for: ${agent}:`)
       const agent_key = await admin.generateAgentPubKey()
       console.log(`${agent} pubkey:`, agent_key.toString('base64'))
-      const memProofJSON = require("./memproofs.js").memproofs
+      const memProofJSON = require('./memproofs.js').memproofs
       const agentNum = agentNames.length * player_num + i
-      console.log("agentNum", agentNum)
+      console.log('agentNum', agentNum)
       const dnas = [
         {
           hash: dnaHash,
           nick: 'elemental-chat',
-          membrane_proof: Buffer.from(memProofJSON[`${agentNum}@holo.host`], 'base64'), // Currently hardcoded since we don't have an array of unique membrane proofs
+          membrane_proof: Buffer.from(
+            memProofJSON[`${agentNum}@holo.host`],
+            'base64'
+          ) // Currently hardcoded since we don't have an array of unique membrane proofs
         }
       ]
 
@@ -1021,13 +1052,42 @@ export const installAgents = async (conductor, agentNames, player_num) => {
       console.log(`installing happ for: ${agent}`)
       let a = await conductor._installHapp(req)
       // Making zomeCalls as soon as the instance is activated
-      await Promise.all([
-        a.cells[0].call('chat', 'refresh_chatter', null),
-        a.cells[0].call('profile', 'update_my_profile', {nickname: `${i}`}),
-        a.cells[0].call('profile', 'get_my_profile', null)
-      ])
+      await a.cells[0].call('chat', 'refresh_chatter', null)
+      await a.cells[0].call('profile', 'get_my_profile', null)
+      await a.cells[0].call('profile', 'update_my_profile', {
+        nickname: `${i}`
+      })
+
       return a
-    }
-  ))
+    })
+  )
   return agents
+}
+
+export const installAnonAgent = async (conductor, name) => {
+  const admin = conductor.adminWs()
+  console.log(`registering dna for: ${chatDna}`)
+  const dnaHash = await conductor.registerDna(
+    { path: chatDna },
+    conductor.scenarioUID
+  )
+
+  console.log(`generating key for: ${name}:`)
+  const agent_key = await admin.generateAgentPubKey()
+  console.log(`${name} pubkey:`, agent_key.toString('base64'))
+  const dnas = [
+    {
+      hash: dnaHash,
+      nick: 'elemental-chat',
+      membrane_proof: Buffer.from([0])
+    }
+  ]
+
+  const req = {
+    installed_app_id: `${name}_chat`,
+    agent_key,
+    dnas
+  }
+  console.log(`installing happ for: ${name}`)
+  return await conductor._installHapp(req)
 }

@@ -66,8 +66,8 @@ if (trial === "gossip") {
         {
             period: 1000 * 60 * 1,
             messages: 135,
-            active: 40,
-            senders: 40,
+            active: 20,
+            senders: 20,
         },
 /*        {
             period: 1000 * 60 * 1,
