@@ -1,15 +1,12 @@
 use hdk::prelude::*;
 
-use crate::{joining_code, validation};
+use crate::joining_code;
 
 pub fn init_validate_and_create_joining_code() -> ExternResult<InitCallbackResult> {
     let elements = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg))?;
     if let Header::AgentValidationPkg(h) = elements[0].header() {
         match &h.membrane_proof {
             Some(mem_proof) => {
-                if validation::is_read_only_proof(&mem_proof) {
-                    return Ok(InitCallbackResult::Pass);
-                }
                 let mem_proof = match Element::try_from(mem_proof.clone()) {
                     Ok(m) => m,
                     Err(_e) => {

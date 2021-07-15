@@ -1,13 +1,13 @@
 pub use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
 pub use entries::{channel, message};
 pub use error::{ChatError, ChatResult};
+pub use hc_joining_code;
 pub use hdk::prelude::Path;
 pub use hdk::prelude::*;
 pub use message::{
     ActiveChatters, ListMessages, ListMessagesInput, Message, MessageData, MessageInput,
     SigResults, SignalMessageData, SignalSpecificInput,
 };
-pub use hc_joining_code;
 pub mod entries;
 pub mod error;
 pub mod utils;
@@ -51,22 +51,6 @@ entry_defs![
     ChannelInfo::entry_def()
 ];
 
-fn is_read_only_instance() -> bool {
-    if hc_joining_code::skip_proof() {
-        return false;
-    }
-    if let Ok(entries) = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg)) {
-        if let Header::AgentValidationPkg(h) = entries[0].header() {
-            if let Some(mem_proof) = &h.membrane_proof {
-                if hc_joining_code::is_read_only_proof(&mem_proof) {
-                    return true;
-                }
-            }
-        }
-    };
-    false
-}
-
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // grant unrestricted access to accept_cap_claim so other agents can send us claims
@@ -78,6 +62,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
         access: ().into(),
         functions,
     })?;
+    validation::set_read_only_cap_tokens()?;
     if hc_joining_code::skip_proof() {
         Ok(InitCallbackResult::Pass)
     } else {
@@ -96,9 +81,6 @@ fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallba
 
 #[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
-    if is_read_only_instance() {
-        return Err(ChatError::ReadOnly.into());
-    }
     Ok(channel::handlers::create_channel(channel_input)?)
 }
 
@@ -109,9 +91,6 @@ fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
 
 #[hdk_extern]
 fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
-    if is_read_only_instance() {
-        return Err(ChatError::ReadOnly.into());
-    }
     Ok(message::handlers::create_message(message_input)?)
 }
 
@@ -127,25 +106,16 @@ fn get_active_chatters(_: ()) -> ExternResult<ActiveChatters> {
 
 #[hdk_extern]
 fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
-    if is_read_only_instance() {
-        return Err(ChatError::ReadOnly.into());
-    }
     Ok(message::handlers::signal_specific_chatters(input)?)
 }
 
 #[hdk_extern]
 fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> {
-    if is_read_only_instance() {
-        return Err(ChatError::ReadOnly.into());
-    }
     Ok(message::handlers::signal_chatters(message_data)?)
 }
 
 #[hdk_extern]
 fn refresh_chatter(_: ()) -> ExternResult<()> {
-    if is_read_only_instance() {
-        return Err(ChatError::ReadOnly.into());
-    }
     Ok(message::handlers::refresh_chatter()?)
 }
 
