@@ -429,7 +429,7 @@ const setup = async (
           }
         ] = [happs]
         console.log(
-          `PlayerIdx: ${i} ANON DNA HASH: ${cell.cellId[0].toString('base64')}`
+          `PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`
         )
         return { hAppId, agent, cell, playerIdx: i }
       })
@@ -450,7 +450,7 @@ const setup = async (
           }
         ] = [happs]
         console.log(
-          `PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`
+          `PlayerIdx: ${i} ANON DNA HASH: ${cell.cellId[0].toString('base64')}`
         )
         const refresh_chatter_promises: any[] = []
         for (let j = 0; j < config.anonymousUsersPerInstance; j++) {
