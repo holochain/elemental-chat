@@ -31,7 +31,7 @@ export const defaultConfig = {
     '172.26.250.75:9000', // Matt's
     // "172.26.93.179:9000", // mary@marycamacho.com: (38oh2q63ob4w2q1783mir5muup993f2m8gk5kthi0w8ljrc4y4)
     // "172.26.134.99:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
-    '172.26.55.252:9000', // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
+    // '172.26.55.252:9000', // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
     // "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)  DON'T USE
     // "172.26.53.50:9000", // mary.camacho@holo.host:  (5xvizkqpupjpu8ottk7sd9chc24k0otjkkv152756a8ph4p3ct)
     // "172.26.159.1:9000", // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
@@ -39,10 +39,10 @@ export const defaultConfig = {
     // "172.26.84.233:9000", // katie
     // "172.26.201.167:9000", // lucas (3yk1vqbt914t4cou6lrascjr29h7xa36ucyho72adr3fu0h4f7)
     //        "172.26.201.167:9000", // lucas
-    '172.26.195.64:9000', // lucas.tauil@holo.host (5mw5siehdr44zj6bafmy684s54zvkvvbh6v4u36w5ki90qyz51)
+    '172.26.90.91:9000', // jarod
+    '172.26.195.64:9000' // lucas.tauil@holo.host (5mw5siehdr44zj6bafmy684s54zvkvvbh6v4u36w5ki90qyz51)
     //"172.26.100.202:9000", // timo1
     //"172.26.156.115:9500" // timo2
-    '172.26.90.91:9000' // jarod
   ],
   //trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
   proxys: [
@@ -59,8 +59,8 @@ export const defaultConfig = {
   conductors: 1, // Conductors per machine
   instances: 10, // Instances per conductor
   activeAgents: 20, // Number of agents to consider "active" for chatting
-  anonymousInstances: 1,
-  anonymousUsersPerInstance: 1,
+  anonymousInstances: true,
+  anonymousUsersPerInstance: 250,
   dnaSource: path.join(__dirname, '../../../elemental-chat.dna')
   // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna" },
 }
@@ -428,34 +428,37 @@ const setup = async (
           }
         ] = [happs]
         console.log(
-          `PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`
+          `PlayerIdx: ${i} ANON DNA HASH: ${cell.cellId[0].toString('base64')}`
         )
         return { hAppId, agent, cell, playerIdx: i }
       })
     })
   )
 
-  // install anonymous agents on all the conductors
-  await Promise.all(
-    allPlayers.map(async (player, i) => {
-      const name = `c${i}an`
-      const happs = await installAnonAgent(player, name)
-      const [
-        {
-          hAppId,
-          agent,
-          cells: [cell]
+  if (config.anonymousInstances) {
+    // install anonymous agents on all the conductors
+    await Promise.all(
+      allPlayers.map(async (player, i) => {
+        const name = `c${i}an`
+        const happs = await installAnonAgent(player, name)
+        const [
+          {
+            hAppId,
+            agent,
+            cells: [cell]
+          }
+        ] = [happs]
+        console.log(
+          `PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`
+        )
+        for (let j = 0; j < config.anonymousUsersPerInstance; j++) {
+          console.log(`anon user c${i}u${j}`)
+          await cell.call('chat', 'refresh_chatter', null)
         }
-      ] = [happs]
-      console.log(
-        `PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`
-      )
-      for (let i = 0; i < config.anonymousUsersPerInstance; i++) {
-        await cell.call('chat', 'refresh_chatter', null)
-      }
-      return { hAppId, agent, cell, playerIdx: i }
-    })
-  )
+        return { hAppId, agent, cell, playerIdx: i }
+      })
+    )
+  }
 
   if (local) {
     let now = Date.now()
@@ -867,11 +870,22 @@ const phaseTrial = async (
     }
   }
 
+  const numPeersPerActiveAgent = await Promise.all(
+    activeAgents.map(
+      async agent =>
+        parseStateDump(
+          await allPlayers[agent.playerIdx]
+            .adminWs()
+            .dumpState({ cell_id: agent.cell.cellId })
+        ).numPeers
+    )
+  )
+
   console.log('----------------------------------------------------------')
   console.log('Results ')
   console.log('----------------------------------------------------------')
   console.log(
-    `Nodes:	${config.nodes}\nConductors/Node:	${config.conductors}\nCells/Conductor:	${config.instances}`
+    `Nodes:	${config.nodes}\nConductors/Node:	${config.conductors}\nCells/Conductor:	${config.instances}\nAnonymousInstances:	${config.anonymousInstances}\nAnonymousUsersPerConductor:	${config.anonymousUsersPerInstance}`
   )
   console.log(`Proxys:	${config.proxyCount}`)
   console.log(`Total total peers in network:	${totalPeers}`)
@@ -920,17 +934,6 @@ const phaseTrial = async (
       console.log(`Latencies in ${tranch}s:	${count} (${percent})%`)
     }
   }
-
-  const numPeersPerActiveAgent = await Promise.all(
-    activeAgents.map(
-      async agent =>
-        parseStateDump(
-          await allPlayers[agent.playerIdx]
-            .adminWs()
-            .dumpState({ cell_id: agent.cell.cellId })
-        ).numPeers
-    )
-  )
 
   const m = maxMinAvg(numPeersPerActiveAgent)
   console.log(
