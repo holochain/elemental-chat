@@ -39,8 +39,9 @@ export const defaultConfig = {
     // "172.26.84.233:9000", // katie
     // "172.26.201.167:9000", // lucas (3yk1vqbt914t4cou6lrascjr29h7xa36ucyho72adr3fu0h4f7)
     //        "172.26.201.167:9000", // lucas
-    '172.26.90.91:9000', // jarod
-    '172.26.195.64:9000' // lucas.tauil@holo.host (5mw5siehdr44zj6bafmy684s54zvkvvbh6v4u36w5ki90qyz51)
+    // '172.26.90.91:9000', // jarod
+    // '172.26.195.64:9000' // lucas.tauil@holo.host (5mw5siehdr44zj6bafmy684s54zvkvvbh6v4u36w5ki90qyz51)
+    '172.26.66.83:9000' // Rob
     //"172.26.100.202:9000", // timo1
     //"172.26.156.115:9500" // timo2
   ],
@@ -60,7 +61,7 @@ export const defaultConfig = {
   instances: 10, // Instances per conductor
   activeAgents: 20, // Number of agents to consider "active" for chatting
   anonymousInstances: true,
-  anonymousUsersPerInstance: 250,
+  anonymousUsersPerInstance: 5,
   dnaSource: path.join(__dirname, '../../../elemental-chat.dna')
   // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna" },
 }
@@ -451,10 +452,14 @@ const setup = async (
         console.log(
           `PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`
         )
+        const refresh_chatter_promises: any[] = []
         for (let j = 0; j < config.anonymousUsersPerInstance; j++) {
           console.log(`anon user c${i}u${j}`)
-          await cell.call('chat', 'refresh_chatter', null)
+          refresh_chatter_promises.push(
+            cell.call('chat', 'refresh_chatter', null)
+          )
         }
+        await Promise.all(refresh_chatter_promises)
         return { hAppId, agent, cell, playerIdx: i }
       })
     )
