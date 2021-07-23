@@ -9,7 +9,7 @@ name = "chat"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-hdk = "0.0.101-alpha.0"
+hdk = "=0.0.101-alpha.0"
 serde = "1.0.123"
 chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99"
