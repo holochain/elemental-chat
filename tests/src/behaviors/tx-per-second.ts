@@ -29,12 +29,12 @@ import {
       // "172.26.21.65:9000", //bekah (5zmks2xs8r2gbazho8du7ic0rgp57bd03i9rcev4wtqeievexi)
       // "172.26.29.50:9000", // peeech
       '172.26.250.75:9000', // Matt's
-      "172.26.93.179:9000", // mary@marycamacho.com: (38oh2q63ob4w2q1783mir5muup993f2m8gk5kthi0w8ljrc4y4)
+      // "172.26.93.179:9000", // mary@marycamacho.com: (38oh2q63ob4w2q1783mir5muup993f2m8gk5kthi0w8ljrc4y4)
       // "172.26.134.99:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
-      '172.26.201.57:9000', // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
+      // '172.26.201.57:9000', // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
       //        "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)  DON'T USE
       // "172.26.53.50:9000", // mary.camacho@holo.host:  (5xvizkqpupjpu8ottk7sd9chc24k0otjkkv152756a8ph4p3ct)
-      "172.26.159.1:9000" // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
+      // "172.26.159.1:9000" // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
       //        "172.26.57.175:9000", // rob.lyon+derecha@holo.host (4fx7rhi2i0v4nrvufpgdz31a5374jbvto6hkvo4fvl4f79g5dn)
       // "172.26.84.233:9000", // katie
       // "172.26.201.167:9000", // lucas (3yk1vqbt914t4cou6lrascjr29h7xa36ucyho72adr3fu0h4f7)
@@ -55,8 +55,8 @@ import {
     proxyCount: 1,
     nodes: 1, // Number of machines
     conductors: 1, // Conductors per machine
-    instances: 50, // Instances per conductor
-    activeAgents: 20, // Number of agents to consider "active" for chatting
+    instances: 1, // Instances per conductor
+    activeAgents: 1, // Number of agents to consider "active" for chatting
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna')
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna" },
   }

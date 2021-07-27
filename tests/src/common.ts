@@ -18,7 +18,7 @@ export const network = {
     sub_transport: { type: TransportConfigType.Quic },
     proxy_config: {
       type: ProxyConfigType.RemoteProxyClient,
-      // proxy_url: "kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/5778/--",
+      proxy_url: "kitsune-proxy://SYVd4CF3BdJ4DS7KwLLgeU3_DbHoZ34Y-qroZ79DOs8/kitsune-quic/h/165.22.32.11/p/5779/--",
 //        proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/147.75.54.129/p/5778/--",
       //proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/165.22.32.11/p/5778/--",
       //proxy_url:"kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/33679/--",
@@ -106,8 +106,17 @@ export const installation2agent: InstallAgentsHapps = [
 
 // this mem_proof is a signature of the `{role, record_locator}` payload signing  a holo public key
 // The current holo_hosting pub key is `uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N`
+export const MEM_PROOF1= Buffer.from("3gACrXNpZ25lZF9oZWFkZXLeAAKmaGVhZGVy3gACp2NvbnRlbnTeAAekdHlwZaZDcmVhdGWmYXV0aG9yxCeEICREcSxdIB5vMom0+wtjVdw148AUiJ4UG3PYBNqeWiTGdILUqTOpdGltZXN0YW1wks5gweIozhCG10+qaGVhZGVyX3Nlcc0E8qtwcmV2X2hlYWRlcsQnhCkk66tTpglJFMXJ2NLbKEw7+2GkGgueWoLm0aYXpJji+9iURW0mqmVudHJ5X3R5cGXeAAGjQXBw3gADomlkAKd6b21lX2lkAKp2aXNpYmlsaXR53gABplB1YmxpY8CqZW50cnlfaGFzaMQnhCEkCsVmECMjpUlPSpCjfbY6KAORN2xvjsbVioJNBX1S1mjE/nSNpGhhc2jEJ4QpJJlxD1gzNcr0ekzERoetgdNF/qhT6lXW88lHtnPfsjF1mVrY6qlzaWduYXR1cmXEQNhPPWrYTk3fn4hcK4OEpRWFmLY6z4htczSI53EFpG+ahBdtOfLBoiHOEo+d1VAWwODs4EXI1GHTV8qYCpz0PQqlZW50cnneAAGnUHJlc2VudN4AAqplbnRyeV90eXBlo0FwcKVlbnRyecQpgqRyb2xlpUFETUlOrnJlY29yZF9sb2NhdG9yrTk2MkBob2xvLmhvc3Q=", 'base64')
 
-export const installAgents = async (conductor, agentNames, num_players, memProofArray?, holo_agent_override?) => {
+export const MEM_PROOF2= Buffer.from("3gACrXNpZ25lZF9oZWFkZXLeAAKmaGVhZGVy3gACp2NvbnRlbnTeAAekdHlwZaZDcmVhdGWmYXV0aG9yxCeEICREcSxdIB5vMom0+wtjVdw148AUiJ4UG3PYBNqeWiTGdILUqTOpdGltZXN0YW1wks5gweIozhPWgP2qaGVhZGVyX3Nlcc0FAatwcmV2X2hlYWRlcsQnhCkk6JXd1q68xGBDF1k3a9KhjUEJq18J/+7ys/8NaDv1ViANJzQ5qmVudHJ5X3R5cGXeAAGjQXBw3gADomlkAKd6b21lX2lkAKp2aXNpYmlsaXR53gABplB1YmxpY8CqZW50cnlfaGFzaMQnhCEkHra+2RNvkEH9V1IERJdWFmGEcEY/h2m+xTExZn4iQcCtgjKmpGhhc2jEJ4QpJI8VjmeZamyCEbMDyqK4hKyeeR3U0KbNkSIQeTk92a5SkUsYn6lzaWduYXR1cmXEQDGPfFXFwYhB83VcMXmU5PU94nlecC/DZ8HEqzELXTb11ZZOsaSESZrdY/u0Uwvv1Yhu6sY3PNkRQLLv24njbQulZW50cnneAAGnUHJlc2VudN4AAqplbnRyeV90eXBlo0FwcKVlbnRyecQpgqRyb2xlpUFETUlOrnJlY29yZF9sb2NhdG9yrTk3N0Bob2xvLmhvc3Q=", 'base64')
+
+export const MEM_PROOF3=Buffer.from("3gACrXNpZ25lZF9oZWFkZXLeAAKmaGVhZGVy3gACp2NvbnRlbnTeAAekdHlwZaZDcmVhdGWmYXV0aG9yxCeEICREcSxdIB5vMom0+wtjVdw148AUiJ4UG3PYBNqeWiTGdILUqTOpdGltZXN0YW1wks5gweIozhaACNKqaGVhZGVyX3Nlcc0FDatwcmV2X2hlYWRlcsQnhCkkkdb7W5fk6agMB4gFfNHRg6LLL8k8BhgHNTk4o4udUXLzKTD+qmVudHJ5X3R5cGXeAAGjQXBw3gADomlkAKd6b21lX2lkAKp2aXNpYmlsaXR53gABplB1YmxpY8CqZW50cnlfaGFzaMQnhCEkgAnN1kgce+zK92804lgIKPaG54JxEaFwQIrDJg0DenZEKngJpGhhc2jEJ4QpJA8lCzTh4rGj+qGhX2W7ocWAE2sB9LBo0EPj/TULdplaXGnTJ6lzaWduYXR1cmXEQMsqDRsy5J+9kluk85w8YYwsfgOQTIaRVE1jUfFW7ZBfl6IuaS5FK4jDsugDDO9RNsclEbvS7upsN++hlJHYOwOlZW50cnneAAGnUHJlc2VudN4AAqplbnRyeV90eXBlo0FwcKVlbnRyecQpgqRyb2xlpUFETUlOrnJlY29yZF9sb2NhdG9yrTk4OUBob2xvLmhvc3Q=", 'base64')
+
+export const MEM_PROOF_BAD_SIG = Buffer.from("3gACrXNpZ25lZF9oZWFkZXLeAAKmaGVhZGVy3gACp2NvbnRlbnTeAAekdHlwZaZDcmVhdGWmYXV0aG9yxCeEICR/PJxdzJx345LodAe+FOB4NWOWQV0Tb5cfP5/8AL/nF6VBfU2pdGltZXN0YW1wks5gUzqazhJyV9WqaGVhZGVyX3NlcQmrcHJldl9oZWFkZXLEJ4QpJEIwak+vC8awMx0vdAe8XSbRRage/CuXmCjRhkkTtWWAUUOp8qplbnRyeV90eXBl3gABo0FwcN4AA6JpZACnem9tZV9pZACqdmlzaWJpbGl0ed4AAaZQdWJsaWPAqmVudHJ5X2hhc2jEJ4QhJAf4ZKktdaQZ6JJj4l+UDRCTwspZSchRPYXtwbdRVvyQBnB8ZqRoYXNoxCeEKSSebKOWLx1D9uHxPBkzVjOgm3gtO6w8VkiiEvigSfgTeFWLVN+pc2lnbmF0dXJlxEC+3INgyz2PfsiwtpBpTZIcx0JYVy9t7rYp2HWnK5x9Vw/uITWUzfIO4uaNl6MQppfkraxHLeNZqamjzEtRWggApWVudHJ53gABp1ByZXNlbnTeAAKqZW50cnlfdHlwZaNBcHClZW50cnnEMoKkcm9sZalkZXZlbG9wZXKucmVjb3JkX2xvY2F0b3Kybmljb2xhc0BsdWNrc3VzLmV1", 'base64')
+
+export const MEM_PROOF_READ_ONLY = Buffer.from([0])
+
+export const installAgents = async (conductor, agentNames, player_num?, memProofArray?, holo_agent_override?) => {
 
   const admin = conductor.adminWs()
   console.log(`registering dna for: ${chatDna}`)
@@ -124,7 +133,9 @@ export const installAgents = async (conductor, agentNames, num_players, memProof
         nick: 'elemental-chat',
       }
       if (memProofArray) {
-        const agentNum = agentNames.length * num_players + i
+        console.log("i is :", i)
+        const agentNum = agentNames.length * player_num + i
+        console.log("agentNum is :", agentNum)
         console.log(`Using memproof number ${agentNum}: ${memProofArray[agentNum]}`)
         dna["membrane_proof"] = Buffer.from(memProofArray[agentNum], 'base64')
       }
