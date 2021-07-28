@@ -92,7 +92,7 @@ const doTransientNodes = async (s, t, local) => {
 
   console.log("******************************************************************")
   console.log("checking to see if carol can see the message via bob")
-  await gotChannelsAndMessages(t, "carol", carol_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
+  await gotChannelsAndMessages(t, "carol", carol_chat, channel.entry, 2 * RETRY_COUNT, RETRY_DELAY)
 
   // This above loop SHOULD work because carol should get the message via bob, but it doesn't
   // So we try starting up alice and getting the message gossiped that way, but that also
