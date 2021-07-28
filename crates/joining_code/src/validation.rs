@@ -1,11 +1,5 @@
 use hdk::prelude::*;
 
-/// check to see if this is the valid read_only membrane proof
-pub fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
-    let b = mem_proof.bytes();
-    b == &[0]
-}
-
 /// Validate joining code from the membrane_proof
 pub fn validate_joining_code(
     progenitor_agent: AgentPubKey,
@@ -35,7 +29,7 @@ pub fn validate_joining_code(
             if let ElementEntry::Present(_entry) = e {
                 let signature = mem_proof.signature().clone();
                 match verify_signature(progenitor_agent.clone(), signature, mem_proof.header()) {
-                    Ok(verified) =>{
+                    Ok(verified) => {
                         if verified {
                             // TODO: check that the joining code has the correct author key in it
                             // once this is added to the registration flow, e.g.:
@@ -53,7 +47,9 @@ pub fn validate_joining_code(
                     }
                     Err(e) => {
                         debug!("Error on get when verifying signature of agent entry: {:?}; treating as unresolved dependency",e);
-                        return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(author).into()]))
+                        return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![
+                            (author).into(),
+                        ]));
                     }
                 }
             } else {
