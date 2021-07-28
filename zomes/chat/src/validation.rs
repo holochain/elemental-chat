@@ -64,6 +64,7 @@ pub fn set_read_only_cap_tokens() -> ExternResult<()> {
     functions.insert((zome_info()?.zome_name, "list_all_messages".into()));
     functions.insert((zome_info()?.zome_name, "stats".into()));
     functions.insert((zome_info()?.zome_name, "agent_stats".into()));
+    functions.insert((zome_info()?.zome_name, "refresh_chatter".into()));
     create_cap_grant(CapGrantEntry {
         tag: "".into(),
         access: ().into(),
