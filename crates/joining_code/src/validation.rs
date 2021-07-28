@@ -8,9 +8,6 @@ pub fn validate_joining_code(
 ) -> ExternResult<ValidateCallbackResult> {
     match membrane_proof {
         Some(mem_proof) => {
-            if is_read_only_proof(&mem_proof) {
-                return Ok(ValidateCallbackResult::Valid);
-            };
             let mem_proof = Element::try_from(mem_proof.clone())?;
 
             trace!("Joining code provided: {:?}", mem_proof);
