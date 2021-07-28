@@ -103,6 +103,6 @@ const doTransientNodes = async (s, t, local) => {
   }
   console.log("******************************************************************")
   console.log("checking to see if carol can see the message via alice after back on")
-  await gotChannelsAndMessages(t, "carol", carol_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
+  await gotChannelsAndMessages(t, "carol", carol_chat, channel.entry, 2 * RETRY_COUNT, RETRY_DELAY)
 
 }
