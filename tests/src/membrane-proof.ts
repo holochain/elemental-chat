@@ -2,13 +2,13 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG, MEM_PROOF1, MEM_PROOF2, MEM_PROOF_READ_ONLY, awaitIntegration, delay } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG, MEM_PROOF3, MEM_PROOF2, MEM_PROOF_READ_ONLY, awaitIntegration, delay } from './common'
 
 module.exports = async (orchestrator) => {
 
   orchestrator.registerScenario('membrane proof tests', async (s, t) => {
     const [conductor] = await s.players([localConductorConfig])
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(conductor,  ["alice", "bob"], [MEM_PROOF1,  MEM_PROOF1])
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(conductor,  ["alice", "bob"], [MEM_PROOF3,  MEM_PROOF2])
     const [alice_chat] = alice_chat_happ.cells
     const [bobbo_chat] = bobbo_chat_happ.cells
     // zome call triggers init
