@@ -8,15 +8,31 @@ module.exports = async (orchestrator) => {
 
   orchestrator.registerScenario('membrane proof tests', async (s, t) => {
     const [conductor] = await s.players([localConductorConfig])
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(conductor,  ["alice", "bob"], [MEM_PROOF3,  MEM_PROOF2])
+    // TEMP: add back "bobbo" once hc install timing error is resolved
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(conductor,  ["alice"], [MEM_PROOF3,  MEM_PROOF2])
     const [alice_chat] = alice_chat_happ.cells
-    const [bobbo_chat] = bobbo_chat_happ.cells
+    // const [bobbo_chat] = bobbo_chat_happ.cells
+
+    delay(4000)
+
+    // tests correct status and number os apps
+    const runningAppsInfo = await conductor.listApps({status_filter: 'running'})
+    t.equal(runningAppsInfo.length, 1, 'number of running apps succeeded')
+    t.equal(runningAppsInfo[0].installed_app_id, 'alice_chat', 'confirmed correct app is running')
+    const pausedAppsInfo = await conductor.listApps({status_filter: 'paused'})
+    t.equal(pausedAppsInfo.length, 0, 'number of paused apps succeeded')
+
     // zome call triggers init
     let channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
-    await awaitIntegration(alice_chat)
+    console.log('channel_list : ', channel_list)
+    t.equal(channel_list.channels.length, 0, 'number of channels succeeded')
+    
+    // TEMP : replace delay with awaitIntegration call once hc 'unreahable code' error is resolved
+    // await awaitIntegration(alice_chat)
+    delay(4000)
 
-    // this second one should fail because the membrane proofs are agent specific
     // TODO: add back in when the proofs carry that agent ID
+    // this second one should fail because the membrane proofs are agent specific
 /*    try {
       channel_list = await bobbo_chat.call('chat', 'list_channels', { category: "General" });
       t.fail()
@@ -32,7 +48,7 @@ module.exports = async (orchestrator) => {
 
     // now try and install carol with a bad membrane proof
     try {
-      let [carol_chat_happ] = await installAgents(conductor,  ["carol"], [MEM_PROOF_BAD_SIG])
+      await installAgents(conductor,  ["carol"], [MEM_PROOF_BAD_SIG])
       t.fail()
     } catch(e) {
       t.deepEqual(e, { type: 'error', data: { type: 'internal_error', data: 'Conductor returned an error while using a ConductorApi: GenesisFailed { errors: [ConductorApiError(WorkflowError(GenesisFailure("Joining code invalid: incorrect signature")))] }' } })
@@ -43,6 +59,7 @@ module.exports = async (orchestrator) => {
     const [doug_chat] = doug_chat_happ.cells
     // reading the channel list should work
     channel_list = await doug_chat.call('chat', 'list_channels', { category: "General" });
+    t.ok(channel_list)
 
     // creating a channel should fail
     try {
