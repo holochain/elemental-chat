@@ -17,15 +17,7 @@ pub fn validate_joining_code(
             if is_read_only_proof(&mem_proof) {
                 return Ok(ValidateCallbackResult::Valid);
             };
-            let mem_proof = match Element::try_from(mem_proof.clone()) {
-                Ok(m) => m,
-                Err(e) => {
-                    return Ok(ValidateCallbackResult::Invalid(format!(
-                        "Joining code invalid: unable to deserialize into element ({:?})",
-                        e
-                    )))
-                }
-            };
+            let mem_proof = Element::try_from(mem_proof.clone())?;
 
             trace!("Joining code provided: {:?}", mem_proof);
 
@@ -43,7 +35,7 @@ pub fn validate_joining_code(
             if let ElementEntry::Present(_entry) = e {
                 let signature = mem_proof.signature().clone();
                 match verify_signature(progenitor_agent.clone(), signature, mem_proof.header()) {
-                    Ok(verified) =>{
+                    Ok(verified) => {
                         if verified {
                             // TODO: check that the joining code has the correct author key in it
                             // once this is added to the registration flow, e.g.:
@@ -61,7 +53,9 @@ pub fn validate_joining_code(
                     }
                     Err(e) => {
                         debug!("Error on get when verifying signature of agent entry: {:?}; treating as unresolved dependency",e);
-                        return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![(author).into()]))
+                        return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![
+                            (author).into(),
+                        ]));
                     }
                 }
             } else {

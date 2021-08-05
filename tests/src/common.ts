@@ -145,12 +145,10 @@ export const installAgents = async (conductor, agentNames, memProofArray?, holo_
     console.log(`installing happ for: ${agent}`)
     try {
       let installed = await conductor._installHapp(req)
-      console.log(">>", installed);
-      
+      console.log(`${agent}_happ installed`)
       agents.push(installed)
-    }catch (e) {
-      console.error("Error: ", e);
-      
+    } catch (e) {
+      throw e
     }
   }
   return agents
