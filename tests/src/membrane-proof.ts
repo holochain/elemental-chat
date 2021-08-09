@@ -15,7 +15,7 @@ module.exports = async (orchestrator) => {
 
     // tests correct status and number os apps
     const runningAppsInfo = await conductor.listApps({status_filter: 'running'})
-    t.equal(runningAppsInfo.length, 1, 'number of running apps succeeded')
+    t.equal(runningAppsInfo.length, 2, 'number of running apps succeeded')
     t.equal(runningAppsInfo[0].installed_app_id, 'alice_chat', 'confirmed correct app is running')
     const pausedAppsInfo = await conductor.listApps({status_filter: 'paused'})
     t.equal(pausedAppsInfo.length, 0, 'number of paused apps succeeded')
