@@ -10,7 +10,7 @@ module.exports = (orchestrator) => {
   orchestrator.registerScenario('test profile zomes', async (s, t) => {
     // spawn the conductor process
     const [ conductor ] = await s.players([localConductorConfig])
-    const [alice_chat_happ, bob_chat_happ] = await installAgents(conductor,  ["alice", "bobbo"], 0, [MEM_PROOF1, MEM_PROOF2])
+    const [alice_chat_happ, bob_chat_happ] = await installAgents(conductor,  ["alice", "bobbo"], [MEM_PROOF1, MEM_PROOF2])
     const [alice] = alice_chat_happ.cells
     const [bobbo] = bob_chat_happ.cells
 

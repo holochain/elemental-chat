@@ -2,18 +2,16 @@ import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG, MEM_PROOF3, MEM_PROOF2, MEM_PROOF_READ_ONLY, awaitIntegration, delay } from './common'
+import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG, MEM_PROOF1, MEM_PROOF2, MEM_PROOF_READ_ONLY, awaitIntegration, delay } from './common'
 
 module.exports = async (orchestrator) => {
-
   orchestrator.registerScenario('membrane proof tests', async (s, t) => {
     const [conductor] = await s.players([localConductorConfig])
-    // TEMP: add back "bobbo" once hc install timing error is resolved
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(conductor,  ["alice"], [MEM_PROOF3,  MEM_PROOF2])
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(conductor,  ["alice", "bob"], [MEM_PROOF1,  MEM_PROOF2])
     const [alice_chat] = alice_chat_happ.cells
-    // const [bobbo_chat] = bobbo_chat_happ.cells
-
-    delay(4000)
+    const [bobbo_chat] = bobbo_chat_happ.cells
+    t.ok(alice_chat)
+    t.ok(bobbo_chat)
 
     // tests correct status and number os apps
     const runningAppsInfo = await conductor.listApps({status_filter: 'running'})
@@ -27,9 +25,7 @@ module.exports = async (orchestrator) => {
     console.log('channel_list : ', channel_list)
     t.equal(channel_list.channels.length, 0, 'number of channels succeeded')
     
-    // TEMP : replace delay with awaitIntegration call once hc 'unreahable code' error is resolved
-    // await awaitIntegration(alice_chat)
-    delay(4000)
+    await awaitIntegration(alice_chat)
 
     // TODO: add back in when the proofs carry that agent ID
     // this second one should fail because the membrane proofs are agent specific
