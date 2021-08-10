@@ -10,6 +10,6 @@ crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
 hdk = "0"
-serde = "1.0.123"
+serde = "1.0"
 derive_more = "0.99"
 holo_hash = "0"

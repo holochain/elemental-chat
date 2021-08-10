@@ -13,8 +13,8 @@ chrono = {version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99"
 hc_joining_code = {path = "../../crates/joining_code"}
 hdk = "0"
-serde = "1.0.123"
-thiserror = "1.0.20"
+serde = "1.0"
+thiserror = "1.0"
 hc_utils = "0"
 
 [dev-dependencies]

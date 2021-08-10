@@ -13,13 +13,6 @@ module.exports = async (orchestrator) => {
     t.ok(alice_chat)
     t.ok(bobbo_chat)
 
-    // tests correct status and number os apps
-    const runningAppsInfo = await conductor.listApps({status_filter: 'running'})
-    t.equal(runningAppsInfo.length, 2, 'number of running apps succeeded')
-    t.equal(runningAppsInfo[0].installed_app_id, 'alice_chat', 'confirmed correct app is running')
-    const pausedAppsInfo = await conductor.listApps({status_filter: 'paused'})
-    t.equal(pausedAppsInfo.length, 0, 'number of paused apps succeeded')
-
     // zome call triggers init
     let channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
     console.log('channel_list : ', channel_list)
