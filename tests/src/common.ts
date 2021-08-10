@@ -18,7 +18,7 @@ export const network = {
     sub_transport: { type: TransportConfigType.Quic },
     proxy_config: {
       type: ProxyConfigType.RemoteProxyClient,
-      proxy_url: "kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/5778/--",
+      proxy_url: "kitsune-proxy://SYVd4CF3BdJ4DS7KwLLgeU3_DbHoZ34Y-qroZ79DOs8/kitsune-quic/h/165.22.32.11/p/5779/--",
 //        proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/147.75.54.129/p/5778/--",
       //proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/165.22.32.11/p/5778/--",
       //proxy_url:"kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/33679/--",
@@ -143,7 +143,13 @@ export const installAgents = async (conductor, agentNames, memProofArray?, holo_
       dnas: [dna]
     }
     console.log(`installing happ for: ${agent}`)
-    agents.push(await conductor._installHapp(req))
+    try {
+      let installed = await conductor._installHapp(req)
+      console.log(`${agent}_happ installed`)
+      agents.push(installed)
+    } catch (e) {
+      throw e
+    }
   }
 
   return agents
