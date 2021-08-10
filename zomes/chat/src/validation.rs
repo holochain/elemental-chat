@@ -11,35 +11,24 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
     if let Entry::Agent(_) = entry {
         if !hc_joining_code::skip_proof() {
             match data.element.header().prev_header() {
-                Some(header) => match get(header.clone(), GetOptions::default()) {
-                    Ok(element_pkg) => match element_pkg {
-                        Some(element_pkg) => match element_pkg.signed_header().header() {
-                            Header::AgentValidationPkg(pkg) => {
-                                return hc_joining_code::validate_joining_code(
-                                    hc_joining_code::holo_agent(&zome_info()?.properties)?,
-                                    pkg.author.clone(),
-                                    pkg.membrane_proof.clone(),
-                                )
-                            }
-                            _ => {
-                                return Ok(ValidateCallbackResult::Invalid(
-                                    "No Agent Validation Pkg found".to_string(),
-                                ))
-                            }
-                        },
-                        None => {
-                            return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![
-                                (header.clone()).into(),
-                            ]))
+                Some(header) => {
+                    let signed_header_hashed: SignedHeaderHashed = must_get_header(header.clone())?;
+                    let header: Header = signed_header_hashed.into();
+                    match header {
+                        Header::AgentValidationPkg(pkg) => {
+                            return hc_joining_code::validate_joining_code(
+                                hc_joining_code::holo_agent(&zome_info()?.properties)?,
+                                pkg.author.clone(),
+                                pkg.membrane_proof.clone(),
+                            )
                         }
-                    },
-                    Err(e) => {
-                        debug!("Error on get when validating agent entry: {:?}; treating as unresolved dependency",e);
-                        return Ok(ValidateCallbackResult::UnresolvedDependencies(vec![
-                            (header.clone()).into(),
-                        ]));
-                    }
-                },
+                        _ => {
+                            return Ok(ValidateCallbackResult::Invalid(
+                                "No Agent Validation Pkg found".to_string(),
+                            ))
+                        }
+                    };
+                }
                 None => unreachable!("This element will always have a prev_header"),
             }
         }

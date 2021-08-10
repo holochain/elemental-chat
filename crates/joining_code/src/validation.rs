@@ -1,5 +1,11 @@
 use hdk::prelude::*;
 
+/// check to see if this is the valid read_only membrane proof
+pub fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
+    let b = mem_proof.bytes();
+    b == &[0]
+}
+
 /// Validate joining code from the membrane_proof
 pub fn validate_joining_code(
     progenitor_agent: AgentPubKey,
@@ -8,15 +14,10 @@ pub fn validate_joining_code(
 ) -> ExternResult<ValidateCallbackResult> {
     match membrane_proof {
         Some(mem_proof) => {
-            let mem_proof = match Element::try_from(mem_proof.clone()) {
-                Ok(m) => m,
-                Err(e) => {
-                    return Ok(ValidateCallbackResult::Invalid(format!(
-                        "Joining code invalid: unable to deserialize into element ({:?})",
-                        e
-                    )))
-                }
+            if is_read_only_proof(&mem_proof) {
+                return Ok(ValidateCallbackResult::Valid);
             };
+            let mem_proof = Element::try_from(mem_proof.clone())?;
 
             trace!("Joining code provided: {:?}", mem_proof);
 

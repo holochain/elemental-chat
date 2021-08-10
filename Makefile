@@ -63,7 +63,7 @@ test-dna:	$(DNA) FORCE
 
 test-dna-debug:
 	@echo "Starting Scenario tests in $$(pwd)..."; \
-	    cd tests && ( [ -d  node_modules ] || npm install ) && npm run test:standard
+	    cd tests && ( [ -d node_modules ] || npm install ) && npm run test:debug
 
 test-behavior:
 	@echo "Starting Scenario tests in $$(pwd)..."; \
