@@ -10,6 +10,6 @@ crate-type = [ "cdylib", "rlib" ]
 doctest = false
 
 [dependencies]
-hdk = "=0.0.102-dev.0"
+hdk = "0"
 hc_utils = "0"
-profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.102-dev.0", package = "profile"}
+profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.102", package = "profile"}
