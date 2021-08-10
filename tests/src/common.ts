@@ -151,6 +151,7 @@ export const installAgents = async (conductor, agentNames, memProofArray?, holo_
       throw e
     }
   }
+
   return agents
 }
 
