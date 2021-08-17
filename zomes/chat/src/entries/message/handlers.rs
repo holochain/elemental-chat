@@ -269,8 +269,7 @@ pub(crate) fn is_active_chatter(chatters_path: Path) -> ChatResult<bool> {
         match x.header() {
             Header::CreateLink(c) => {
                 if c.base_address == base {
-                    let time = std::time::Duration::new(c.timestamp.0 as u64, c.timestamp.1);
-                    let link_time = to_date(time);
+                    let link_time = to_date(c.timestamp);
                     if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
                         pass = true;
                         break;

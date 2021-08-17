@@ -26,64 +26,65 @@ export const network = {
    }
   }],
   tuning_params: {
+      gossip_strategy: "sharded-gossip",
       gossip_loop_iteration_delay_ms: 2000, //number // default 10
 
-        /// Default agent count for remote notify. [Default: 5]
-        default_notify_remote_agent_count:  5,
+      /// Default agent count for remote notify. [Default: 5]
+      default_notify_remote_agent_count:  5,
 
-        /// Default timeout for remote notify. [Default: 30s]
-        default_notify_timeout_ms: 1000 * 30,
+      /// Default timeout for remote notify. [Default: 30s]
+      default_notify_timeout_ms: 1000 * 30,
 
-        /// Default timeout for rpc single. [Default: 30s]
-        default_rpc_single_timeout_ms: 1000 * 30,
+      /// Default timeout for rpc single. [Default: 30s]
+      default_rpc_single_timeout_ms: 1000 * 30,
 
-        /// Default agent count for rpc multi. [Default: 2]
-        default_rpc_multi_remote_agent_count: 2,
+      /// Default agent count for rpc multi. [Default: 2]
+      default_rpc_multi_remote_agent_count: 2,
 
-        /// Default timeout for rpc multi. [Default: 30s]
-        default_rpc_multi_timeout_ms: 1000 * 30,
+      /// Default timeout for rpc multi. [Default: 30s]
+      default_rpc_multi_timeout_ms: 1000 * 30,
 
-        /// Default agent expires after milliseconds. [Default: 20 minutes]
-        agent_info_expires_after_ms: 1000 * 60 * 20,
+      /// Default agent expires after milliseconds. [Default: 20 minutes]
+      agent_info_expires_after_ms: 1000 * 60 * 20,
 
-        /// Tls in-memory session storage capacity. [Default: 512]
-        tls_in_mem_session_storage: 512,
+      /// Tls in-memory session storage capacity. [Default: 512]
+      tls_in_mem_session_storage: 512,
 
-        /// How often should NAT nodes refresh their proxy contract?
-        /// [Default: 2 minutes]
-        proxy_keepalive_ms: 1000 * 60 * 2,
+      /// How often should NAT nodes refresh their proxy contract?
+      /// [Default: 2 minutes]
+      proxy_keepalive_ms: 1000 * 60 * 2,
 
-        /// How often should proxy nodes prune their ProxyTo list?
-        /// Note - to function this should be > proxy_keepalive_ms.
-        /// [Default: 5 minutes]
-        proxy_to_expire_ms: 1000 * 60 * 5,
+      /// How often should proxy nodes prune their ProxyTo list?
+      /// Note - to function this should be > proxy_keepalive_ms.
+      /// [Default: 5 minutes]
+      proxy_to_expire_ms: 1000 * 60 * 5,
 
-        /// Mainly used as the for_each_concurrent limit,
-        /// this restricts the number of active polled futures
-        /// on a single thread.
-        concurrent_limit_per_thread: 4096,
+      /// Mainly used as the for_each_concurrent limit,
+      /// this restricts the number of active polled futures
+      /// on a single thread.
+      concurrent_limit_per_thread: 4096,
 
-        /// tx2 quic max_idle_timeout
-        /// [Default: 30 seconds]
-        tx2_quic_max_idle_timeout_ms: 1000 * 30,
+      /// tx2 quic max_idle_timeout
+      /// [Default: 30 seconds]
+      tx2_quic_max_idle_timeout_ms: 1000 * 30,
 
-        /// tx2 pool max connection count
-        /// [Default: 4096]
-        tx2_pool_max_connection_count: 4096,
+      /// tx2 pool max connection count
+      /// [Default: 4096]
+      tx2_pool_max_connection_count: 4096,
 
-        /// tx2 channel count per connection
-        /// [Default: 3]
-        tx2_channel_count_per_connection: 16,
+      /// tx2 channel count per connection
+      /// [Default: 3]
+      tx2_channel_count_per_connection: 16,
 
-        /// tx2 timeout used for passive background operations
-        /// like reads / responds.
-        /// [Default: 30 seconds]
-        tx2_implicit_timeout_ms: 1000 * 30,
+      /// tx2 timeout used for passive background operations
+      /// like reads / responds.
+      /// [Default: 30 seconds]
+      tx2_implicit_timeout_ms: 1000 * 30,
 
-        /// tx2 initial connect retry delay
-        /// (note, this delay is currenty exponentially backed off--
-        /// multiplied by 2x on every loop)
-        /// [Default: 200 ms]
+      /// tx2 initial connect retry delay
+      /// (note, this delay is currenty exponentially backed off--
+      /// multiplied by 2x on every loop)
+      /// [Default: 200 ms]
       tx2_initial_connect_retry_delay_ms: 200
   }
 }
@@ -134,7 +135,7 @@ export const installAgents = async (conductor, agentNames, memProofArray?, holo_
       nick: 'elemental-chat',
     }
     if (memProofArray) {
-      dna["membrane_proof"] = Array.from(memProofArray[i])
+      dna["membrane_proof"] = Buffer.from(memProofArray[i], 'base64')
     }
 
     const req = {

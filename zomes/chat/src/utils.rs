@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use hdk::prelude::*;
 use timestamp::Timestamp;
 
@@ -26,14 +24,14 @@ pub(crate) fn get_local_header(header_hash: &HeaderHash) -> ChatResult<Option<He
 }
 
 /// Turns a unix timestamp into a holochain Timestamp
-pub(crate) fn to_timestamp(duration: Duration) -> Timestamp {
-    Timestamp(duration.as_secs() as i64, duration.subsec_nanos())
-}
+// pub(crate) fn to_timestamp(duration: Duration) -> Timestamp {
+//     Timestamp(duration.as_secs() as i64, duration.subsec_nanos())
+// }
 
 /// Turns a unix timestamp into a Date
-pub(crate) fn to_date(duration: Duration) -> chrono::DateTime<chrono::Utc> {
+pub(crate) fn to_date(timestamp: Timestamp) -> chrono::DateTime<chrono::Utc> {
     use chrono::{DateTime, NaiveDateTime, Utc};
-    let s = duration.as_secs() as i64;
-    let n = duration.subsec_nanos();
+    let s = timestamp.0 as i64;
+    let n = timestamp.1;
     DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(s, n), Utc)
 }

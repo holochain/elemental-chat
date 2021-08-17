@@ -10,40 +10,35 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 export const defaultConfig = {
     trycpAddresses: [
 //        "localhost:9000",
-        "172.26.136.38:9000", // zippy1 (58f9o0jx7l73xu7vi13oi0yju06644xm5we2a7i8oqbt918o48
-        "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
-        "172.26.146.6:9000", // zippy (noah's) 1l5nm0ylneapp0z7josuk56fivjly21pcwo0t4o86bhsosapla
-        "172.26.2.55:9000", // zippy (sj) 15jf0n4i50yy7tigsgq0vt8p6pi16y0rxpx3gwa5y2hpm3c1pm
-        "172.26.32.181:9000", //bekah (5zmks2xs8r2gbazho8du7ic0rgp57bd03i9rcev4wtqeievexi)
-        "172.26.29.50:9000", // peeech
-
+        // "172.26.136.38:9000", // zippy1 (58f9o0jx7l73xu7vi13oi0yju06644xm5we2a7i8oqbt918o48
+        // "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
+        // "172.26.146.6:9000", // zippy (noah's) 1l5nm0ylneapp0z7josuk56fivjly21pcwo0t4o86bhsosapla
+        "172.26.174.19:9000", // zippy (sj) 15jf0n4i50yy7tigsgq0vt8p6pi16y0rxpx3gwa5y2hpm3c1pm
+        // "172.26.32.181:9000", //bekah (5zmks2xs8r2gbazho8du7ic0rgp57bd03i9rcev4wtqeievexi)
+        "172.26.250.75:9000", // Matt
+        // "172.26.29.50:9000", // peeech
         "172.26.93.179:9000", // mary@marycamacho.com: (38oh2q63ob4w2q1783mir5muup993f2m8gk5kthi0w8ljrc4y4)
-        "172.26.134.99:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
-//        "172.26.55.252:9000", // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
+        // "172.26.235.20:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
+//        "172.26.201.57:9000", // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
 //        "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)  DON'T USE
-        "172.26.53.50:9000", // mary.camacho@holo.host:  (5xvizkqpupjpu8ottk7sd9chc24k0otjkkv152756a8ph4p3ct)
-        "172.26.159.1:9000", // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
+        // "172.26.53.50:9000", // mary.camacho@holo.host:  (5xvizkqpupjpu8ottk7sd9chc24k0otjkkv152756a8ph4p3ct)
+        // "172.26.159.1:9000", // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
 //        "172.26.57.175:9000", // rob.lyon+derecha@holo.host (4fx7rhi2i0v4nrvufpgdz31a5374jbvto6hkvo4fvl4f79g5dn)
-        "172.26.84.233:9000", // katie
-        "172.26.201.167:9000", // lucas (3yk1vqbt914t4cou6lrascjr29h7xa36ucyho72adr3fu0h4f7)
+        // "172.26.84.233:9000", // katie
+        "172.26.195.64:9000", // lucas (3yk1vqbt914t4cou6lrascjr29h7xa36ucyho72adr3fu0h4f7)
 //        "172.26.201.167:9000", // lucas
         //"172.26.100.202:9000", // timo1
         //"172.26.156.115:9500" // timo2
     ],
     //trycpAddresses: ["localhost:9000", "192.168.0.16:9000"],
     proxys: [
-//        "kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/5778/--",
-        "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/165.22.32.11/p/5778/--",
-        "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/165.227.194.75/p/5788/--",
-//        "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/164.90.142.115/p/10000/--",
-        "kitsune-proxy://duArtq0LtFEUIDZreC2muXEN3ow_G8zISXKJI3hypCA/kitsune-quic/h/138.197.78.45/p/10000/--",
-        "kitsune-proxy://sbUgYILMN7QiHkZZAVjR9Njwlb_Fzb8UE0XsmeGEP48/kitsune-quic/h/161.35.182.155/p/10000/--"
+        "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/167.172.0.245/p/5778/--",
     ],
     proxyCount: 1,
-    nodes: 4, // Number of machines
-    conductors: 10, // Conductors per machine
-    instances: 10, // Instances per conductor
-    activeAgents: 5, // Number of agents to consider "active" for chatting
+    nodes: 1, // Number of machines
+    conductors: 4, // Conductors per machine
+    instances: 1, // Instances per conductor
+    activeAgents: 1, // Number of agents to consider "active" for chatting
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna'),
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna" },
 }
@@ -78,9 +73,6 @@ type StateDump = [
 
 type StateDumpRelevant = {
     numPeers: number
-    opsIntegrated: number,
-    opsValidationLimbo: number,
-    opsIntegrationLimbo: number,
     elementsAuthored: number,
     opsPublished: number,
 }
@@ -89,12 +81,12 @@ type StateDumpRelevant = {
 // Example state dump
 // [
 //     /*irrelevant json object omitted*/,
-//     "--- Cell State Dump Summary ---\nNumber of other peers in p2p store: 0,\nOps: Limbo (validation: 0 integration: 0) Integrated: 7\nElements authored: 3, Ops published: 7"
+//     "--- Cell State Dump Summary ---\nNumber of other peers in p2p store: 0,\nElements authored: 3, Ops published: 7"
 // ]
 
 
 const parseStateDump = ([unused, stateDumpRelevant]: StateDump): StateDumpRelevant => {
-    const regex = /^--- Cell State Dump Summary ---\nNumber of other peers in p2p store: (\d+),\nOps: Limbo \(validation: (\d+) integration: (\d+)\) Integrated: (\d+)\nElements authored: (\d+), Ops published: (\d+)/
+    const regex = /^--- Cell State Dump Summary ---\nNumber of other peers in p2p store: (\d+),\nElements authored: (\d+), Ops published: (\d+)/
 
     const groups = regex.exec(stateDumpRelevant)
 
@@ -104,11 +96,8 @@ const parseStateDump = ([unused, stateDumpRelevant]: StateDump): StateDumpReleva
 
     return {
         numPeers: Number.parseInt(groups[1], 10),
-        opsValidationLimbo: Number.parseInt(groups[2], 10),
-        opsIntegrationLimbo: Number.parseInt(groups[3], 10),
-        opsIntegrated: Number.parseInt(groups[4], 10),
-        elementsAuthored: Number.parseInt(groups[5], 10),
-        opsPublished: Number.parseInt(groups[6], 10),
+        elementsAuthored: Number.parseInt(groups[2], 10),
+        opsPublished: Number.parseInt(groups[3], 10),
     }
 }
 
@@ -281,13 +270,20 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
         }
     }
 
+    // import list of memproofs
+    const memProofJSON = require("./memproofs.js").memproofs
+    const memProofArray = Object.keys(memProofJSON)
+        .map(function(key) {
+            return memProofJSON[key];
+        });
+
     // install chat on all the conductors
     const playerAgents: PlayerAgents = await Promise.all(allPlayers.map(async (player, i) => {
         console.log("installing player", i)
         // console.log("installation", installation)
-        //        const agents = await player.installAgentsHapps(installation)
         const agentNames = _.times(config.instances, (n) => `c${i}p${n}`)
-        const agents = await installAgents(player,agentNames)
+        const agents = await installAgents(player, agentNames, memProofArray.slice(i*agentNames.length),'uhCAkRHEsXSAebzKJtPsLY1XcNePAFIieFBtz2ATanlokxnSC1Kkz');
+        // const agents = await installAgents(player, agentNames);
         //const installedAgentHapps: InstalledAgentHapps = agents.
         return agents.map((happs) => {
             const [{ hAppId, agent, cells: [cell] }] = [happs];
