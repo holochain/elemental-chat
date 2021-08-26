@@ -9,11 +9,11 @@ const delay = ms => new Promise(r => setTimeout(r, ms))
 
 export const defaultConfig = {
   trycpAddresses: [
-//        "localhost:9000",
+       "localhost:9000",
         // "172.26.136.38:9000", // zippy1 (58f9o0jx7l73xu7vi13oi0yju06644xm5we2a7i8oqbt918o48
         // "172.26.38.158:9000", // zippy2 (k776n3w1jyovyofz38eex8b8piq89159g985owcbm1annz2hg)
         // "172.26.146.6:9000", // zippy (noah's) 1l5nm0ylneapp0z7josuk56fivjly21pcwo0t4o86bhsosapla
-        "172.26.174.19:9000", // zippy (sj) 15jf0n4i50yy7tigsgq0vt8p6pi16y0rxpx3gwa5y2hpm3c1pm
+        // "172.26.174.19:9000", // zippy (sj) 15jf0n4i50yy7tigsgq0vt8p6pi16y0rxpx3gwa5y2hpm3c1pm
         // "172.26.32.181:9000", //bekah (5zmks2xs8r2gbazho8du7ic0rgp57bd03i9rcev4wtqeievexi)
         // "172.26.250.75:9000", // Matt
         // "172.26.29.50:9000", // peeech
@@ -32,7 +32,7 @@ export const defaultConfig = {
     ],
     // trycpAddresses: [],
     proxys: [
-        "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/167.172.0.245/p/5778/--",
+        "kitsune-proxy://SYVd4CF3BdJ4DS7KwLLgeU3_DbHoZ34Y-qroZ79DOs8/kitsune-quic/h/165.22.32.11/p/5779/--"
     ],
     proxyCount: 1,
     nodes: 1, // Number of machines
