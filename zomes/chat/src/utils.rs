@@ -33,6 +33,9 @@ pub(crate) fn to_timestamp(duration: Duration) -> Timestamp {
 /// Turns a unix timestamp into a Date
 pub(crate) fn to_date(ts: Timestamp) -> chrono::DateTime<chrono::Utc> {
     match chrono::DateTime::<chrono::Utc>::try_from(ts) {
+        // docs suggest that this can fail and must be handled. however, it
+        // seems unrecoverable.
+        // https://github.com/holochain/holochain/blob/813d3ea68d35276ebd7ea0282c3b74e0460c46d3/crates/holochain_zome_types/src/timestamp.rs#L106-L108
         Err(err) => panic!("to_date: timestamp conversion error: {}", err),
         Ok(dt) => dt,
     }
