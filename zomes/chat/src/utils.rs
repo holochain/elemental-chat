@@ -31,9 +31,9 @@ pub(crate) fn to_timestamp(duration: Duration) -> Timestamp {
 }
 
 /// Turns a unix timestamp into a Date
-pub(crate) fn to_date(duration: Duration) -> chrono::DateTime<chrono::Utc> {
-    use chrono::{DateTime, NaiveDateTime, Utc};
-    let s = duration.as_secs() as i64;
-    let n = duration.subsec_nanos();
-    DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(s, n), Utc)
+pub(crate) fn to_date(ts: Timestamp) -> chrono::DateTime<chrono::Utc> {
+    match chrono::DateTime::<chrono::Utc>::try_from(ts) {
+        Err(err) => panic!("to_date: timestamp conversion error: {}", err),
+        Ok(dt) => dt,
+    }
 }

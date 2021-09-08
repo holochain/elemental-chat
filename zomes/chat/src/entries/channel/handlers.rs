@@ -2,7 +2,6 @@ use crate::{
     channel::{Channel, ChannelInput},
     error::ChatResult,
     message::handlers::add_chunk_path,
-    utils::to_timestamp,
 };
 use hdk::prelude::*;
 use link::Link;
@@ -24,7 +23,7 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
         // This agent
         created_by: agent_info()?.agent_initial_pubkey,
         // Right now
-        created_at: to_timestamp(sys_time()?),
+        created_at: sys_time()?,
         name,
     };
 

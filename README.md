@@ -13,11 +13,7 @@ A fairly basic chat app.  Includes channels, and exercises various holochain fea
 
 ### Prerequisites
 
-- Build the Holochain tools
-  - Clone the repo: `git clone https://github.com/holochain/holochain && cd ./holochain`
-  - Activate the needed rust environment and load correct holochain version: `nix-shell`
-- Build the elemental-chat DNA (assumes you are still in the nix shell for correct rust/cargo versions from step above):
-  - Clone this repo: `git clone https://github.com/holochain/elemental-chat && cd ./elemental-chat`
+- Activate the needed rust environment and load correct holochain version: `nix-shell`
   - Build the wasm: `CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown`
   - Assemble the DNA: `hc dna pack . -o elemental-chat.dna`
   - Assemble the hApp: `hc app pack . -o elemental-chat.happ`
