@@ -1,8 +1,8 @@
-import { Player, DnaPath, PlayerConfig, Config, InstallAgentsHapps, InstalledAgentHapps, TransportConfigType, ProxyAcceptConfig, ProxyConfigType, Cell } from '@holochain/tryorama'
+import { Player, PlayerConfig, Config, InstallAgentsHapps, InstalledHapp, Cell } from '@holochain/tryorama'
 import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { network as defaultNetworkConfig, installAgents } from '../common'
+import { network as defaultNetworkConfig, installAgents, chatDna } from '../common'
 const path = require('path')
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
@@ -21,16 +21,17 @@ export const defaultConfig = {
         // "172.26.235.20:9000", // alastair (rkbpxayrx3b9mrslvp26oz88rw36wzltxaklm00czl5u5mx1w)
         // "172.26.201.57:9000", // alastair 2 (2dbk737jjs2vyc1z0w72tmc0i7loprr8tbq6f1yevpms4msytn)
         // "172.26.115.133:9000", // alastair 3
-        // "172.26.227.223:9000", // alastair 4
-//        "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)  DON'T USE
+        "172.26.227.223:9000", // alastair 4
+    //    "172.26.206.158:9000", // mary@holo.host :  (25poc70j8u924ovbzz0tnz1atgrcdg0xjmlo095mck96bbkvtt)  DON'T USE
         // "172.26.53.50:9000", // mary.camacho@holo.host:  (5xvizkqpupjpu8ottk7sd9chc24k0otjkkv152756a8ph4p3ct)
         // "172.26.159.1:9000", // mc@marycamacho.com: (1k73gwsyo1r8hz8trd4sdbghsjt5gi5b7f3w8anf7xlmndgnt4)
 //        "172.26.57.175:9000", // rob.lyon+derecha@holo.host (4fx7rhi2i0v4nrvufpgdz31a5374jbvto6hkvo4fvl4f79g5dn)
-        "172.26.151.236:9000" // Rob2
+        // "172.26.151.236:9000" // Rob2
         // "172.26.84.233:9000", // katie
         // "172.26.195.64:9000", // lucas (3yk1vqbt914t4cou6lrascjr29h7xa36ucyho72adr3fu0h4f7)
 //        "172.26.201.167:9000", // lucas
         //"172.26.100.202:9000", // timo1
+        // "172.26.146.149:9000" // David A
         //"172.26.156.115:9500" // timo2
     ],
     // trycpAddresses: [],
@@ -39,10 +40,11 @@ export const defaultConfig = {
     ],
     proxyCount: 1,
     nodes: 1, // Number of machines
-    conductors: 10, // Conductors per machine
-    instances: 10, // Instances per conductor
+    conductors: 1, // Conductors per machine
+    instances: 70, // Instances per conductor
     activeAgents: 1, // Number of agents to consider "active" for chatting
     dnaSource: path.join(__dirname, '../../../elemental-chat.dna'),
+    signupZomecalls: true,
     // dnaSource: { url: "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna" },
 }
 
@@ -238,7 +240,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     for (let i = 0; i < config.conductors; i++) {
         network = _.cloneDeep(network)
         network.transport_pool[0].proxy_config.proxy_url = config.proxys[i%config.proxyCount]
-        const conductorConfig = Config.gen({network})
+        const conductorConfig = Config.gen({network, db_sync_level: {type: off}})
         conductorConfigsArray.push(conductorConfig)
     }
     for (let i = 0; i < config.conductors; i++) {
@@ -285,9 +287,14 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
         console.log("installing player", i)
         // console.log("installation", installation)
         const agentNames = _.times(config.instances, (n) => `c${i}p${n}`)
-        // const agents = await installAgents(player, agentNames, memProofArray.slice(i*agentNames.length),'uhCAkRHEsXSAebzKJtPsLY1XcNePAFIieFBtz2ATanlokxnSC1Kkz');
-        const agents = await installAgents(player, agentNames);
-        //const installedAgentHapps: InstalledAgentHapps = agents.
+        let agents
+        if (config.signupZomecalls) {
+            agents = await installAgentsWithCalls(player, agentNames, memProofArray.slice(i*agentNames.length),'uhCAkRHEsXSAebzKJtPsLY1XcNePAFIieFBtz2ATanlokxnSC1Kkz');
+        } else {
+            agents = await installAgents(player, agentNames, memProofArray.slice(i*agentNames.length),'uhCAkRHEsXSAebzKJtPsLY1XcNePAFIieFBtz2ATanlokxnSC1Kkz');
+            // agents = await installAgents(player, agentNames);
+        }        
+        console.log(agents)
         return agents.map((happs) => {
             const [{ hAppId, agent, cells: [cell] }] = [happs];
             console.log(`PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`)
@@ -333,21 +340,6 @@ const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
         })
         console.log(`signal sent ${i}`)
     }
-}
-
-const sendSerially = async (end: number, sendingCell: Cell, channel, messagesToSend: number) => {
-    //    const msDelayBetweenMessage = period/messagesToSend
-    for (let i = 0; i < messagesToSend; i++) {
-        await send(i, sendingCell, channel, "signal")
-        if (Date.now() > end) {
-            i = i + 1
-            console.log(`Couldn't send all messages in period, sent ${i}`)
-            return i
-        }
-        // console.log(`waiting ${msDelayBetweenMessage}ms`)
-        // await delay(msDelayBetweenMessage-20)
-    }
-    return messagesToSend
 }
 
 const sendConcurrently = async (agents: Agents, channel, messagesToSend: number, signal: "signal" | "noSignal") => {
@@ -498,9 +490,15 @@ const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers:
 
     const totalPeers = config.nodes * config.conductors * config.instances
     const activeAgents = selectActiveAgents(phase.active, playerAgents)
-    const peerConsistencyTook = await waitActivePeers(PEER_CONSISTENCY_PERCENT, totalPeers, activeAgents, allPlayers) // need 75% of peers for go
-    await _activateAgents(activeAgents, playerAgents)
-    const activationConsistencyTook = await _waitAgentsActivated(activeAgents)
+
+    let peerConsistencyTook = 0
+    let activationConsistencyTook = 0
+
+    if (!config.signupZomecalls) {
+        peerConsistencyTook = await waitActivePeers(PEER_CONSISTENCY_PERCENT, totalPeers, activeAgents, allPlayers) // need 90% of peers for go
+        await _activateAgents(activeAgents, playerAgents)
+        activationConsistencyTook = await _waitAgentsActivated(activeAgents)
+    }
 
     let totalActiveAgents = activeAgents.length
     // Track how many signals are received in various latencies
@@ -694,4 +692,53 @@ export const phasesTx = async (s, t, config, phases, local) => {
         await phaseTrial(config, phase, playerAgents, allPlayers, channel)
     }
     await Promise.all(allPlayers.map(player => player.shutdown()))
+}
+
+
+export const signupTx = async (s, t, config, phases, local) => {
+    // do the standard setup
+    const { playerAgents, allPlayers, channel } = await setup(s, t, config, local)
+    for (const phase of phases) {
+        await phaseTrial(config, phase, playerAgents, allPlayers, channel)
+    }
+    await Promise.all(allPlayers.map(player => player.shutdown()))
+}
+
+export const installAgentsWithCalls = async (conductor, agentNames, memProofArray?, holo_agent_override?) => {
+
+    const admin = conductor.adminWs()
+    console.log(`registering dna for: ${chatDna}`)
+    const  dnaHash = await conductor.registerDna({path: chatDna}, conductor.scenarioUID, {skip_proof: !memProofArray, holo_agent_override})
+
+    const agents: Array<InstalledHapp> = []
+    for (const i in agentNames) {
+        const agent = agentNames[i]
+        console.log(`generating key for: ${agent}:`)
+        const agent_key = await admin.generateAgentPubKey()
+        console.log(`${agent} pubkey:`, agent_key.toString('base64'))
+
+        let dna = {
+            hash: dnaHash,
+            nick: 'elemental-chat',
+        }
+        if (memProofArray) {
+            dna["membrane_proof"] = Buffer.from(memProofArray[i], 'base64')
+        }
+
+        const req = {
+            installed_app_id: `${agent}_chat`,
+            agent_key,
+            dnas: [dna]
+        }
+        console.log(`installing happ for: ${agent}`)
+        let a = await conductor._installHapp(req)
+        agents.push(a)
+    // Making zomeCalls as soon as the instance is activated
+        await Promise.all([
+            a.cells[0].call('chat', 'refresh_chatter', null),
+            // a.cells[0].call('profile', 'update_my_profile', {nickname: `${i}`}),
+            // a.cells[0].call('profile', 'get_my_profile', null)
+        ])        
+    }
+    return agents
 }

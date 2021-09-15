@@ -39,7 +39,7 @@ export const network = {
       default_rpc_single_timeout_ms: 1000 * 30,
 
       /// Default agent count for rpc multi. [Default: 2]
-      default_rpc_multi_remote_agent_count: 2,
+      default_rpc_multi_remote_agent_count: 1,
 
       /// Default timeout for rpc multi. [Default: 30s]
       default_rpc_multi_timeout_ms: 1000 * 30,
@@ -85,7 +85,10 @@ export const network = {
       /// (note, this delay is currenty exponentially backed off--
       /// multiplied by 2x on every loop)
       /// [Default: 200 ms]
-      tx2_initial_connect_retry_delay_ms: 200
+      tx2_initial_connect_retry_delay_ms: 200,
+
+      default_rpc_multi_remote_request_grace_ms: 10,
+      gossip_single_storage_arc_per_space: true
   }
 }
 
