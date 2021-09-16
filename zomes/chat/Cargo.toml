@@ -12,7 +12,7 @@ name = "chat"
 chrono = {version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99"
 hc_joining_code = {path = "../../crates/joining_code"}
-hdk = "0"
+hdk = "=0.0.106-dev.0"
 serde = "1.0"
 thiserror = "1.0"
 hc_utils = "0"
