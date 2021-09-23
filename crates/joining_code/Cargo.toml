@@ -9,7 +9,7 @@ name = "hc_joining_code"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-hdk = "=0.0.106-dev.0"
+hdk = "=0.0.107"
 serde = "1.0"
 derive_more = "0.99"
-holo_hash = "=0.0.5"
+holo_hash = { version = "*", features = ["encoding", "serialization"]}
