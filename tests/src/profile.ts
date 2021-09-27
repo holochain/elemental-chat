@@ -1,23 +1,23 @@
-import { InstalledHapp } from '@holochain/tryorama'
-import path = require('path')
-import * as _ from 'lodash'
-const delay = ms => new Promise(r => setTimeout(r, ms))
-import { localConductorConfig, installAgents, MEM_PROOF1, MEM_PROOF2, awaitIntegration } from './common'
-var wait = ms => new Promise((r, j)=>setTimeout(r, ms))
+import { localConductorConfig, awaitIntegration } from './common'
+import { installJCHapp, installAgents } from './installAgents'
+const wait = ms => new Promise((r, j) => setTimeout(r, ms))
 
 module.exports = (orchestrator) => {
 
   orchestrator.registerScenario('test profile zomes', async (s, t) => {
     // spawn the conductor process
     const [ conductor ] = await s.players([localConductorConfig])
-    const [alice_chat_happ, bob_chat_happ] = await installAgents(conductor,  ["alice", "bobbo"], [MEM_PROOF1, MEM_PROOF2])
+
+    const jcHapp = await installJCHapp((await s.players([localConductorConfig]))[0])
+
+    const [alice_chat_happ, bob_chat_happ] = await installAgents(conductor,  ["alice", "bobbo"], jcHapp)
     const [alice] = alice_chat_happ.cells
     const [bobbo] = bob_chat_happ.cells
 
     // Trigger init to run in both zomes
     await alice.call('chat', 'list_channels', { category: "General" });
     await bobbo.call('chat', 'list_channels', { category: "General" });
-    
+
     // Create a channel
     const profile_input = {
       nickname: "Alice",

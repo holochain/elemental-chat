@@ -4,9 +4,11 @@ let orchestrator = new Orchestrator()
 require('./basic-chatting')(orchestrator)
 orchestrator.run()
 
+/* transient-nodes is consider flakey by holochain team
 orchestrator = new Orchestrator()
 require('./transient-nodes')(orchestrator)
 orchestrator.run()
+*/
 
 /* currently not using multi-chunk
 orchestrator = new Orchestrator()

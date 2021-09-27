@@ -1,8 +1,7 @@
-import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
-import path from 'path'
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG, MEM_PROOF1, MEM_PROOF2, awaitIntegration, delay } from './common'
+import { localConductorConfig, delay } from './common'
+import { installAgents } from './installAgents'
 
 module.exports = async (orchestrator) => {
 
@@ -14,7 +13,7 @@ module.exports = async (orchestrator) => {
 
     // install your happs into the coductors and destructuring the returned happ data using the same
     // array structure as you created in your installation array.
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor,  ["alice", 'bobbo'], [MEM_PROOF1,  MEM_PROOF2])
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor,  ["alice", 'bobbo'])
     const [alice_chat] = alice_chat_happ.cells
     const [bobbo_chat] = bobbo_chat_happ.cells
 
