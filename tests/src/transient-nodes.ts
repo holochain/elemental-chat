@@ -82,6 +82,8 @@ const doTransientNodes = async (s, t, local) => {
   console.log("shutting down alice")
   await alice.shutdown()
   await delay(10000)
+  console.log("checking again to see if bob can see the message")
+  await gotChannelsAndMessages(t, "bob", bob_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
   await carol.startup()
   let [carol_chat_happ] = await installAgents(carol, ["carol"])
   const [carol_chat] = carol_chat_happ.cells
