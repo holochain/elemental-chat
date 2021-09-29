@@ -9,7 +9,8 @@ slots:
       deferred: false
     dna:
       bundled: ./elemental-chat.dna
-      properties: ~
+      properties:
+        skip_proof: true
       uid: ~
       version: ~
       clone_limit: 0
