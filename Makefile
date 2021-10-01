@@ -12,6 +12,15 @@ HAPP		= $(DNANAME).happ
 WASM		= target/wasm32-unknown-unknown/release/chat.wasm
 WASM2		= target/wasm32-unknown-unknown/release/profile.wasm
 
+.PHONY: DNAs
+
+dnas:
+	mkdir -p ./dnas
+dnas/joining-code-factory.dna:	dnas
+	curl 'https://holo-host.github.io/joining-code-happ/releases/downloads/0_1_2_alpha1/joining-code-factory.test.dna' -o $@
+
+DNAs: dnas/joining-code-factory.dna
+
 # External targets; Uses a nix-shell environment to obtain Holochain runtimes, run tests, etc.
 .PHONY: all FORCE
 all: nix-test
@@ -57,15 +66,15 @@ test-unit:
 	RUST_BACKTRACE=1 cargo test \
 	    -- --nocapture
 
-test-dna:	$(DNA) FORCE
+test-dna: DNAs $(DNA) FORCE
 	@echo "Starting Scenario tests in $$(pwd)..."; \
 	    cd tests && ( [ -d  node_modules ] || npm install ) && npm test
 
-test-dna-debug:
+test-dna-debug: DNAs $(DNA) FORCE
 	@echo "Starting Scenario tests in $$(pwd)..."; \
 	    cd tests && ( [ -d node_modules ] || npm install ) && npm run test:debug
 
-test-behavior:
+test-behavior: DNAs $(DNA) FORCE
 	@echo "Starting Scenario tests in $$(pwd)..."; \
 	    cd tests && ( [ -d  node_modules ] || npm install ) && npm run test:behavior
 

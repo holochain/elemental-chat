@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@holo-host/cryptolib": "^0.3.1",
     "@msgpack/msgpack": "^2.4.1",
     "lodash": "^4.17.19",
     "tape": "^5.0.1",
@@ -21,7 +22,7 @@
     "uuidv4": "^6.2.3"
   },
   "devDependencies": {
-    "@holochain/tryorama": "holochain/tryorama#24fce37ac3605ee35dfba906314130f63f6213bc",
+    "@holochain/tryorama": "^0.4.5",
     "@types/lodash": "^4.14.158",
     "@types/node": "^14.0.14",
     "tap-diff": "^0.1.1"

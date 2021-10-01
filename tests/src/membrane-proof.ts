@@ -1,13 +1,14 @@
-import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
-import path from 'path'
-import * as _ from 'lodash'
-import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, MEM_PROOF_BAD_SIG, MEM_PROOF1, MEM_PROOF2, MEM_PROOF_READ_ONLY, awaitIntegration, delay } from './common'
+const { Codec } = require("@holo-host/cryptolib");
+
+import { localConductorConfig, awaitIntegration } from './common'
+import { installJCHapp, installAgents, Memproof } from './installAgents'
 
 module.exports = async (orchestrator) => {
   orchestrator.registerScenario('membrane proof tests', async (s, t) => {
     const [conductor] = await s.players([localConductorConfig])
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(conductor,  ["alice", "bob"], [MEM_PROOF1,  MEM_PROOF2])
+    const jcHapp1 = await installJCHapp((await s.players([localConductorConfig]))[0])
+    const jcHapp2 = await installJCHapp((await s.players([localConductorConfig]))[0])
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(conductor,  ["alice", "bob"], jcHapp1)
     const [alice_chat] = alice_chat_happ.cells
     const [bobbo_chat] = bobbo_chat_happ.cells
     t.ok(alice_chat)
@@ -17,7 +18,7 @@ module.exports = async (orchestrator) => {
     let channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
     console.log('channel_list : ', channel_list)
     t.equal(channel_list.channels.length, 0, 'number of channels succeeded')
-    
+
     await awaitIntegration(alice_chat)
 
     // TODO: add back in when the proofs carry that agent ID
@@ -35,21 +36,39 @@ module.exports = async (orchestrator) => {
       })
     }*/
 
-    // now try and install carol with a bad membrane proof
+    // now try and install carol with a membrane proof from a different joining code authority
     try {
-      await installAgents(conductor,  ["carol"], [MEM_PROOF_BAD_SIG])
+      await installAgents(conductor,  ["carol"], { ...jcHapp2, agent: jcHapp1.agent })
+      t.fail()
+    } catch(e) {
+      t.deepEqual(e, {
+        type: 'error',
+        data: {
+          type: 'internal_error',
+          data: `Conductor returned an error while using a ConductorApi: GenesisFailed { errors: [ConductorApiError(WorkflowError(GenesisFailure(\
+"Joining code invalid: unexpected author (AgentPubKey(${Codec.AgentId.encode(jcHapp2.agent)}))")))] }`
+        }
+      })
+    }
+
+    // now install david with a membrane proof that has a mismatched signature
+    const corruptMemproofSignature = (memproof: Memproof) => {
+      const sig = Array.from(memproof.signed_header.signature)
+      sig[sig.length - 1] ^= 1
+      const signature = Buffer.from(sig)
+      return {
+        ...memproof,
+        signed_header: {
+          ...memproof.signed_header,
+          signature
+        }
+      }
+    }
+    try {
+      await installAgents(conductor,  ["david"], jcHapp1, corruptMemproofSignature)
       t.fail()
     } catch(e) {
       t.deepEqual(e, { type: 'error', data: { type: 'internal_error', data: 'Conductor returned an error while using a ConductorApi: GenesisFailed { errors: [ConductorApiError(WorkflowError(GenesisFailure("Joining code invalid: incorrect signature")))] }' } })
-    }
-
-    // Test holo_agent_override properties
-    const MEM_PROP_FOR_NEW_HOLO_AGENT = Buffer.from("3gACrXNpZ25lZF9oZWFkZXLeAAKmaGVhZGVy3gACp2NvbnRlbnTeAAekdHlwZaZDcmVhdGWmYXV0aG9yxCeEICREcSxdIB5vMom0+wtjVdw148AUiJ4UG3PYBNqeWiTGdILUqTOpdGltZXN0YW1wks5gweIkzivzEHGqaGVhZGVyX3Nlcc0BMKtwcmV2X2hlYWRlcsQnhCkks5/HpSpAL3RXYHfpjhAk8ZXayukBa4/54aur1mBaKL95vbeDqmVudHJ5X3R5cGXeAAGjQXBw3gADomlkAKd6b21lX2lkAKp2aXNpYmlsaXR53gABplB1YmxpY8CqZW50cnlfaGFzaMQnhCEkyy3pfmVBc8BkzVX5+jlnJ3TBYFrrdIdGdEMz0170ZSUTdfg9pGhhc2jEJ4QpJI+UES7dIWlQ0LcaXyirSViVBv7mCZr8GbZKBXZ7GxxR5WFvyKlzaWduYXR1cmXEQLpug6Zw3jDRuqiykCLCHrrD6q0XNxXPYe/Nq/Ec4YXY9Q3ISu9HuCC4qnAhAAOY8fcRNBIfe2WSmYfv1b2ViQalZW50cnneAAGnUHJlc2VudN4AAqplbnRyeV90eXBlo0FwcKVlbnRyecQngqRyb2xlpUFETUlOrnJlY29yZF9sb2NhdG9yqzBAaG9sby5ob3N0", 'base64')
-    try {
-      let [jack_chat_happ] = await installAgents(conductor,  ["jack"], [MEM_PROP_FOR_NEW_HOLO_AGENT], "uhCAkRHEsXSAebzKJtPsLY1XcNePAFIieFBtz2ATanlokxnSC1Kkz")
-      t.ok(true)
-    } catch(e) {
-      t.fail()
     }
   })
 }

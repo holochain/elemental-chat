@@ -1,8 +1,6 @@
-import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
-import path from 'path'
-import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, installAgents, consistency } from './common'
+import { localConductorConfig, consistency } from './common'
+import { installAgents } from "./installAgents";
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
