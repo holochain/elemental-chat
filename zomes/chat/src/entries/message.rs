@@ -7,7 +7,7 @@ pub mod handlers;
 
 /// The actual message data that is saved into the DHT
 #[hdk_entry(id = "message")]
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Message {
     pub uuid: String,
     pub content: String,
@@ -16,14 +16,14 @@ pub struct Message {
 /// This allows the app to properly order messages.
 /// This message is either the first message of the time block
 /// or has another message that was observed at the time of sending.
-#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
 pub enum LastSeen {
     First,
     Message(EntryHash),
 }
 
 /// Input to the create message call
-#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
 pub struct MessageInput {
     pub last_seen: LastSeen,
     pub channel: Channel,
@@ -32,7 +32,7 @@ pub struct MessageInput {
 }
 
 /// The message type that goes to the UI
-#[derive(Debug, Serialize, Deserialize, Clone, SerializedBytes)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, SerializedBytes)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageData {
     pub entry: Message,
@@ -46,9 +46,8 @@ pub struct MessageData {
 pub struct SignalSpecificInput {
     signal_message_data: SignalMessageData,
     chatters: Vec<AgentPubKey>,
-    include_active_chatters: Option<bool>
+    include_active_chatters: Option<bool>,
 }
-
 
 /// The message type that goes to the UI via emit_signal
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
@@ -59,13 +58,13 @@ pub struct SignalMessageData {
 }
 
 /// Input to the list messages call
-#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesInput {
     pub channel: Channel,
     pub chunk: Chunk,
     pub active_chatter: bool,
 }
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 pub struct Chunk {
     pub start: u32,
     pub end: u32,
@@ -83,7 +82,7 @@ pub struct ActiveChatters {
 }
 
 /// The messages returned from list messages
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, derive_more::From, Clone)]
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, derive_more::From, Clone, PartialEq)]
 pub struct ListMessages {
     pub messages: Vec<MessageData>,
 }

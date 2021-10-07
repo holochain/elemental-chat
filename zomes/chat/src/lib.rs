@@ -143,7 +143,7 @@ pub struct ChannelMessages {
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct AllMessagesList(Vec<ChannelMessages>);
+pub struct AllMessagesList(pub Vec<ChannelMessages>);
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 #[serde(rename_all = "camelCase")]

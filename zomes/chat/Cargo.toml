@@ -20,8 +20,8 @@ holo_hash = { version = "*", features = ["encoding"]}
 
 [dev-dependencies]
 holochain = { git = "https://github.com/holochain/holochain.git", branch = "sweettest-additions", features = ["test_utils"] }
-#holochain_types = { git = "https://github.com/holochain/holochain.git", branch = "develop", features = ["test_utils"] }
 # holochain = { path = "../../../chain/crates/holochain/"}
+#holochain_types = { git = "https://github.com/holochain/holochain.git", branch = "develop", features = ["test_utils"] }
 # holochain_types = { path = "../../../chain/crates/holochain_types/"}
 futures = "0.3.1"
 nanoid = "0.3"
