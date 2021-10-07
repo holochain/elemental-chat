@@ -1,5 +1,6 @@
-21:25:01 [tryorama] info: Using the following settings from environment variables:
-21:25:01 [tryorama] info: {
+elemental-chat$ TRYORAMA_LOG_LEVEL=info RUST_LOG=[debug]=debug node tests/hc-repro.js
+21:35:39 [tryorama] info: Using the following settings from environment variables:
+21:35:39 [tryorama] info: {
   "adminInterfaceId": "tryorama-interface-admin",
   "appInterfaceId": "tryorama-interface-app",
   "stateDumpOnError": true,
@@ -18,12 +19,12 @@
   "lairPath": "lair-keystore"
 }
 FIXME: ignoring onJoin
-21:25:02 [tryorama] info: Spawning lair for test with keystore at:  /tmp/tryorama/Ephbnw/keystore
-21:25:02 [tryorama] info: Using conductor path:  holochain
-21:25:02 [tryorama] info: Holochain version:     holochain 0.0.108
+21:35:39 [tryorama] info: Spawning lair for test with keystore at:  /tmp/tryorama/E1tXmT/keystore
+21:35:39 [tryorama] info: Using conductor path:  holochain
+21:35:39 [tryorama] info: Holochain version:     holochain 0.0.109
 
-21:25:02 [tryorama] info: Conductor config path: /tmp/tryorama/Ephbnw/conductor-config.yml
-21:25:02 info:
+21:35:39 [tryorama] info: Conductor config path: /tmp/tryorama/E1tXmT/conductor-config.yml
+21:35:40 info:
 ☉☉☉ [[[CONDUCTOR c0]]]
 ☉
 ☉ ###HOLOCHAIN_SETUP###
@@ -31,69 +32,71 @@ FIXME: ignoring onJoin
 ☉ ###HOLOCHAIN_SETUP_END###
 ☉ Conductor ready.
 ☉
-21:25:02 [tryorama] info: Conductor 'c0' process spawning completed.
-App Port spun up on port  43435
+21:35:40 [tryorama] info: Conductor 'c0' process spawning completed.
+App Port spun up on port  35847
 alice integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 21 }
 bobbo integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
 carol integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
-21:25:06 info:
+21:35:43 info:
 ★★★ [[[CONDUCTOR c0]]]
-★ Oct 06 21:25:06.129 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
+★ Oct 06 21:35:43.125 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
 ★
 bobbo integration 2
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
 alice integration 2
-integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 51 }
+integration dump was: { validation_limbo: 2, integration_limbo: 0, integrated: 51 }
+waiting 5 seconds for integration
+integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 66 }
 carol integration 2
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
-21:25:06 info:
+21:35:48 info:
 ☯☯☯ [[[CONDUCTOR c0]]]
-☯ Oct 06 21:25:06.168 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links []
+☯ Oct 06 21:35:48.163 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:35:43.124884Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9QHS_IuKLkTh5eLa8HUcHOyIGkzbml3Vla9cn4MUKMyX-cPD) }]
 ☯
-alice list_channels { channels: [] }
-21:25:06 info:
+alice list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
+21:35:48 info:
 ☸☸☸ [[[CONDUCTOR c0]]]
-☸ Oct 06 21:25:06.180 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
+☸ Oct 06 21:35:48.173 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
 ☸
-alice stats { agents: 3, active: 3, channels: 0, messages: 0 }
-21:25:06 info:
+alice stats { agents: 3, active: 3, channels: 1, messages: 0 }
+21:35:48 info:
 ☮☮☮ [[[CONDUCTOR c0]]]
-☮ Oct 06 21:25:06.202 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:25:06.128752Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkhf5YL7hsqXpt-qE0Z8d9DR20n8dYVEWPy6saoNiNHHWjrOkw) }]
+☮ Oct 06 21:35:48.191 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:35:43.124884Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9QHS_IuKLkTh5eLa8HUcHOyIGkzbml3Vla9cn4MUKMyX-cPD) }]
 ☮
 bobbo list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-21:25:06 info:
+21:35:48 info:
 ☉☉☉ [[[CONDUCTOR c0]]]
-☉ Oct 06 21:25:06.256 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
+☉ Oct 06 21:35:48.245 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
 ☉
 bobbo stats { agents: 3, active: 3, channels: 1, messages: 0 }
-21:25:06 info:
+21:35:48 info:
 ★★★ [[[CONDUCTOR c0]]]
-★ Oct 06 21:25:06.308 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links []
+★ Oct 06 21:35:48.300 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links []
 ★
 carol list_channels { channels: [] }
-21:25:06 info:
+21:35:48 info:
 ☯☯☯ [[[CONDUCTOR c0]]]
-☯ Oct 06 21:25:06.334 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
+☯ Oct 06 21:35:48.328 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
 ☯
 carol stats { agents: 3, active: 3, channels: 0, messages: 0 }
-21:25:06 info:
+21:35:48 info:
 ☸☸☸ [[[CONDUCTOR c0]]]
-☸ Oct 06 21:25:06.367 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
+☸ Oct 06 21:35:48.356 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
 ☸
 carol integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
 alice integration 2
-integration dump was: { validation_limbo: 7, integration_limbo: 0, integrated: 69 }
+integration dump was: { validation_limbo: 3, integration_limbo: 0, integrated: 66 }
 waiting 5 seconds for integration
-integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 81 }
+integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 78 }
 bobbo integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
-21:25:11 info:
+21:35:53 info:
 ☮☮☮ [[[CONDUCTOR c0]]]
-☮ Oct 06 21:25:11.408 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:25:06.128752Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkhf5YL7hsqXpt-qE0Z8d9DR20n8dYVEWPy6saoNiNHHWjrOkw) }, Link { target: EntryHash(uhCEkX-ilKASrcdn09v_RhGNN2ZfqASyNCDlUizQcK1ENpHHrCmZZ), timestamp: Timestamp(2021-10-07T01:25:06.366988Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9WKMeib3l5M3l6l9_WTMIk7nE0gWUTElDBVjTTL1oIwfuUlV) }]
+☮ Oct 06 21:35:53.388 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:35:43.124884Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9QHS_IuKLkTh5eLa8HUcHOyIGkzbml3Vla9cn4MUKMyX-cPD) }, Link { target: EntryHash(uhCEkX-ilKASrcdn09v_RhGNN2ZfqASyNCDlUizQcK1ENpHHrCmZZ), timestamp: Timestamp(2021-10-07T01:35:48.355675Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkM1oihAkNCzN1zMwDmf5AdXfL5TFP-31DEnJn_WBHwhY2Fwt4) }]
 ☮
 alice list_channels {
   channels: [
@@ -101,15 +104,15 @@ alice list_channels {
     { entry: [Object], info: [Object], latestChunk: 0 }
   ]
 }
-21:25:11 info:
+21:35:53 info:
 ☉☉☉ [[[CONDUCTOR c0]]]
-☉ Oct 06 21:25:11.453 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:25:06.128752Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkhf5YL7hsqXpt-qE0Z8d9DR20n8dYVEWPy6saoNiNHHWjrOkw) }]
+☉ Oct 06 21:35:53.422 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:35:43.124884Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9QHS_IuKLkTh5eLa8HUcHOyIGkzbml3Vla9cn4MUKMyX-cPD) }]
 ☉
 bobbo list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-21:25:11 info:
+21:35:53 info:
 ★★★ [[[CONDUCTOR c0]]]
-★ Oct 06 21:25:11.496 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkX-ilKASrcdn09v_RhGNN2ZfqASyNCDlUizQcK1ENpHHrCmZZ), timestamp: Timestamp(2021-10-07T01:25:06.366988Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9WKMeib3l5M3l6l9_WTMIk7nE0gWUTElDBVjTTL1oIwfuUlV) }]
+★ Oct 06 21:35:53.465 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkX-ilKASrcdn09v_RhGNN2ZfqASyNCDlUizQcK1ENpHHrCmZZ), timestamp: Timestamp(2021-10-07T01:35:48.355675Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkM1oihAkNCzN1zMwDmf5AdXfL5TFP-31DEnJn_WBHwhY2Fwt4) }]
 ★
 carol list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-21:25:11 [tryorama] info: conductor 'c0' exited with code null
+21:35:53 [tryorama] info: conductor 'c0' exited with code null
 FIXME: ignoring onLeave
