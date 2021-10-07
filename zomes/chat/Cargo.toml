@@ -19,7 +19,7 @@ hc_utils = "0"
 holo_hash = { version = "*", features = ["encoding"]}
 
 [dev-dependencies]
-#holochain = { git = "https://github.com/holochain/holochain.git", branch = "develop", features = ["test_utils"] }
+holochain = { git = "https://github.com/holochain/holochain.git", branch = "sweettest-additions", features = ["test_utils"] }
 #holochain_types = { git = "https://github.com/holochain/holochain.git", branch = "develop", features = ["test_utils"] }
 # holochain = { path = "../../../chain/crates/holochain/"}
 # holochain_types = { path = "../../../chain/crates/holochain_types/"}
