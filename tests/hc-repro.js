@@ -63,15 +63,16 @@ const awaitIntegration = async(cell) => {
 }
 
 orchestrator.registerScenario('Two Chatters', async scenario => {
-  const [conductor] = await scenario.players([conductorConfig], false)
+  const [conductor, conductor2] = await scenario.players([conductorConfig, conductorConfig], false)
 
   await conductor.startup()
+  await conductor2.startup()
 
   const bundlePath = path.join(__dirname, '..', 'elemental-chat.happ')
 
   const aliceChatHapp = await conductor.installBundledHapp({ path: bundlePath }, null, 'first_agent')
   const bobboChatHapp = await conductor.installBundledHapp({ path: bundlePath }, null, 'second_agent')
-  const carolChatHapp = await conductor.installBundledHapp({ path: bundlePath }, null, 'third_agent')
+  const carolChatHapp = await conductor2.installBundledHapp({ path: bundlePath }, null, 'third_agent')
   const [aliceChat] = aliceChatHapp.cells
   const [bobboChat] = bobboChatHapp.cells
   const [carolChat] = carolChatHapp.cells
