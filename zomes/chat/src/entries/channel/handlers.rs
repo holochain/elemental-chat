@@ -18,6 +18,8 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     let path: Path = entry.clone().into();
     path.ensure()?;
 
+    debug!("create_channel: ensured {:?}", path);
+
     // Create the channel info
     let info = ChannelInfo {
         // This agent
@@ -44,21 +46,27 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
 
     // Get any channels on this path
     let links = path.children()?.into_inner();
+
+    debug!("list_channels: path {:?} links {:?}", path, links);
     let mut channels = Vec::with_capacity(links.len());
 
     // For each channel get the channel info links and choose the latest
     for tag in links.into_iter().map(|link| link.tag) {
+        // debug!("list_channels: 1");
         // Path links have their full path as the tag so
         // we don't need to get_links on the child.
         // The tag can be turned into the channel path
         let channel_path = Path::try_from(&tag)?;
+        // debug!("list_channels: 2");
 
         // Turn the channel path into the channel
         let channel = Channel::try_from(&channel_path)?;
+        // debug!("list_channels: 3");
 
         // Get any channel info links on this channel
         let channel_info =
             get_links(channel_path.hash()?, Some(ChannelInfoTag::tag()))?.into_inner();
+            // debug!("list_channels: 4");
 
         // Find the latest
         let latest_info = channel_info
@@ -79,13 +87,17 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
             Some(l) => l,
             None => continue,
         };
+        // debug!("list_channels: 5");
 
         // find the latest chunk
         let path: Path = channel.clone().into();
         let links = path.children()?.into_inner();
+        // debug!("list_channels: 6");
         let mut chunk: u32 = 0;
         for link in links.into_iter() {
+            // debug!("list_channels: 7.1");
             let chunk_path = Path::try_from(&link.tag)?;
+            // debug!("list_channels: 7.2");
             let chunks: Vec<_> = chunk_path.into();
             if let Some(c) = chunks
                 .last()
@@ -95,11 +107,15 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
                     chunk = c;
                 }
             }
+            // debug!("list_channels: 7.3");
         }
+        // debug!("list_channels: 8");
 
         // Get the actual channel info entry
         if let Some(element) = get(latest_info.target, GetOptions::content())? {
+            // debug!("list_channels: 9");
             if let Some(info) = element.into_inner().1.to_app_option()? {
+                // debug!("list_channels: 10");
                 // Construct the channel data from the channel and info
                 channels.push(ChannelData {
                     entry: channel,
