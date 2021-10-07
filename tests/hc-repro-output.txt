@@ -1,6 +1,6 @@
 elemental-chat$ TRYORAMA_LOG_LEVEL=info RUST_LOG=[debug]=debug,warn node tests/hc-repro.js
-22:15:59 [tryorama] info: Using the following settings from environment variables:
-22:15:59 [tryorama] info: {
+09:31:36 [tryorama] info: Using the following settings from environment variables:
+09:31:36 [tryorama] info: {
   "adminInterfaceId": "tryorama-interface-admin",
   "appInterfaceId": "tryorama-interface-app",
   "stateDumpOnError": true,
@@ -19,21 +19,20 @@ elemental-chat$ TRYORAMA_LOG_LEVEL=info RUST_LOG=[debug]=debug,warn node tests/h
   "lairPath": "lair-keystore"
 }
 FIXME: ignoring onJoin
-22:15:59 [tryorama] info: Spawning lair for test with keystore at:  /tmp/tryorama/m7c1J5/keystore
-22:15:59 [tryorama] info: Using conductor path:  holochain
-22:15:59 [tryorama] info: Holochain version:     holochain 0.0.109
+09:31:36 [tryorama] info: Spawning lair for test with keystore at:  /tmp/tryorama/r6uTDh/keystore
+09:31:36 [tryorama] info: Using conductor path:  holochain
+09:31:36 [tryorama] info: Holochain version:     holochain 0.0.109
 
-22:15:59 [tryorama] info: Conductor config path: /tmp/tryorama/m7c1J5/conductor-config.yml
-22:15:59 info:
+09:31:36 [tryorama] info: Conductor config path: /tmp/tryorama/r6uTDh/conductor-config.yml
+09:31:36 info:
 ☉☉☉ {{{CONDUCTOR c0}}}
-☉ Oct 06 22:15:59.718  WARN kitsune_p2p_types::config::tuning_params_struct: INVALID TUNING PARAM: 'default_notify_remote_agent_count'
+☉ Oct 07 09:31:36.806  WARN holochain::conductor::conductor::builder: USING INSECURE PASSPHRASE FROM CONFIG--This defeats the whole purpose of having a passphrase. (unfortunately, there isn't another option at the moment).
 ☉
-22:15:59 info:
+09:31:36 info:
 ★★★ {{{CONDUCTOR c0}}}
-★ Oct 06 22:15:59.718  WARN holochain::conductor::conductor::builder: USING INSECURE PASSPHRASE FROM CONFIG--This defeats the whole purpose of having a passphrase. (unfortunately, there isn't another option at the moment).
-★ Oct 06 22:15:59.718 ERROR lair_keystore_client: error=IpcClientConnectError("/tmp/tryorama/m7c1J5/keystore/socket", Os { code: 2, kind: NotFound, message: "No such file or directory" }) file="/home/timo/.cargo/registry/src/github.com-1ecc6299db9ec823/lair_keystore_client-0.0.7/src/lib.rs" line=41
+★ Oct 07 09:31:36.806 ERROR lair_keystore_client: error=IpcClientConnectError("/tmp/tryorama/r6uTDh/keystore/socket", Os { code: 2, kind: NotFound, message: "No such file or directory" }) file="/home/timo/.cargo/registry/src/github.com-1ecc6299db9ec823/lair_keystore_client-0.0.7/src/lib.rs" line=41
 ★
-22:16:00 info:
+09:31:37 info:
 ☯☯☯ [[[CONDUCTOR c0]]]
 ☯
 ☯ ###HOLOCHAIN_SETUP###
@@ -41,135 +40,968 @@ FIXME: ignoring onJoin
 ☯ ###HOLOCHAIN_SETUP_END###
 ☯ Conductor ready.
 ☯
-22:16:00 [tryorama] info: Conductor 'c0' process spawning completed.
-App Port spun up on port  38605
+09:31:37 [tryorama] info: Conductor 'c0' process spawning completed.
+App Port spun up on port  40043
 FIXME: ignoring onJoin
-22:16:00 [tryorama] info: Spawning lair for test with keystore at:  /tmp/tryorama/5AIvW5/keystore
-22:16:00 [tryorama] info: Using conductor path:  holochain
-22:16:00 [tryorama] info: Holochain version:     holochain 0.0.109
+09:31:37 [tryorama] info: Spawning lair for test with keystore at:  /tmp/tryorama/OxAd2d/keystore
+09:31:37 [tryorama] info: Using conductor path:  holochain
+09:31:37 [tryorama] info: Holochain version:     holochain 0.0.109
 
-22:16:00 [tryorama] info: Conductor config path: /tmp/tryorama/5AIvW5/conductor-config.yml
-22:16:00 info:
+09:31:37 [tryorama] info: Conductor config path: /tmp/tryorama/OxAd2d/conductor-config.yml
+09:31:37 info:
 ☸☸☸ {{{CONDUCTOR c1}}}
-☸ Oct 06 22:16:00.265  WARN kitsune_p2p_types::config::tuning_params_struct: INVALID TUNING PARAM: 'default_notify_remote_agent_count'
+☸ Oct 07 09:31:37.330  WARN holochain::conductor::conductor::builder: USING INSECURE PASSPHRASE FROM CONFIG--This defeats the whole purpose of having a passphrase. (unfortunately, there isn't another option at the moment).
 ☸
-22:16:00 info:
-☮☮☮ {{{CONDUCTOR c1}}}
-☮ Oct 06 22:16:00.265  WARN holochain::conductor::conductor::builder: USING INSECURE PASSPHRASE FROM CONFIG--This defeats the whole purpose of having a passphrase. (unfortunately, there isn't another option at the moment).
-☮
-22:16:00 info:
-☉☉☉ [[[CONDUCTOR c1]]]
-☉
-☉ ###HOLOCHAIN_SETUP###
-☉ ###ADMIN_PORT:33001###
-☉ ###HOLOCHAIN_SETUP_END###
-☉ Conductor ready.
-☉
-22:16:00 [tryorama] info: Conductor 'c1' process spawning completed.
-App Port spun up on port  34781
-22:16:01 info:
-★★★ {{{CONDUCTOR c0}}}
-★ Oct 06 22:16:01.939  WARN holochain::conductor::api::api_cell: Using placeholder dpki
-★
-22:16:03 info:
-☯☯☯ {{{CONDUCTOR c1}}}
-☯ Oct 06 22:16:03.446  WARN holochain::conductor::api::api_cell: Using placeholder dpki
-☯
-bobbo integration 1
-integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
-carol integration 1
-integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
-22:16:03 info:
-☸☸☸ {{{CONDUCTOR c0}}}
-☸ Oct 06 22:16:03.721  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
-☸
-22:16:03 info:
-☮☮☮ {{{CONDUCTOR c1}}}
-☮ Oct 06 22:16:03.766  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
-☮
-22:16:03 info:
-☉☉☉ {{{CONDUCTOR c0}}}
-☉ Oct 06 22:16:03.806  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
-☉
-22:16:03 info:
-★★★ [[[CONDUCTOR c0]]]
-★ Oct 06 22:16:03.827 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
-★
-bobbo integration 2
-integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 34 }
-carol integration 2
-integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 19 }
-22:16:03 info:
-☯☯☯ {{{CONDUCTOR c0}}}
-☯ Oct 06 22:16:03.886  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
-☯
-22:16:03 info:
-☸☸☸ [[[CONDUCTOR c0]]]
-☸ Oct 06 22:16:03.890 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T02:16:03.818330Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkwdo5GLtBqJEB4ZG36a3E0mgaGiCj6_PkIO9NWGnE_C5j9YmX) }]
-☸
-bobbo list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-22:16:03 info:
-☮☮☮ {{{CONDUCTOR c0}}}
-☮ Oct 06 22:16:03.902  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
-☮
-22:16:03 info:
-☉☉☉ [[[CONDUCTOR c0]]]
-☉ Oct 06 22:16:03.905 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 1
-☉
-bobbo stats { agents: 1, active: 1, channels: 1, messages: 0 }
-22:16:03 info:
-★★★ {{{CONDUCTOR c1}}}
-★ Oct 06 22:16:03.914  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
-★
-22:16:03 info:
-☯☯☯ [[[CONDUCTOR c1]]]
-☯ Oct 06 22:16:03.917 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links []
-☯
-carol list_channels { channels: [] }
-22:16:03 info:
-☸☸☸ {{{CONDUCTOR c1}}}
-☸ Oct 06 22:16:03.923  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
-☸
-22:16:03 info:
+09:31:37 info:
 ☮☮☮ [[[CONDUCTOR c1]]]
-☮ Oct 06 22:16:03.926 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 1
 ☮
-carol stats { agents: 1, active: 1, channels: 0, messages: 0 }
-22:16:03 info:
-☉☉☉ {{{CONDUCTOR c1}}}
-☉ Oct 06 22:16:03.929  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
-☉
-22:16:03 info:
-★★★ [[[CONDUCTOR c1]]]
-★ Oct 06 22:16:03.932 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
-★
-carol integration 1
-integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 34 }
-bobbo integration 1
-integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 34 }
-22:16:03 info:
-☯☯☯ {{{CONDUCTOR c0}}}
-☯ Oct 06 22:16:03.946  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
-☯
-22:16:03 info:
-☸☸☸ [[[CONDUCTOR c0]]]
-☸ Oct 06 22:16:03.948 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T02:16:03.818330Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkwdo5GLtBqJEB4ZG36a3E0mgaGiCj6_PkIO9NWGnE_C5j9YmX) }]
-☸
-bobbo list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-22:16:03 info:
-☮☮☮ {{{CONDUCTOR c1}}}
-☮ Oct 06 22:16:03.951  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☮ ###HOLOCHAIN_SETUP###
+☮ ###ADMIN_PORT:33001###
+☮ ###HOLOCHAIN_SETUP_END###
+☮ Conductor ready.
 ☮
-22:16:03 info:
-☉☉☉ [[[CONDUCTOR c1]]]
-☉ Oct 06 22:16:03.953 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkX-ilKASrcdn09v_RhGNN2ZfqASyNCDlUizQcK1ENpHHrCmZZ), timestamp: Timestamp(2021-10-07T02:16:03.931752Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkpfhkiTXWDMIt1SIishjh0dW7myyf05yj_tXQ2c8togJxBSht) }]
+09:31:37 [tryorama] info: Conductor 'c1' process spawning completed.
+App Port spun up on port  36291
+09:31:38 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 07 09:31:38.948  WARN holochain::conductor::api::api_cell: Using placeholder dpki
 ☉
-carol list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-22:16:03 info:
+09:31:40 info:
 ★★★ {{{CONDUCTOR c1}}}
-★ Oct 06 22:16:03.965  WARN lair_keystore_api::ipc::spawn_client_ipc: client-ipc-evt-loop ENDED err=Other(OtherError("read returned 0 bytes"))
+★ Oct 07 09:31:40.492  WARN holochain::conductor::api::api_cell: Using placeholder dpki
 ★
-22:16:03 [tryorama] info: conductor 'c0' exited with code null
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 8,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: []
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 0,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 12,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 12,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 14,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+cell_dumps
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 16,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+[
+  {
+    peer_dump: {
+      this_agent_info: [Object],
+      this_dna: [Array],
+      this_agent: [Array],
+      peers: [Array]
+    },
+    source_chain_dump: { elements: [Array], published_ops_count: 7 },
+    integration_dump: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+  },
+  '--- Cell State Dump Summary ---\n' +
+    'Number of other peers in p2p store: 15,\n' +
+    'Elements authored: 3, Ops published: 7\n'
+]
+total_published 14
+integration_dumps [
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 },
+  { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
+]
+waiting 5 seconds for integration
+09:33:42 [tryorama] info: conductor 'c1' exited with code null
 FIXME: ignoring onLeave
-22:16:03 [tryorama] info: conductor 'c1' exited with code null
+09:33:42 [tryorama] info: conductor 'c0' exited with code null
 FIXME: ignoring onLeave
+09:33:42 [tryorama] error:
+The following conductors were forcefully shutdown after 125 seconds of no activity:
+
+
+09:33:46 [tryorama: player c0] error: Attempted conductor action when no conductor is running! You must `.startup()` first.
+Action: cell.stateDump()
