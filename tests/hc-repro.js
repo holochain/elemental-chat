@@ -31,7 +31,7 @@ const network = {
     gossip_loop_iteration_delay_ms: 2000, // Default was 10
     agent_info_expires_after_ms: 1000 * 60 * 30, // Default was 20 minutes
     tx2_channel_count_per_connection: 16, // Default was 3
-    default_rpc_multi_remote_request_grace_ms: 10,
+    default_rpc_multi_remote_request_grace_ms: 100,
     gossip_single_storage_arc_per_space: true,
 
     default_notify_remote_agent_count:  5,
@@ -46,23 +46,30 @@ const network = {
   }
 }
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+const sum = arr => arr.reduce((a, b) => a + b)
 
 const orchestrator = new Orchestrator({ middleware: combine(localOnly) })
 const conductorConfig = Config.gen({ network, db_sync_level: "Off" })
-const awaitIntegration = async(cell) => {
+const awaitIntegration = async(authorities, cells) => {
   while (true) {
-      const dump = await cell.stateDump()
-      const idump = dump[0].integration_dump
-      console.log("integration dump was:", idump)
-      if (idump.validation_limbo == 0 && idump.integration_limbo == 0) {
-          break
-      }
-      console.log("waiting 5 seconds for integration")
-      await wait(5000)
+    const cell_dumps = await Promise.all(cells.map(c => c.stateDump()))
+    console.log('cell_dumps')
+    cell_dumps.forEach(d => console.log(d))
+    const total_published = sum(cell_dumps.map(dump => dump[0].source_chain_dump.published_ops_count))
+    console.log('total_published', total_published)
+
+    const authority_dumps = await Promise.all(authorities.map(c => c.stateDump()))
+    const integration_dumps = authority_dumps.map(dump => dump[0].integration_dump)
+    console.log('integration_dumps', integration_dumps)
+    if (integration_dumps.every(integration_dump => integration_dump.integrated === total_published && integration_dump.validation_limbo === 0)) {
+        break
+    }
+    console.log("waiting 5 seconds for integration")
+    await wait(5000)
   }
 }
 
-orchestrator.registerScenario('Two Chatters', async scenario => {
+orchestrator.registerScenario('2 chatters + 1 chatter -- fixed by changing UID?', async scenario => {
   const [conductor, conductor2] = await scenario.players([conductorConfig, conductorConfig], false)
 
   await conductor.startup()
@@ -76,12 +83,7 @@ orchestrator.registerScenario('Two Chatters', async scenario => {
   const [aliceChat] = aliceChatHapp.cells
   const [bobboChat] = bobboChatHapp.cells
   const [carolChat] = carolChatHapp.cells
-  console.log('alice integration 1')
-  await awaitIntegration(aliceChat)
-  console.log('bobbo integration 1')
-  await awaitIntegration(bobboChat)
-  console.log('carol integration 1')
-  await awaitIntegration(carolChat)
+  await awaitIntegration([aliceChat, carolChat], [aliceChat, bobboChat, carolChat])
 
   await aliceChat.call('chat', 'refresh_chatter', null)
   await bobboChat.call('chat', 'refresh_chatter', null)
@@ -94,12 +96,7 @@ orchestrator.registerScenario('Two Chatters', async scenario => {
         "uuid": "45b27e1e-01a1-4672-a313-a88a6192f333"
     }
   })
-  console.log('bobbo integration 2')
-  await awaitIntegration(bobboChat)
-  console.log('alice integration 2')
-  await awaitIntegration(aliceChat)
-  console.log('carol integration 2')
-  await awaitIntegration(carolChat)
+  await awaitIntegration([aliceChat, carolChat], [aliceChat, bobboChat, carolChat])
 
   console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' }))
   console.log('alice stats', await aliceChat.call('chat', 'stats', { category: 'General' }))
@@ -116,12 +113,7 @@ orchestrator.registerScenario('Two Chatters', async scenario => {
     }
   })
 
-  console.log('carol integration 1')
-  await awaitIntegration(carolChat)
-  console.log('alice integration 2')
-  await awaitIntegration(aliceChat)
-  console.log('bobbo integration 1')
-  await awaitIntegration(bobboChat)
+  await awaitIntegration([aliceChat, carolChat], [aliceChat, bobboChat, carolChat])
 
   console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' }))
   console.log('bobbo list_channels', await bobboChat.call('chat', 'list_channels', { category: 'General' }))

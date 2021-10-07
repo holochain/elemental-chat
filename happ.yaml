@@ -11,6 +11,6 @@ slots:
       bundled: ./elemental-chat.dna
       properties:
         skip_proof: true
-      uid: ~
+      uid: "timo3"
       version: ~
       clone_limit: 0
