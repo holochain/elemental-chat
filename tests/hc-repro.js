@@ -69,7 +69,7 @@ const awaitIntegration = async(authorities, cells) => {
   }
 }
 
-orchestrator.registerScenario('Two Chatters', async scenario => {
+orchestrator.registerScenario('three chatters same conductor -- fixed in e5a480ce735beaa8ae7434abdb1b6dc03d487ffa', async scenario => {
   const [conductor] = await scenario.players([conductorConfig], false)
 
   await conductor.startup()
