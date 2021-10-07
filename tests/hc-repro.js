@@ -101,12 +101,12 @@ orchestrator.registerScenario('Two Chatters', async scenario => {
   console.log('carol integration 2')
   await awaitIntegration(carolChat)
 
-  // console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' })) // observes 1 channel linked to path
-  // console.log('alice stats', await aliceChat.call('chat', 'stats', { category: 'General' })) // observes 3 agents linked to path
+  // console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' }))
+  // console.log('alice stats', await aliceChat.call('chat', 'stats', { category: 'General' }))
   console.log('bobbo list_channels', await bobboChat.call('chat', 'list_channels', { category: 'General' })) // observes 1 channel
-  console.log('bobbo stats', await bobboChat.call('chat', 'stats', { category: 'General' })) // observes 3 agents
+  console.log('bobbo stats', await bobboChat.call('chat', 'stats', { category: 'General' })) // observes 1 agent
   console.log('carol list_channels', await carolChat.call('chat', 'list_channels', { category: 'General' })) // observes 0 channels
-  console.log('carol stats', await carolChat.call('chat', 'stats', { category: 'General' })) // observes 3 agents
+  console.log('carol stats', await carolChat.call('chat', 'stats', { category: 'General' })) // observes 1 agent
 
   await carolChat.call('chat', 'create_channel', {
     "name": "abc",
@@ -123,7 +123,7 @@ orchestrator.registerScenario('Two Chatters', async scenario => {
   console.log('bobbo integration 1')
   await awaitIntegration(bobboChat)
 
-  // console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' })) // observes 2 channels
+  // console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' }))
   console.log('bobbo list_channels', await bobboChat.call('chat', 'list_channels', { category: 'General' })) // observes 1 channel
   console.log('carol list_channels', await carolChat.call('chat', 'list_channels', { category: 'General' })) // observes 1 channel
 
