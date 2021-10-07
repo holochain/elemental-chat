@@ -11,7 +11,7 @@ const path = require('path')
 
 // Note: this is a copy of the network config used in ec dna tests
 const network = {
-  bootstrap_service: 'https://bootstrap.holo.host',
+  bootstrap_service: 'https://bootstrap-staging.holo.host',
   network_type: 'quic_bootstrap',
   transport_pool: [
     {
@@ -20,7 +20,7 @@ const network = {
       proxy_config: {
         type: ProxyConfigType.RemoteProxyClient,
         proxy_url:
-          'kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/167.172.0.245/p/5788/--'
+          'kitsune-proxy://SYVd4CF3BdJ4DS7KwLLgeU3_DbHoZ34Y-qroZ79DOs8/kitsune-quic/h/165.22.32.11/p/5779/--'
       }
     }
   ],
@@ -32,12 +32,9 @@ const network = {
     agent_info_expires_after_ms: 1000 * 60 * 30, // Default was 20 minutes
     tx2_channel_count_per_connection: 16, // Default was 3
     default_rpc_multi_remote_request_grace_ms: 10,
-    gossip_single_storage_arc_per_space: true,
+    gossip_single_storage_arc_per_space: false,
 
     default_notify_remote_agent_count:  5,
-    default_notify_timeout_ms: 1000 * 30,
-    default_rpc_single_timeout_ms: 1000 * 30,
-    default_rpc_multi_timeout_ms: 1000 * 30,
     tls_in_mem_session_storage: 512,
     proxy_keepalive_ms: 1000 * 60 * 2,
     proxy_to_expire_ms: 1000 * 60 * 5,
@@ -66,26 +63,27 @@ const awaitIntegration = async(cell) => {
 }
 
 orchestrator.registerScenario('Two Chatters', async scenario => {
-  const [conductor] = await scenario.players([conductorConfig], false)
+  const [conductor, conductor2] = await scenario.players([conductorConfig, conductorConfig], false)
 
   await conductor.startup()
+  await conductor2.startup()
 
   const bundlePath = path.join(__dirname, '..', 'elemental-chat.happ')
 
-  const aliceChatHapp = await conductor.installBundledHapp({ path: bundlePath }, null, 'first_agent')
+  // const aliceChatHapp = await conductor.installBundledHapp({ path: bundlePath }, null, 'first_agent')
   const bobboChatHapp = await conductor.installBundledHapp({ path: bundlePath }, null, 'second_agent')
-  const carolChatHapp = await conductor.installBundledHapp({ path: bundlePath }, null, 'third_agent')
-  const [aliceChat] = aliceChatHapp.cells
+  const carolChatHapp = await conductor2.installBundledHapp({ path: bundlePath }, null, 'third_agent')
+  // const [aliceChat] = aliceChatHapp.cells
   const [bobboChat] = bobboChatHapp.cells
   const [carolChat] = carolChatHapp.cells
-  console.log('alice integration 1')
-  await awaitIntegration(aliceChat)
+  // console.log('alice integration 1')
+  // await awaitIntegration(aliceChat)
   console.log('bobbo integration 1')
   await awaitIntegration(bobboChat)
   console.log('carol integration 1')
   await awaitIntegration(carolChat)
 
-  await aliceChat.call('chat', 'refresh_chatter', null)
+  // await aliceChat.call('chat', 'refresh_chatter', null)
   await bobboChat.call('chat', 'refresh_chatter', null)
   await carolChat.call('chat', 'refresh_chatter', null)
 
@@ -98,13 +96,13 @@ orchestrator.registerScenario('Two Chatters', async scenario => {
   })
   console.log('bobbo integration 2')
   await awaitIntegration(bobboChat)
-  console.log('alice integration 2')
-  await awaitIntegration(aliceChat)
+  // console.log('alice integration 2')
+  // await awaitIntegration(aliceChat)
   console.log('carol integration 2')
   await awaitIntegration(carolChat)
 
-  console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' })) // observes 1 channel linked to path
-  console.log('alice stats', await aliceChat.call('chat', 'stats', { category: 'General' })) // observes 3 agents linked to path
+  // console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' })) // observes 1 channel linked to path
+  // console.log('alice stats', await aliceChat.call('chat', 'stats', { category: 'General' })) // observes 3 agents linked to path
   console.log('bobbo list_channels', await bobboChat.call('chat', 'list_channels', { category: 'General' })) // observes 1 channel
   console.log('bobbo stats', await bobboChat.call('chat', 'stats', { category: 'General' })) // observes 3 agents
   console.log('carol list_channels', await carolChat.call('chat', 'list_channels', { category: 'General' })) // observes 0 channels
@@ -120,12 +118,12 @@ orchestrator.registerScenario('Two Chatters', async scenario => {
 
   console.log('carol integration 1')
   await awaitIntegration(carolChat)
-  console.log('alice integration 2')
-  await awaitIntegration(aliceChat)
+  // console.log('alice integration 2')
+  // await awaitIntegration(aliceChat)
   console.log('bobbo integration 1')
   await awaitIntegration(bobboChat)
 
-  console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' })) // observes 2 channels
+  // console.log('alice list_channels', await aliceChat.call('chat', 'list_channels', { category: 'General' })) // observes 2 channels
   console.log('bobbo list_channels', await bobboChat.call('chat', 'list_channels', { category: 'General' })) // observes 1 channel
   console.log('carol list_channels', await carolChat.call('chat', 'list_channels', { category: 'General' })) // observes 1 channel
 
