@@ -11,7 +11,7 @@ const path = require('path')
 
 // Note: this is a copy of the network config used in ec dna tests
 const network = {
-  bootstrap_service: 'https://bootstrap.holo.host',
+  bootstrap_service: 'https://bootstrap-staging.holo.host',
   network_type: 'quic_bootstrap',
   transport_pool: [
     {
@@ -20,7 +20,7 @@ const network = {
       proxy_config: {
         type: ProxyConfigType.RemoteProxyClient,
         proxy_url:
-          'kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/167.172.0.245/p/5788/--'
+          'kitsune-proxy://SYVd4CF3BdJ4DS7KwLLgeU3_DbHoZ34Y-qroZ79DOs8/kitsune-quic/h/165.22.32.11/p/5779/--'
       }
     }
   ],
@@ -35,9 +35,6 @@ const network = {
     gossip_single_storage_arc_per_space: true,
 
     default_notify_remote_agent_count:  5,
-    default_notify_timeout_ms: 1000 * 30,
-    default_rpc_single_timeout_ms: 1000 * 30,
-    default_rpc_multi_timeout_ms: 1000 * 30,
     tls_in_mem_session_storage: 512,
     proxy_keepalive_ms: 1000 * 60 * 2,
     proxy_to_expire_ms: 1000 * 60 * 5,
