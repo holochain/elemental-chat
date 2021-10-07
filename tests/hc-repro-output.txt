@@ -1,6 +1,6 @@
-elemental-chat$ TRYORAMA_LOG_LEVEL=info RUST_LOG=[debug]=debug node tests/hc-repro.js
-21:35:39 [tryorama] info: Using the following settings from environment variables:
-21:35:39 [tryorama] info: {
+elemental-chat$ TRYORAMA_LOG_LEVEL=info RUST_LOG=[debug]=debug,warn node tests/hc-repro.js
+22:14:12 [tryorama] info: Using the following settings from environment variables:
+22:14:12 [tryorama] info: {
   "adminInterfaceId": "tryorama-interface-admin",
   "appInterfaceId": "tryorama-interface-app",
   "stateDumpOnError": true,
@@ -19,73 +19,190 @@ elemental-chat$ TRYORAMA_LOG_LEVEL=info RUST_LOG=[debug]=debug node tests/hc-rep
   "lairPath": "lair-keystore"
 }
 FIXME: ignoring onJoin
-21:35:39 [tryorama] info: Spawning lair for test with keystore at:  /tmp/tryorama/E1tXmT/keystore
-21:35:39 [tryorama] info: Using conductor path:  holochain
-21:35:39 [tryorama] info: Holochain version:     holochain 0.0.109
+22:14:12 [tryorama] info: Spawning lair for test with keystore at:  /tmp/tryorama/NEQSq0/keystore
+22:14:12 [tryorama] info: Using conductor path:  holochain
+22:14:12 [tryorama] info: Holochain version:     holochain 0.0.109
 
-21:35:39 [tryorama] info: Conductor config path: /tmp/tryorama/E1tXmT/conductor-config.yml
-21:35:40 info:
-☉☉☉ [[[CONDUCTOR c0]]]
+22:14:12 [tryorama] info: Conductor config path: /tmp/tryorama/NEQSq0/conductor-config.yml
+22:14:12 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 06 22:14:12.562  WARN kitsune_p2p_types::config::tuning_params_struct: INVALID TUNING PARAM: 'default_notify_remote_agent_count'
 ☉
-☉ ###HOLOCHAIN_SETUP###
-☉ ###ADMIN_PORT:33000###
-☉ ###HOLOCHAIN_SETUP_END###
-☉ Conductor ready.
+22:14:12 info:
+★★★ {{{CONDUCTOR c0}}}
+★ Oct 06 22:14:12.562  WARN holochain::conductor::conductor::builder: USING INSECURE PASSPHRASE FROM CONFIG--This defeats the whole purpose of having a passphrase. (unfortunately, there isn't another option at the moment).
+★ Oct 06 22:14:12.562 ERROR lair_keystore_client: error=IpcClientConnectError("/tmp/tryorama/NEQSq0/keystore/socket", Os { code: 2, kind: NotFound, message: "No such file or directory" }) file="/home/timo/.cargo/registry/src/github.com-1ecc6299db9ec823/lair_keystore_client-0.0.7/src/lib.rs" line=41
+★
+22:14:13 info:
+☯☯☯ [[[CONDUCTOR c0]]]
+☯
+☯ ###HOLOCHAIN_SETUP###
+☯ ###ADMIN_PORT:33000###
+☯ ###HOLOCHAIN_SETUP_END###
+☯ Conductor ready.
+☯
+22:14:13 [tryorama] info: Conductor 'c0' process spawning completed.
+App Port spun up on port  45821
+22:14:14 info:
+☸☸☸ {{{CONDUCTOR c0}}}
+☸ Oct 06 22:14:14.215  WARN holochain::conductor::api::api_cell: Using placeholder dpki
+☸
+22:14:14 info:
+☮☮☮ {{{CONDUCTOR c0}}}
+☮ Oct 06 22:14:14.732  WARN holochain::conductor::api::api_cell: Using placeholder dpki
+☮
+22:14:15 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 06 22:14:15.021  WARN holochain::conductor::api::api_cell: Using placeholder dpki
 ☉
-21:35:40 [tryorama] info: Conductor 'c0' process spawning completed.
-App Port spun up on port  35847
 alice integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 21 }
 bobbo integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
 carol integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
-21:35:43 info:
-★★★ [[[CONDUCTOR c0]]]
-★ Oct 06 21:35:43.125 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
+22:14:15 info:
+★★★ {{{CONDUCTOR c0}}}
+★ Oct 06 22:14:15.207  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
 ★
+22:14:15 info:
+☯☯☯ {{{CONDUCTOR c0}}}
+☯ Oct 06 22:14:15.224  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☯
+22:14:15 info:
+☸☸☸ {{{CONDUCTOR c0}}}
+☸ Oct 06 22:14:15.244  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☸
+22:14:15 info:
+☮☮☮ {{{CONDUCTOR c0}}}
+☮ Oct 06 22:14:15.252  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☮
+22:14:15 info:
+☉☉☉ [[[CONDUCTOR c0]]]
+☉ Oct 06 22:14:15.280 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
+☉
 bobbo integration 2
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
 alice integration 2
-integration dump was: { validation_limbo: 2, integration_limbo: 0, integrated: 51 }
+integration dump was: { validation_limbo: 1, integration_limbo: 5, integrated: 51 }
 waiting 5 seconds for integration
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 66 }
 carol integration 2
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
-21:35:48 info:
+22:14:20 info:
+★★★ {{{CONDUCTOR c0}}}
+★ Oct 06 22:14:20.313  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+★
+22:14:20 info:
 ☯☯☯ [[[CONDUCTOR c0]]]
-☯ Oct 06 21:35:48.163 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:35:43.124884Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9QHS_IuKLkTh5eLa8HUcHOyIGkzbml3Vla9cn4MUKMyX-cPD) }]
+☯ Oct 06 22:14:20.318 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T02:14:15.279694Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkU3TBQQ8VOIgMFRErohsurysBenYXYUT-7PKhksMTZa0Stcc7) }]
 ☯
 alice list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-21:35:48 info:
-☸☸☸ [[[CONDUCTOR c0]]]
-☸ Oct 06 21:35:48.173 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
+22:14:20 info:
+☸☸☸ {{{CONDUCTOR c0}}}
+☸ Oct 06 22:14:20.329  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
 ☸
-alice stats { agents: 3, active: 3, channels: 1, messages: 0 }
-21:35:48 info:
+22:14:20 info:
 ☮☮☮ [[[CONDUCTOR c0]]]
-☮ Oct 06 21:35:48.191 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:35:43.124884Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9QHS_IuKLkTh5eLa8HUcHOyIGkzbml3Vla9cn4MUKMyX-cPD) }]
+☮ Oct 06 22:14:20.334 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
+☮
+alice stats { agents: 3, active: 3, channels: 1, messages: 0 }
+22:14:20 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 06 22:14:20.340  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☉
+22:14:20 info:
+★★★ {{{CONDUCTOR c0}}}
+★ Oct 06 22:14:20.354  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.010469973
+★
+22:14:20 info:
+☯☯☯ [[[CONDUCTOR c0]]]
+☯ Oct 06 22:14:20.355 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T02:14:15.279694Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkU3TBQQ8VOIgMFRErohsurysBenYXYUT-7PKhksMTZa0Stcc7) }]
+☯
+22:14:20 info:
+☸☸☸ {{{CONDUCTOR c0}}}
+☸ Oct 06 22:14:20.368  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.012280274
+☸
+22:14:20 info:
+☮☮☮ {{{CONDUCTOR c0}}}
+☮ Oct 06 22:14:20.380  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.010735151
 ☮
 bobbo list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-21:35:48 info:
-☉☉☉ [[[CONDUCTOR c0]]]
-☉ Oct 06 21:35:48.245 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
+22:14:20 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 06 22:14:20.382  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☉
+22:14:20 info:
+★★★ {{{CONDUCTOR c0}}}
+★ Oct 06 22:14:20.394  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.010439594
+★
+22:14:20 info:
+☯☯☯ {{{CONDUCTOR c0}}}
+☯ Oct 06 22:14:20.407  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.010928187
+☯
+22:14:20 info:
+☸☸☸ [[[CONDUCTOR c0]]]
+☸ Oct 06 22:14:20.408 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
+☸
+22:14:20 info:
+☮☮☮ {{{CONDUCTOR c0}}}
+☮ Oct 06 22:14:20.420  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011052993
+☮
+22:14:20 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 06 22:14:20.433  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011593975
 ☉
 bobbo stats { agents: 3, active: 3, channels: 1, messages: 0 }
-21:35:48 info:
-★★★ [[[CONDUCTOR c0]]]
-★ Oct 06 21:35:48.300 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links []
+22:14:20 info:
+★★★ {{{CONDUCTOR c0}}}
+★ Oct 06 22:14:20.434  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
 ★
-carol list_channels { channels: [] }
-21:35:48 info:
-☯☯☯ [[[CONDUCTOR c0]]]
-☯ Oct 06 21:35:48.328 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
+22:14:20 info:
+☯☯☯ {{{CONDUCTOR c0}}}
+☯ Oct 06 22:14:20.446  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.010510703
 ☯
-carol stats { agents: 3, active: 3, channels: 0, messages: 0 }
-21:35:48 info:
-☸☸☸ [[[CONDUCTOR c0]]]
-☸ Oct 06 21:35:48.356 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
+22:14:20 info:
+☸☸☸ {{{CONDUCTOR c0}}}
+☸ Oct 06 22:14:20.459  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011375
 ☸
+22:14:20 info:
+☮☮☮ [[[CONDUCTOR c0]]]
+☮ Oct 06 22:14:20.460 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links []
+☮
+carol list_channels { channels: [] }
+22:14:20 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 06 22:14:20.461  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☉
+22:14:20 info:
+★★★ {{{CONDUCTOR c0}}}
+★ Oct 06 22:14:20.473  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.010791633
+★
+22:14:20 info:
+☯☯☯ {{{CONDUCTOR c0}}}
+☯ Oct 06 22:14:20.485  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011435984
+☯
+22:14:20 info:
+☸☸☸ [[[CONDUCTOR c0]]]
+☸ Oct 06 22:14:20.486 DEBUG wasm_trace: chat::entries::message::handlers:zomes/chat/src/entries/message/handlers.rs:187 num online chatters 3
+☸
+22:14:20 info:
+☮☮☮ {{{CONDUCTOR c0}}}
+☮ Oct 06 22:14:20.498  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.010436512
+☮
+carol stats { agents: 3, active: 3, channels: 0, messages: 0 }
+22:14:20 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 06 22:14:20.499  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☉
+22:14:20 info:
+★★★ {{{CONDUCTOR c0}}}
+★ Oct 06 22:14:20.512  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011269435
+★
+22:14:20 info:
+☯☯☯ [[[CONDUCTOR c0]]]
+☯ Oct 06 22:14:20.514 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:21 create_channel: ensured Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0]), Component([53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0])])
+☯
 carol integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
 alice integration 2
@@ -94,9 +211,13 @@ waiting 5 seconds for integration
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 78 }
 bobbo integration 1
 integration dump was: { validation_limbo: 0, integration_limbo: 0, integrated: 7 }
-21:35:53 info:
+22:14:25 info:
+☸☸☸ {{{CONDUCTOR c0}}}
+☸ Oct 06 22:14:25.541  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☸
+22:14:25 info:
 ☮☮☮ [[[CONDUCTOR c0]]]
-☮ Oct 06 21:35:53.388 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:35:43.124884Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9QHS_IuKLkTh5eLa8HUcHOyIGkzbml3Vla9cn4MUKMyX-cPD) }, Link { target: EntryHash(uhCEkX-ilKASrcdn09v_RhGNN2ZfqASyNCDlUizQcK1ENpHHrCmZZ), timestamp: Timestamp(2021-10-07T01:35:48.355675Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkM1oihAkNCzN1zMwDmf5AdXfL5TFP-31DEnJn_WBHwhY2Fwt4) }]
+☮ Oct 06 22:14:25.546 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T02:14:15.279694Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkU3TBQQ8VOIgMFRErohsurysBenYXYUT-7PKhksMTZa0Stcc7) }, Link { target: EntryHash(uhCEkX-ilKASrcdn09v_RhGNN2ZfqASyNCDlUizQcK1ENpHHrCmZZ), timestamp: Timestamp(2021-10-07T02:14:20.514102Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkks0BGVvzZkCTZERHXWnmE5ntjEgFyySi_Ka-G6jqy9IN-B-H_) }]
 ☮
 alice list_channels {
   channels: [
@@ -104,15 +225,47 @@ alice list_channels {
     { entry: [Object], info: [Object], latestChunk: 0 }
   ]
 }
-21:35:53 info:
-☉☉☉ [[[CONDUCTOR c0]]]
-☉ Oct 06 21:35:53.422 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T01:35:43.124884Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkk9QHS_IuKLkTh5eLa8HUcHOyIGkzbml3Vla9cn4MUKMyX-cPD) }]
+22:14:25 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 06 22:14:25.560  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
 ☉
-bobbo list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-21:35:53 info:
-★★★ [[[CONDUCTOR c0]]]
-★ Oct 06 21:35:53.465 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkX-ilKASrcdn09v_RhGNN2ZfqASyNCDlUizQcK1ENpHHrCmZZ), timestamp: Timestamp(2021-10-07T01:35:48.355675Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkM1oihAkNCzN1zMwDmf5AdXfL5TFP-31DEnJn_WBHwhY2Fwt4) }]
+22:14:25 info:
+★★★ {{{CONDUCTOR c0}}}
+★ Oct 06 22:14:25.573  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011203
 ★
+22:14:25 info:
+☯☯☯ [[[CONDUCTOR c0]]]
+☯ Oct 06 22:14:25.574 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkKFF7CrxVud4kj2UqyMRMkpeovBIZLo9d-AIPCaQScYvclEQs), timestamp: Timestamp(2021-10-07T02:14:15.279694Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 52, 0, 0, 0, 53, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkkU3TBQQ8VOIgMFRErohsurysBenYXYUT-7PKhksMTZa0Stcc7) }]
+☯
+22:14:25 info:
+☸☸☸ {{{CONDUCTOR c0}}}
+☸ Oct 06 22:14:25.587  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011725423
+☸
+22:14:25 info:
+☮☮☮ {{{CONDUCTOR c0}}}
+☮ Oct 06 22:14:25.600  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011265748
+☮
+bobbo list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
+22:14:25 info:
+☉☉☉ {{{CONDUCTOR c0}}}
+☉ Oct 06 22:14:25.604  WARN holochain::conductor::api::api_external::app_interface: AppRequest::ZomeCallInvocation is deprecated, use AppRequest::ZomeCall (TODO: update conductor-api)
+☉
+22:14:25 info:
+★★★ [[[CONDUCTOR c0]]]
+★ Oct 06 22:14:25.630 DEBUG wasm_trace: chat::entries::channel::handlers:zomes/chat/src/entries/channel/handlers.rs:50 list_channels: path Path([Component([71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0])]) links [Link { target: EntryHash(uhCEkX-ilKASrcdn09v_RhGNN2ZfqASyNCDlUizQcK1ENpHHrCmZZ), timestamp: Timestamp(2021-10-07T02:14:20.514102Z), tag: LinkTag([104, 100, 107, 46, 112, 97, 116, 104, 146, 196, 28, 71, 0, 0, 0, 101, 0, 0, 0, 110, 0, 0, 0, 101, 0, 0, 0, 114, 0, 0, 0, 97, 0, 0, 0, 108, 0, 0, 0, 196, 144, 53, 0, 0, 0, 52, 0, 0, 0, 98, 0, 0, 0, 50, 0, 0, 0, 55, 0, 0, 0, 101, 0, 0, 0, 49, 0, 0, 0, 101, 0, 0, 0, 45, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 97, 0, 0, 0, 49, 0, 0, 0, 45, 0, 0, 0, 52, 0, 0, 0, 54, 0, 0, 0, 55, 0, 0, 0, 50, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 51, 0, 0, 0, 49, 0, 0, 0, 51, 0, 0, 0, 45, 0, 0, 0, 97, 0, 0, 0, 56, 0, 0, 0, 56, 0, 0, 0, 97, 0, 0, 0, 54, 0, 0, 0, 49, 0, 0, 0, 57, 0, 0, 0, 50, 0, 0, 0, 102, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0, 51, 0, 0, 0]), create_link_hash: HeaderHash(uhCkks0BGVvzZkCTZERHXWnmE5ntjEgFyySi_Ka-G6jqy9IN-B-H_) }]
+★
+22:14:25 info:
+☯☯☯ {{{CONDUCTOR c0}}}
+☯ Oct 06 22:14:25.630  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011601146
+☯
+22:14:25 info:
+☸☸☸ {{{CONDUCTOR c0}}}
+☸ Oct 06 22:14:25.643  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011412047
+☸
+22:14:25 info:
+☮☮☮ {{{CONDUCTOR c0}}}
+☮ Oct 06 22:14:25.657  WARN kitsune_p2p_types::tx2::tx2_api: (api) req dropped dbg_name=Wire::Call local_cert=Cert(SX0mgx..1Qc6R8) peer_cert=Cert(D_CR_S..uzhMTM) elapsed_s=0.011345946
+☮
 carol list_channels { channels: [ { entry: [Object], info: [Object], latestChunk: 0 } ] }
-21:35:53 [tryorama] info: conductor 'c0' exited with code null
+22:14:25 [tryorama] info: conductor 'c0' exited with code null
 FIXME: ignoring onLeave
