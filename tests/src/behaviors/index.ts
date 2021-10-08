@@ -65,9 +65,9 @@ if (trial === "gossip") {
     const phases = [
         {
             period: 1000 * 60 * 1,
-            messages: 135,
-            active: 150,
-            senders: 15,
+            messages: 10,
+            active: 5,
+            senders: 5,
         },
 /*        {
             period: 1000 * 60 * 1,
