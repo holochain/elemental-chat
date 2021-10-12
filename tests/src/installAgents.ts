@@ -33,7 +33,7 @@ export const installJCHapp = async (conductor: Player): Promise<InstalledHapp> =
   return happ
 }
 
-export const installAgents = async (conductor: Player, agentNames: string[], jcHapp?: InstalledHapp, memProofMutator: (memproof: Memproof) => Memproof = m => m): Promise<InstalledHapp[]> => {
+export const installAgents = async (conductor: Player, agentNames: string[], jcHapp?: InstalledHapp, memProofMutator= m => m): Promise<InstalledHapp[]> => {
   let holo_agent_override = undefined
   if (!!jcHapp) {
     holo_agent_override = Codec.AgentId.encode(jcHapp.agent)
@@ -58,7 +58,7 @@ export const installAgents = async (conductor: Player, agentNames: string[], jcH
         role: "ROLE",
         record_locator: "RECORD_LOCATOR",
         registered_agent: Codec.AgentId.encode(agent_key)
-      });
+      });      
       const mutated = memProofMutator(membrane_proof)
       dna["membrane_proof"] = Array.from(msgpack.encode(mutated))
     }

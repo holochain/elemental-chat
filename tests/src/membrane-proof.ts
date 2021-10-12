@@ -1,5 +1,5 @@
 const { Codec } = require("@holo-host/cryptolib");
-
+import { v4 as uuidv4 } from "uuid";
 import { localConductorConfig, awaitIntegration } from './common'
 import { installJCHapp, installAgents, Memproof } from './installAgents'
 
@@ -35,6 +35,37 @@ module.exports = async (orchestrator) => {
         }
       })
     }*/
+
+   // now try and install doug with the read-only membrane proof
+   let [doug_chat_happ] = await installAgents(conductor,  ["doug"], jcHapp1, (_)=>{return 0})
+   const [doug_chat] = doug_chat_happ.cells
+   // reading the channel list should work
+   channel_list = await doug_chat.call('chat', 'list_channels', { category: "General" });
+
+   // creating a channel should fail
+   try {
+     const channel = await doug_chat.call('chat', 'create_channel', { name: "Test Channel", entry: { category: "General", uuid: "123" } });
+     t.fail()
+   } catch(e) {
+     t.deepEqual(e, { type: 'error', data: { type: 'ribosome_error', data: 'Wasm error while working with Ribosome: Guest("Read only instance")' } })
+   }
+
+   let first_message = {
+     last_seen: { First: null },
+     channel: {category: "General", uuid: "123"},
+     chunk: 0,
+     entry: {
+       uuid: uuidv4(),
+       content: 'x'.repeat(1),
+     }
+   };
+   // sending a message should fail
+   try {
+     const x = await doug_chat.call('chat', 'create_message', first_message);
+     t.fail()
+   } catch(e) {
+     t.deepEqual(e, { type: 'error', data: { type: 'ribosome_error', data: 'Wasm error while working with Ribosome: Guest("Read only instance")' } })
+   }
 
     // now try and install carol with a membrane proof from a different joining code authority
     try {

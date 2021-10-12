@@ -1,9 +1,26 @@
 use hdk::prelude::*;
+use crate::skip_proof;
 
 /// check to see if this is the valid read_only membrane proof
 pub fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
     let b = mem_proof.bytes();
     b == &[0]
+}
+
+pub fn is_read_only_instance() -> bool {
+    if skip_proof() {
+        return false;
+    }
+    if let Ok(entries) = &query(ChainQueryFilter::new().header_type(HeaderType::AgentValidationPkg)) {
+        if let Header::AgentValidationPkg(h) = entries[0].header() {
+            if let Some(mem_proof) = &h.membrane_proof {
+                if is_read_only_proof(&mem_proof) {
+                    return true;
+                }
+            }
+        }
+    };
+    false
 }
 
 /// Validate joining code from the membrane_proof
