@@ -81,6 +81,9 @@ fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallba
 
 #[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
+    if hc_joining_code::is_read_only_instance() {
+        return Err(ChatError::ReadOnly.into());
+    }
     Ok(channel::handlers::create_channel(channel_input)?)
 }
 
@@ -91,6 +94,9 @@ fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
 
 #[hdk_extern]
 fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
+    if hc_joining_code::is_read_only_instance() {
+        return Err(ChatError::ReadOnly.into());
+    }
     Ok(message::handlers::create_message(message_input)?)
 }
 
@@ -106,11 +112,17 @@ fn get_active_chatters(_: ()) -> ExternResult<ActiveChatters> {
 
 #[hdk_extern]
 fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
+    if hc_joining_code::is_read_only_instance() {
+        return Err(ChatError::ReadOnly.into());
+    }
     Ok(message::handlers::signal_specific_chatters(input)?)
 }
 
 #[hdk_extern]
 fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> {
+    if hc_joining_code::is_read_only_instance() {
+        return Err(ChatError::ReadOnly.into());
+    }
     Ok(message::handlers::signal_chatters(message_data)?)
 }
 
