@@ -9,14 +9,14 @@ crate-type = ["cdylib", "rlib"]
 name = "chat"
 
 [dependencies]
-chrono = {version = "0.4", features = ['alloc', 'std']}
+chrono = {version = "0.4.19", features = ['alloc', 'std']}
 derive_more = "0.99"
 hc_joining_code = {path = "../../crates/joining_code"}
 hdk = "=0.0.107"
 serde = "1.0"
 thiserror = "1.0"
 hc_utils = "=0.0.107"
-holo_hash = { version = "*", features = ["encoding"]}
+holo_hash = { version = "=0.0.7", features = ["encoding"]}
 
 [dev-dependencies]
 holochain = { git = "https://github.com/holochain/holochain.git", rev = "0f96823dd7861b85780eb62936d1e27d53ea4e65", features = ["test_utils"] }
