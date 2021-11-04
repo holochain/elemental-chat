@@ -235,14 +235,17 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
 
 // Turn all the link targets into the actual message
 fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
+    // Optimizing by calling parallel gets
     let mut messages = Vec::with_capacity(links.len());
-
     // for every link get details on the target and create the message
-    for target in links.into_iter().map(|link| link.target) {
-        // Get details because we are going to return the original message and
-        // allow the UI to follow the CRUD tree to find which message
-        // to actually display.
-        let message = match get_details(target, GetOptions::content())? {
+    let msg_results_input: Vec<GetInput> = links
+        .into_iter()
+        .map(|link| GetInput::new(link.target.into(), GetOptions::default()))
+        .collect();
+    let all_msg_results_elements = HDK.with(|hdk| hdk.borrow().get_details(msg_results_input))?;
+
+    for ele in all_msg_results_elements.into_iter() {
+        match ele {
             Some(Details::Entry(EntryDetails {
                 entry, mut headers, ..
             })) => {
@@ -255,45 +258,14 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
                 };
 
                 // Create the message type for the UI
-                MessageData::new(signed_header.header().clone(), message)?
+                messages.push(MessageData::new(signed_header.header().clone(), message)?)
             }
             // Message is missing. This could be an error but we are
             // going to ignore it.
-            _ => continue,
-        };
-        messages.push(message);
+            _ => continue, // Create the message type for the UI
+        }
     }
     Ok(messages)
-    // TODO: use this code when you figure out how to call hdk::hdk::get()
-    // let mut messages = Vec::with_capacity(links.len());
-    // let mut get_input: Vec<GetInput> = Vec::new();
-    // // for every link get details on the target and create the message
-    // for target in links.into_iter().map(|link| link.target) {
-    //     // Get details because we are going to return the original message and
-    //     // allow the UI to follow the CRUD tree to find which message
-    //     // to actually display.
-    //     get_input.push(GetInput {
-    //         any_dht_hash: target.into(),
-    //         get_options: GetOptions::content(),
-    //     });
-    // }
-    // HDK.with(|hdk| hdk.borrow().get_details(game_results_input))?;
-    // let response = hdk::hdk::get(get_input)?;
-    // for ele in response.into_iter() {
-    //     match ele {
-    //         Some(e) => {
-    //             // Turn the entry into a MessageEntry
-    //         let message: Message = e.entry().try_into()?;
-    //         let signed_header = e.header();
-
-    //         // Create the message type for the UI
-    //         messages.push(MessageData::new(signed_header.header().clone(), message)?)
-
-    //         }
-    //         None => continue
-    //     }
-    // }
-    // Ok(messages)
 }
 
 /// Add the chunk index from the Date type to this path
