@@ -11,5 +11,5 @@ doctest = false
 
 [dependencies]
 hdk = "=0.0.107"
-hc_utils = "0"
+hc_utils = "=0.0.107"
 profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.107", package = "profile"}

@@ -62,7 +62,7 @@ test-all:	test
 
 test:		test-unit test-e2e # test-stress # re-enable when Stress tests end reliably
 
-test-unit:
+test-unit: $(DNA) FORCE
 	RUST_BACKTRACE=1 cargo test \
 	    -- --nocapture
 
