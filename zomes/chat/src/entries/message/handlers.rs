@@ -11,8 +11,8 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{
-    ActiveChatters, Channel, LastSeen, LastSeenKey, ListMessages, ListMessagesInput,
-    ListMessagesPageInput, MessageData, SigResults, SignalMessageData, SignalSpecificInput,
+    ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, ListMessagesPageInput,
+    MessageData, SigResults, SignalMessageData, SignalSpecificInput,
 };
 
 /// Create a new message
@@ -35,21 +35,21 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let path: Path = channel.clone().into();
 
     // Add the current time components
-    let path = get_timestamp_path(path, sys_time()?, None)?;
+    let path = timestamp_into_path(path, sys_time()?, None)?;
 
     // Ensure the path exists
     path.ensure()?;
 
-    debug!("path ensure: {:?}", path);
     // The actual hash we are going to hang this message on
     let path_hash = path.hash()?;
-
+    let hp: &Vec<_> = path.as_ref();
+    let hour = String::try_from(&hp[hp.len() - 1])?;
+    debug!("COMMITING TO HOUR:::  {:?}", hour);
     // Get the hash of the last_seen of this message
     let parent_hash_entry = match last_seen {
         LastSeen::Message(hash_entry) => hash_entry,
         LastSeen::First => path_hash.clone(),
     };
-    debug!("tag: {}", parent_hash_entry);
     // Turn the reply to and timestamp into a link tag
     let tag = LastSeenKey::new(parent_hash_entry, message.created_at);
     create_link(path_hash, message.entry_hash.clone(), LinkTag::from(tag))?;
@@ -71,29 +71,38 @@ pub(crate) fn list_page_messages(
     } = list_message_input;
 
     let mut links: Vec<Link> = Vec::new();
-    let mut counter = 0;
-    loop {
-        // Get the channel hash
-        let path: Path = channel.clone().into();
-        // DEV MODE: This can be updated to sec() for testing
-        let duration = Duration::hours(counter);
-        // TODO:
-        get_next_path(path.clone(), earlier_than)?;
+    // let mut counter = 0;
 
-        // Add the chunk component
-        let path = get_timestamp_path(path, earlier_than, Some(duration))?;
+    // Get the channel hash
+    let path: Path = channel.clone().into();
+    let mut next_path = timestamp_into_path(path.clone(), earlier_than, None)?;
+
+    loop {
+        let path: Path = channel.clone().into();
+
+        debug!("Next path: {:?}", next_path.clone());
+        // let path = timestamp_into_path(path, earlier_than, Some(duration))?;
 
         // Ensure the path exists
-        if path.exists()? {
+        if next_path.exists()? {
+            debug!("next path exists");
             // Get the actual hash we are going to pull the messages from
-            let channel_entry_hash = path.hash()?;
+            let channel_entry_hash = next_path.hash()?;
             // Get the message links on this channel
             let nm = &mut get_links(channel_entry_hash.clone(), None)?.into_inner();
+            let nm_check = nm.is_empty();
             links.append(nm);
-            if (links.len() >= target_message_count) || nm.is_empty() {
+            if (links.len() >= target_message_count) || nm_check {
+                debug!("links.len() BREAK");
                 break;
             }
-            counter += 1;
+        } else {
+            debug!("next.path does not exists");
+        }
+        // TODO: set next path
+        match get_next_path(&path, next_path)? {
+            Some(p) => next_path = p,
+            None => break,
         }
     }
 
@@ -103,33 +112,38 @@ pub(crate) fn list_page_messages(
 }
 
 // TODO:
-pub fn get_next_path(channel: Path, last_seen: Timestamp) -> ChatResult<()> {
-    // base is going to be a channel
-    // get last seen
-
+pub fn get_next_path(channel: &Path, last_seen: Path) -> ChatResult<Option<Path>> {
+    let (_, _, l_day, l_hour) = path_spread(&last_seen)?;
     // get base that starts with year and month
-    let base_ym = get_year_month_path(channel, last_seen)?;
+    let base_ym = get_year_month_path(&channel, &last_seen)?; // ROOT->Y->M
     let days = base_ym.children()?.into_inner();
     // let mut msg_links: Vec<Link> = Vec::new();
-    let mut a = 0;
-    for tag in days.clone().into_iter().map(|link| link.tag) {
-        debug!("COUNT: {}", a);
-        a += 1;
-        let years = Path::try_from(&tag)?; // a->B->YEAR
-        debug!("years:  {:?}", years);
-        let path: &Vec<_> = years.as_ref();
-        for i in path {
-            debug!("CHECK:  {:?}", String::try_from(i)?);
+    for tag in days.clone().into_iter().rev().map(|link| link.tag) {
+        let day = Path::try_from(&tag)?; // ROOT->Y->M->D
+        let dp: &Vec<_> = day.as_ref();
+        // debug!("CHECK days:  {:?}", String::try_from(&dp[dp.len() - 1])?);
+        // check if latest day is less than path day
+        if format!("{}", l_day) >= String::try_from(&dp[dp.len() - 1])? {
+            let hours = day.children()?.into_inner();
+            for tag in hours.clone().into_iter().rev().map(|link| link.tag) {
+                let hour_path = Path::try_from(&tag)?; // ROOT->Y->M->D->H
+                let hp: &Vec<_> = hour_path.as_ref();
+                let hour = String::try_from(&hp[hp.len() - 1])?;
+                debug!("CHECK hour/seconds:  {:?}", hour);
+                if hour < format!("{}", l_hour) {
+                    return Ok(Some(hour_path));
+                }
+            }
         }
     }
 
-    Ok(())
+    Ok(None)
 }
 
 use chrono::{DateTime, Datelike, Duration, NaiveDateTime, Timelike, Utc};
 use std::ops::Sub;
 /// Add the message from the Date type to this path
-pub fn get_timestamp_path(
+pub fn timestamp_into_path(
     path: Path,
     time: Timestamp,
     interval: Option<Duration>, // Duration that will be subtracted from time to get a path for that time
@@ -144,18 +158,27 @@ pub fn get_timestamp_path(
     components.push(format!("{}", time.year()).into());
     components.push(format!("{}", time.month()).into());
     components.push(format!("{}", time.day()).into());
-    // DEV MODE: This can be updated to sec() for testing
+    // DEV_MODE: This can be updated to sec() for testing
     components.push(format!("{}", time.hour()).into());
     Ok(components.into())
 }
-pub fn get_year_month_path(path: Path, time: Timestamp) -> ChatResult<Path> {
-    let (ms, ns) = time.as_seconds_and_nanos();
-    let time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(ms, ns), Utc);
-    // if Some(i) = interval.unwrap() {}
-    let mut components: Vec<_> = path.into();
-
-    components.push(format!("{}", time.year()).into());
-    components.push(format!("{}", time.month()).into());
+///
+pub fn path_spread(p: &Path) -> ChatResult<(String, String, String, String)> {
+    let p: &Vec<_> = p.as_ref();
+    let l = p.len();
+    Ok((
+        String::try_from(&p[l - 4])?,
+        String::try_from(&p[l - 3])?,
+        String::try_from(&p[l - 2])?,
+        String::try_from(&p[l - 1])?,
+    ))
+}
+///
+pub fn get_year_month_path(path: &Path, time_path: &Path) -> ChatResult<Path> {
+    let mut components: Vec<_> = path.to_owned().into();
+    let (y, m, _, _) = path_spread(time_path)?;
+    components.push(y.into());
+    components.push(m.into());
     Ok(components.into())
 }
 /// List all the messages on this channel

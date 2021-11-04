@@ -64,29 +64,31 @@ module.exports = async (orchestrator) => {
         content: "Is anybody out there?",
       }
     });
+    await delay(10000)
     console.log(sends[1]);
     recvs.push(await alice_chat.call('chat', 'create_message', sends[1]));
     console.log(recvs[1]);
     t.deepEqual(sends[1].entry, recvs[1].entry);
 
-    const channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
-    console.log("????????????????????",channel_list);
+    await delay(10000)    
+    await awaitIntegration(bobbo_chat)
 
     // Alice lists the messages
     const getTimestamp = () => (Date.now() * 1000)
-    let alices_view = await alice_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 1 })
-    console.log(">>>>>>>", alices_view);
-    console.log("LENGTH >>>>>>>", alices_view.messages.length);
-      
-    await awaitIntegration(bobbo_chat)
-
-    let bobbos_view = await bobbo_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 1 })
-    console.log(">>>>>>>", bobbos_view);
-    console.log("LENGTH >>>>>>>", bobbos_view.messages.length);
+    let alices_view = await alice_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })
     
+    let bobbos_view = await bobbo_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })
+    
+    if (alices_view.messages.length !== 2) {
+      await delay(10000)
+      console.log("Trying again...");
+      
+      alices_view = await alice_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })
+   
+      bobbos_view = await bobbo_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })     
+    }
     t.deepEqual(alices_view.messages.length, 2)
     t.deepEqual(bobbos_view.messages.length, 2)
-
     // Bobbo and Alice both reply to the same message
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
@@ -114,10 +116,12 @@ module.exports = async (orchestrator) => {
     t.deepEqual(sends[3].entry, recvs[3].entry);
     await delay(4000)
     // Alice lists the messages
-    alices_view = await alice_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 1 })
+    alices_view = await alice_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 20 })
     // Bobbo lists the messages
-    bobbos_view = await bobbo_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 1 })
-    console.log(">>>>>>>", bobbos_view);
+    bobbos_view = await bobbo_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 10 })
+    bobbos_view.messages.forEach(msg => {
+      console.log(">>>>>>>", msg.entry);
+    });
     console.log("LENGTH >>>>>>>", bobbos_view.messages.length);
     
     t.deepEqual(alices_view.messages.length, 4)
