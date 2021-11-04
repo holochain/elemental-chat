@@ -98,7 +98,6 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
         }
 
         // Get the actual channel info entry
-        // TODO: Need to Optimize
         if let Some(element) = get(latest_info.target, GetOptions::content())? {
             if let Some(info) = element.into_inner().1.to_app_option()? {
                 // Construct the channel data from the channel and info

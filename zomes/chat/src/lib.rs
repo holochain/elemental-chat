@@ -10,6 +10,7 @@ pub use message::{
 };
 pub mod entries;
 pub mod error;
+pub mod pagination_helper;
 pub mod utils;
 pub mod validation;
 
