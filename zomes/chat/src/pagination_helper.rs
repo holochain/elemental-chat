@@ -18,7 +18,7 @@ pub fn get_page_links(
 
     loop {
         debug!("Next path: {:?}", next_path.clone());
-        // Ensure the path exists
+        // Confirm the path exists
         if next_path.exists()? {
             debug!("next path exists");
             // Get the actual hash we are going to pull the messages from
