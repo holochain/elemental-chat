@@ -149,7 +149,10 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
                 let signed_header = match headers.pop() {
                     Some(h) => h,
                     // Ignoring missing messages
-                    None => continue,
+                    None => {
+                        debug!("Ignoring missing messages");
+                        continue;
+                    }
                 };
 
                 // Create the message type for the UI

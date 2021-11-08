@@ -37,7 +37,10 @@ pub fn get_page_links(
         // set next path
         match get_next_path(&base, next_path)? {
             Some(p) => next_path = p,
-            None => break,
+            None => {
+                debug!("Crawled through the entire tree");
+                break;
+            }
         }
     }
     Ok(links)
@@ -45,15 +48,15 @@ pub fn get_page_links(
 
 ///
 pub fn get_next_path(channel: &Path, last_seen: Path) -> ChatResult<Option<Path>> {
-    let (_, _, l_day, l_hour) = path_spread(&last_seen)?;
+    let (ly, lm, l_day, mut l_hour) = path_spread(&last_seen)?;
+    debug!("Crawling through year {} and month {}", ly, lm);
     // get base that starts with year and month
     let base_ym = get_year_month_path(&channel, &last_seen)?; // ROOT->Y->M
     let days = base_ym.children()?.into_inner();
-    // let mut msg_links: Vec<Link> = Vec::new();
     for tag in days.clone().into_iter().rev().map(|link| link.tag) {
         let day = Path::try_from(&tag)?; // ROOT->Y->M->D
         let dp: &Vec<_> = day.as_ref();
-        // debug!("CHECK days:  {:?}", String::try_from(&dp[dp.len() - 1])?);
+        debug!("Checking day {:?}", String::try_from(&dp[dp.len() - 1])?);
         // check if latest day is less than path day
         if format!("{}", l_day) >= String::try_from(&dp[dp.len() - 1])? {
             let hours = day.children()?.into_inner();
@@ -61,11 +64,14 @@ pub fn get_next_path(channel: &Path, last_seen: Path) -> ChatResult<Option<Path>
                 let hour_path = Path::try_from(&tag)?; // ROOT->Y->M->D->H
                 let hp: &Vec<_> = hour_path.as_ref();
                 let hour = String::try_from(&hp[hp.len() - 1])?;
-                debug!("CHECK hour/seconds:  {:?}", hour);
+                debug!("Checking hour:  {:?}", hour);
                 if hour < format!("{}", l_hour) {
+                    debug!("Next hour selected:  {:?}", hour);
                     return Ok(Some(hour_path));
                 }
             }
+            debug!("Resetting the hour to 23:00");
+            l_hour = "23".to_string()
         }
     }
 

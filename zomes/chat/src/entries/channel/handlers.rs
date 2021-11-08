@@ -1,3 +1,4 @@
+use super::{ChannelData, ChannelInfo, ChannelInfoTag, ChannelList, ChannelListInput};
 use crate::{
     channel::{Channel, ChannelInput},
     error::ChatResult,
@@ -5,8 +6,7 @@ use crate::{
 };
 use hdk::prelude::*;
 use link::Link;
-
-use super::{ChannelData, ChannelInfo, ChannelInfoTag, ChannelList, ChannelListInput};
+use std::collections::HashMap;
 
 /// Create a new channel
 /// This effectively just stores channel info on the
@@ -45,7 +45,11 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
     // Get any channels on this path
     let links = path.children()?.into_inner();
     let mut channels = Vec::with_capacity(links.len());
-
+    struct ChannelPayload {
+        entry: Channel,
+        latest_chunk: u32,
+    }
+    let mut channel_data: HashMap<EntryHash, ChannelPayload> = HashMap::new();
     // For each channel get the channel info links and choose the latest
     for tag in links.into_iter().map(|link| link.tag) {
         // Path links have their full path as the tag so
@@ -97,18 +101,38 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
             }
         }
 
-        // Get the actual channel info entry
-        if let Some(element) = get(latest_info.target, GetOptions::content())? {
-            if let Some(info) = element.into_inner().1.to_app_option()? {
-                // Construct the channel data from the channel and info
-                channels.push(ChannelData {
-                    entry: channel,
-                    info,
-                    latest_chunk: chunk,
-                });
+        channel_data.insert(
+            latest_info.target,
+            ChannelPayload {
+                entry: channel,
+                latest_chunk: chunk,
+            },
+        );
+    }
+    let chan_results_input = channel_data
+        .keys()
+        .cloned()
+        .into_iter()
+        .map(|t| GetInput::new(t.into(), GetOptions::default()))
+        .collect();
+    let all_channel_results_elements = HDK.with(|hdk| hdk.borrow().get(chan_results_input))?;
+    // Get the actual channel info entry
+    for ele in all_channel_results_elements.into_iter() {
+        if let Some(element) = ele {
+            if let Some(info) = element.into_inner().1.to_app_option::<ChannelInfo>()? {
+                // Turn the entry into a ChannelInfo
+                let info_hash = hash_entry(&info)?;
+                if let Some(d) = channel_data.get(&info_hash) {
+                    channels.push(ChannelData {
+                        entry: d.entry.clone(),
+                        info,
+                        latest_chunk: d.latest_chunk.clone(),
+                    })
+                }
             }
         }
     }
+
     // Return all the channels data to the UI
     Ok(channels.into())
 }
