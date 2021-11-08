@@ -57,7 +57,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     Ok(message)
 }
 
-/// Using pagination to List all the messages on this channel
+/// Using batching to List all the messages on this channel
 pub(crate) fn list_page_messages(
     list_message_input: ListMessagesPageInput,
 ) -> ChatResult<ListMessages> {
