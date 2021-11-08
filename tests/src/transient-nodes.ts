@@ -2,6 +2,7 @@ import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
 import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfig, awaitIntegration, delay } from './common'
 import { installAgents } from './installAgents'
+import { getTimestamp } from './utils'
 
 module.exports = async (orchestrator) => {
     orchestrator.registerScenario('transient nodes-local', async (s, t) => {
@@ -18,7 +19,9 @@ const gotChannelsAndMessages = async(t, name, happ, channelEntry, retry_count, r
   while (true) {
     const channel_list = await happ.call('chat', 'list_channels', { category: "General" });
     console.log(`${name}'s channel list:`, channel_list.channels);
-    const r = await happ.call('chat', 'list_messages', { channel: channelEntry, active_chatter: false, chunk: {start:0, end: 1} })
+    let batch_payload = { channel: channelEntry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 }
+
+    const r = await happ.call('chat', 'list_messages', batch_payload)
     t.ok(r)
     console.log(`${name}'s message list:`, r);
     if (r.messages.length > 0) {

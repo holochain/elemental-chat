@@ -94,21 +94,30 @@ async fn chat_away() {
 
     assert_eq!(msg1.entry, res1.entry);
 
-    let lmi = ListMessagesInput {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let start = SystemTime::now();
+    let since_the_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+    // let current_time = Utc::now();
+    let lmpi = ListMessagesBatchInput {
         channel: channel.entry.clone(),
+        earlier_than: hdk::prelude::Timestamp::from_micros(
+            since_the_epoch.as_micros().try_into().unwrap(),
+        ),
+        target_message_count: 1,
         active_chatter: false,
-        chunk: Chunk { start: 0, end: 1 },
     };
 
     let alice_msgs: ListMessages = conductor
-        .call(alice_chat, "list_messages", lmi.clone())
+        .call(alice_chat, "list_messages", lmpi.clone())
         .await;
 
     // TODO: add consistency awaiting to sweettest
     tokio::time::sleep(tokio::time::Duration::from_millis(4000)).await;
 
     let bobbo_msgs: ListMessages = conductor
-        .call(bobbo_chat, "list_messages", lmi.clone())
+        .call(bobbo_chat, "list_messages", lmpi.clone())
         .await;
 
     // Alice got all messages so far.
@@ -140,11 +149,11 @@ async fn chat_away() {
     tokio::time::sleep(tokio::time::Duration::from_millis(4000)).await;
 
     let alice_msgs: ListMessages = conductor
-        .call(alice_chat, "list_messages", lmi.clone())
+        .call(alice_chat, "list_messages", lmpi.clone())
         .await;
 
     let bobbo_msgs: ListMessages = conductor
-        .call(bobbo_chat, "list_messages", lmi.clone())
+        .call(bobbo_chat, "list_messages", lmpi.clone())
         .await;
 
     // Alice got all messages so far.
@@ -154,21 +163,4 @@ async fn chat_away() {
     );
     // Bobbo got the same messages as Alice.
     assert_eq!(alice_msgs, bobbo_msgs);
-
-    let all_messages: AllMessagesList = conductor
-        .call(
-            bobbo_chat,
-            "list_all_messages",
-            ListAllMessagesInput {
-                category: "General".into(),
-                chunk: Chunk { start: 0, end: 1 },
-            },
-        )
-        .await;
-
-    assert_eq!(
-        all_messages.0[0].channel.info.name,
-        "Test Channel".to_string()
-    );
-    assert_eq!(all_messages.0[0].messages.len(), 4);
 }

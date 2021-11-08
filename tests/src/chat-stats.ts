@@ -74,12 +74,12 @@ module.exports = async (orchestrator) => {
     await delay(1500)
 
     let stats = await alice_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 3});
+    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 0}); // stats for messages is depricated 
 
     await delay(1500)
 
     stats = await bob_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 3});
+    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 0}); // stats for messages is depricated 
 
   })
 }

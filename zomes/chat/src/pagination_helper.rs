@@ -8,7 +8,7 @@ use hdk::prelude::*;
 use std::ops::Sub;
 
 ///
-pub fn get_page_links(
+pub fn get_batch_links(
     base: Path,
     earlier_than: Timestamp,
     target_count: usize,

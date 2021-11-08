@@ -66,11 +66,11 @@ pub struct ListMessagesInput {
 /// Input to the list messages call
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesBatchInput {
-    channel: Channel,
-    earlier_than: Timestamp,
+    pub channel: Channel,
+    pub earlier_than: Timestamp,
     // Keep expanding search interval until this count is reached
-    target_message_count: usize, // UI will say 20 to start
-    active_chatter: bool,
+    pub target_message_count: usize, // UI will say 20 to start
+    pub active_chatter: bool,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 pub struct Chunk {
