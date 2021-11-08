@@ -10,7 +10,7 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{
-    ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesBatchInput, MessageData,
+    ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData,
     SigResults, SignalMessageData, SignalSpecificInput,
 };
 
@@ -34,7 +34,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let path: Path = channel.clone().into();
 
     // Add the current time components
-    let path = crate::pagination_helper::timestamp_into_path(path, sys_time()?, None)?;
+    let path = crate::pagination_helper::timestamp_into_path(path, sys_time()?)?;
 
     // Ensure the path exists
     path.ensure()?;
@@ -58,19 +58,16 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
 }
 
 /// Using batching to List all the messages on this channel
-pub(crate) fn list_messages_batch(
-    list_message_input: ListMessagesBatchInput,
-) -> ChatResult<ListMessages> {
-    let ListMessagesBatchInput {
+pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
+    let ListMessagesInput {
         channel,
-        earlier_than,
+        earliest_seen,
         target_message_count,
-        active_chatter: _,
     } = list_message_input;
 
-    let path: Path = channel.clone().into();
+    let path: Path = channel.into();
     let mut links =
-        crate::pagination_helper::get_batch_links(path, earlier_than, target_message_count)?;
+        crate::pagination_helper::get_message_links(path, earliest_seen, target_message_count)?;
     links.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
     let sorted_messages = get_messages(links)?;
     Ok(sorted_messages.into())

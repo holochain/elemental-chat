@@ -94,19 +94,11 @@ async fn chat_away() {
 
     assert_eq!(msg1.entry, res1.entry);
 
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let start = SystemTime::now();
-    let since_the_epoch = start
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
     // let current_time = Utc::now();
-    let lmpi = ListMessagesBatchInput {
+    let lmpi = ListMessagesInput {
         channel: channel.entry.clone(),
-        earlier_than: hdk::prelude::Timestamp::from_micros(
-            since_the_epoch.as_micros().try_into().unwrap(),
-        ),
+        earliest_seen: None,
         target_message_count: 1,
-        active_chatter: false,
     };
 
     let alice_msgs: ListMessages = conductor

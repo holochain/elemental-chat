@@ -5,7 +5,7 @@ pub use hc_joining_code;
 pub use hdk::prelude::Path;
 pub use hdk::prelude::*;
 pub use message::{
-    ActiveChatters, ListMessages, ListMessagesBatchInput, Message, MessageData, MessageInput,
+    ActiveChatters, ListMessages, ListMessagesInput, Message, MessageData, MessageInput,
     SigResults, SignalMessageData, SignalSpecificInput,
 };
 pub mod entries;
@@ -142,15 +142,9 @@ fn list_channels(list_channels_input: ChannelListInput) -> ExternResult<ChannelL
     Ok(channel::handlers::list_channels(list_channels_input)?)
 }
 
-/// Deprecated
-// #[hdk_extern]
-// fn list_messages(list_messages_input: ListMessagesInput) -> ExternResult<ListMessages> {
-//     Ok(message::handlers::list_messages(list_messages_input)?)
-// }
-
 #[hdk_extern]
-fn list_messages(list_messages_input: ListMessagesBatchInput) -> ExternResult<ListMessages> {
-    Ok(message::handlers::list_messages_batch(list_messages_input)?)
+fn list_messages(list_messages_input: ListMessagesInput) -> ExternResult<ListMessages> {
+    Ok(message::handlers::list_messages(list_messages_input)?)
 }
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
