@@ -65,7 +65,7 @@ pub struct ListMessagesInput {
 }
 /// Input to the list messages call
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
-pub struct ListMessagesPageInput {
+pub struct ListMessagesBatchInput {
     channel: Channel,
     earlier_than: Timestamp,
     // Keep expanding search interval until this count is reached

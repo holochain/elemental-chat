@@ -10,7 +10,7 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{
-    ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, ListMessagesPageInput,
+    ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesBatchInput, ListMessagesInput,
     MessageData, SigResults, SignalMessageData, SignalSpecificInput,
 };
 
@@ -58,10 +58,10 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
 }
 
 /// Using batching to List all the messages on this channel
-pub(crate) fn list_page_messages(
-    list_message_input: ListMessagesPageInput,
+pub(crate) fn list_messages_batch(
+    list_message_input: ListMessagesBatchInput,
 ) -> ChatResult<ListMessages> {
-    let ListMessagesPageInput {
+    let ListMessagesBatchInput {
         channel,
         earlier_than,
         target_message_count,
