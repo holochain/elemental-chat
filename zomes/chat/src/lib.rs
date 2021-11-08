@@ -5,8 +5,8 @@ pub use hc_joining_code;
 pub use hdk::prelude::Path;
 pub use hdk::prelude::*;
 pub use message::{
-    ActiveChatters, ListMessages, ListMessagesInput, ListMessagesPageInput, Message, MessageData,
-    MessageInput, SigResults, SignalMessageData, SignalSpecificInput,
+    ActiveChatters, ListMessages, ListMessagesInput, Message, MessageData, MessageInput,
+    SigResults, SignalMessageData, SignalSpecificInput,
 };
 pub mod entries;
 pub mod error;
@@ -147,11 +147,6 @@ fn list_messages(list_messages_input: ListMessagesInput) -> ExternResult<ListMes
     Ok(message::handlers::list_messages(list_messages_input)?)
 }
 
-#[hdk_extern]
-fn list_page_messages(list_messages_input: ListMessagesPageInput) -> ExternResult<ListMessages> {
-    Ok(message::handlers::list_page_messages(list_messages_input)?)
-}
-
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMessages {
@@ -170,29 +165,30 @@ pub struct ListAllMessagesInput {
     pub chunk: message::Chunk,
 }
 
-#[hdk_extern]
-fn list_all_messages(input: ListAllMessagesInput) -> ExternResult<AllMessagesList> {
-    let channels = channel::handlers::list_channels(ChannelListInput {
-        category: input.category.clone(),
-    })?;
-    let all_messages: Result<Vec<ChannelMessages>, ChatError> = channels
-        .channels
-        .into_iter()
-        .map(|channel| {
-            let list_messages_input = ListMessagesInput {
-                channel: channel.entry.clone(),
-                chunk: input.chunk.clone(),
-                active_chatter: false,
-            };
-            let messages = message::handlers::list_messages(list_messages_input)?;
-            Ok(ChannelMessages {
-                channel,
-                messages: messages.messages,
-            })
-        })
-        .collect();
-    Ok(AllMessagesList(all_messages?))
-}
+/// Deprecated
+// #[hdk_extern]
+// fn list_all_messages(input: ListAllMessagesInput) -> ExternResult<AllMessagesList> {
+//     let channels = channel::handlers::list_channels(ChannelListInput {
+//         category: input.category.clone(),
+//     })?;
+//     let all_messages: Result<Vec<ChannelMessages>, ChatError> = channels
+//         .channels
+//         .into_iter()
+//         .map(|channel| {
+//             let list_messages_input = ListMessagesInput {
+//                 channel: channel.entry.clone(),
+//                 chunk: input.chunk.clone(),
+//                 active_chatter: false,
+//             };
+//             let messages = message::handlers::list_messages(list_messages_input)?;
+//             Ok(ChannelMessages {
+//                 channel,
+//                 messages: messages.messages,
+//             })
+//         })
+//         .collect();
+//     Ok(AllMessagesList(all_messages?))
+// }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct Stats {

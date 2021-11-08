@@ -2,112 +2,105 @@
 //!
 //!
 //!
-use crate::error::ChatResult;
-use chrono::{DateTime, Datelike, Duration, NaiveDateTime, Timelike, Utc};
+use crate::{error::ChatResult, ChatError};
+use chrono::{DateTime, Datelike, NaiveDateTime, Timelike, Utc};
 use hdk::prelude::*;
-use std::ops::Sub;
+use std::cmp;
 
-///
-pub fn get_page_links(
-    base: Path,
-    earlier_than: Timestamp,
+pub fn get_message_links(
+    channel: Path,
+    earliest_seen: Option<Timestamp>,
     target_count: usize,
-) -> ChatResult<Vec<Link>> {
-    let mut links: Vec<Link> = Vec::new();
-    let mut next_path = timestamp_into_path(base.clone(), earlier_than, None)?;
-
-    loop {
-        debug!("Next path: {:?}", next_path.clone());
-        // Ensure the path exists
-        if next_path.exists()? {
-            debug!("next path exists");
-            // Get the actual hash we are going to pull the messages from
-            let channel_entry_hash = next_path.hash()?;
-            // Get the message links on this channel
-            let nm = &mut get_links(channel_entry_hash.clone(), None)?.into_inner();
-            let nm_check = nm.is_empty();
-            links.append(nm);
-            if (links.len() >= target_count) || nm_check {
-                debug!("links.len() BREAK");
-                break;
-            }
+) -> Result<Vec<Link>, WasmError> {
+    let newest_included_hour = if let Some(earliest_seen) = earliest_seen {
+        if let Ok(hour) = earliest_seen - std::time::Duration::from_secs(60 * 60) {
+            hour
         } else {
-            debug!("next.path does not exists");
+            return Ok(Vec::new());
         }
-        // set next path
-        match get_next_path(&base, next_path)? {
-            Some(p) => next_path = p,
-            None => break,
-        }
+    } else {
+        sys_time()?
+    };
+
+    let mut links = Vec::new();
+
+    let root_path_length = channel.as_ref().len();
+    let newest_included_hour_path = timestamp_into_path(channel, newest_included_hour)?;
+    if newest_included_hour_path.exists()? {
+        links.append(&mut get_links(newest_included_hour_path.hash()?, None)?.into_inner());
     }
+
+    let mut earliest_seen_child_path = newest_included_hour_path;
+    let mut current_search_path = earliest_seen_child_path.parent().unwrap();
+    let mut depth = 0;
+    while links.len() < target_count && current_search_path.as_ref().len() >= root_path_length {
+        if current_search_path.exists()? {
+            let earliest_seen_child_segment =
+                last_segment_from_path(&earliest_seen_child_path).unwrap();
+            let mut children = current_search_path.children()?.into_inner();
+            children.retain(|child_link| {
+                link_is_earlier(child_link, earliest_seen_child_segment).unwrap_or(false)
+            });
+            append_message_links_recursive(children, &mut links, target_count, depth)?;
+        }
+
+        earliest_seen_child_path = current_search_path;
+        current_search_path = earliest_seen_child_path.parent().unwrap();
+        depth += 1;
+    }
+
     Ok(links)
 }
 
-///
-pub fn get_next_path(channel: &Path, last_seen: Path) -> ChatResult<Option<Path>> {
-    let (_, _, l_day, l_hour) = path_spread(&last_seen)?;
-    // get base that starts with year and month
-    let base_ym = get_year_month_path(&channel, &last_seen)?; // ROOT->Y->M
-    let days = base_ym.children()?.into_inner();
-    // let mut msg_links: Vec<Link> = Vec::new();
-    for tag in days.clone().into_iter().rev().map(|link| link.tag) {
-        let day = Path::try_from(&tag)?; // ROOT->Y->M->D
-        let dp: &Vec<_> = day.as_ref();
-        // debug!("CHECK days:  {:?}", String::try_from(&dp[dp.len() - 1])?);
-        // check if latest day is less than path day
-        if format!("{}", l_day) >= String::try_from(&dp[dp.len() - 1])? {
-            let hours = day.children()?.into_inner();
-            for tag in hours.clone().into_iter().rev().map(|link| link.tag) {
-                let hour_path = Path::try_from(&tag)?; // ROOT->Y->M->D->H
-                let hp: &Vec<_> = hour_path.as_ref();
-                let hour = String::try_from(&hp[hp.len() - 1])?;
-                debug!("CHECK hour/seconds:  {:?}", hour);
-                if hour < format!("{}", l_hour) {
-                    return Ok(Some(hour_path));
-                }
-            }
+fn append_message_links_recursive(
+    mut children: Vec<Link>,
+    links: &mut Vec<Link>,
+    target_count: usize,
+    depth: u8,
+) -> ChatResult<()> {
+    children.sort_unstable_by_key(|grandchild_link| cmp::Reverse(grandchild_link.timestamp));
+    for child_link in children {
+        if depth == 0 {
+            let mut message_links = get_links(child_link.target, None)?.into_inner();
+            links.append(&mut message_links);
+        } else {
+            let path = Path::try_from(&child_link.tag)?;
+            let grandchildren = path.children()?.into_inner();
+            append_message_links_recursive(grandchildren, links, target_count, depth - 1)?;
+        }
+        if links.len() >= target_count {
+            break;
         }
     }
 
-    Ok(None)
+    Ok(())
+}
+
+fn link_is_earlier(link: &Link, earlier_than: i64) -> ChatResult<bool> {
+    let path = Path::try_from(&link.tag)?;
+    let segment = last_segment_from_path(&path)?;
+    Ok(segment < earlier_than)
+}
+
+pub fn last_segment_from_path(path: &Path) -> ChatResult<i64> {
+    let component = path
+        .as_ref()
+        .last()
+        .ok_or(ChatError::InvalidPaginationPath)?;
+    let bytes: [u8; 8] = component.as_ref().try_into().map_err(|_| ChatError::InvalidPaginationPath)?;
+    Ok(i64::from_be_bytes(bytes))
 }
 
 /// Add the message from the Date type to this path
-pub fn timestamp_into_path(
-    path: Path,
-    time: Timestamp,
-    interval: Option<Duration>, // Duration that will be subtracted from time to get a path for that time
-) -> ChatResult<Path> {
+pub fn timestamp_into_path(path: Path, time: Timestamp) -> ChatResult<Path> {
     let (ms, ns) = time.as_seconds_and_nanos();
-    let mut time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(ms, ns), Utc);
-    if let Some(i) = interval {
-        time = time.sub(i);
-    }
+    let time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(ms, ns), Utc);
     let mut components: Vec<_> = path.into();
 
-    components.push(format!("{}", time.year()).into());
-    components.push(format!("{}", time.month()).into());
-    components.push(format!("{}", time.day()).into());
+    components.push(i64::from(time.year()).to_be_bytes().to_vec().into());
+    components.push(i64::from(time.month()).to_be_bytes().to_vec().into());
+    components.push(i64::from(time.day()).to_be_bytes().to_vec().into());
     // DEV_MODE: This can be updated to sec() for testing
-    components.push(format!("{}", time.hour()).into());
-    Ok(components.into())
-}
-///
-pub fn path_spread(p: &Path) -> ChatResult<(String, String, String, String)> {
-    let p: &Vec<_> = p.as_ref();
-    let l = p.len();
-    Ok((
-        String::try_from(&p[l - 4])?,
-        String::try_from(&p[l - 3])?,
-        String::try_from(&p[l - 2])?,
-        String::try_from(&p[l - 1])?,
-    ))
-}
-///
-pub fn get_year_month_path(path: &Path, time_path: &Path) -> ChatResult<Path> {
-    let mut components: Vec<_> = path.to_owned().into();
-    let (y, m, _, _) = path_spread(time_path)?;
-    components.push(y.into());
-    components.push(m.into());
+    components.push(i64::from(time.hour()).to_be_bytes().to_vec().into());
     Ok(components.into())
 }

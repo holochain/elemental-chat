@@ -25,7 +25,6 @@ module.exports = async (orchestrator) => {
 
     var sends: any[] = [];
     var recvs: any[] = [];
-    function messageEntry(m) { return m.entry }
 
     let first_message = {
       last_seen: { First: null },
@@ -33,19 +32,10 @@ module.exports = async (orchestrator) => {
       chunk: 0,
       entry: {
         uuid: uuidv4(),
-        content: 'x'.repeat(1025),
+        content: "Hello from alice :)",
       }
     };
 
-    //Send a messages that's too long
-    try {
-      await alice_chat.call('chat', 'create_message', first_message);
-      t.fail()
-    } catch(e) {
-      t.deepEqual(e,{ type: 'error', data: { type: 'internal_error', data: 'Source chain error: InvalidCommit error: Message too long' } })
-    }
-
-    first_message.entry.content = "Hello from alice :)";
     // Alice send a message
     sends.push(first_message);
     console.log(sends[0]);
@@ -74,18 +64,17 @@ module.exports = async (orchestrator) => {
     await awaitIntegration(bobbo_chat)
 
     // Alice lists the messages
-    const getTimestamp = () => (Date.now() * 1000)
-    let alices_view = await alice_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })
+    let alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
     
-    let bobbos_view = await bobbo_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })
+    let bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
     
     if (alices_view.messages.length !== 2) {
       await delay(10000)
       console.log("Trying again...");
       
-      alices_view = await alice_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })
+      alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
    
-      bobbos_view = await bobbo_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })     
+      bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })     
     }
     t.deepEqual(alices_view.messages.length, 2)
     t.deepEqual(bobbos_view.messages.length, 2)
@@ -116,17 +105,14 @@ module.exports = async (orchestrator) => {
     t.deepEqual(sends[3].entry, recvs[3].entry);
     await delay(4000)
     // Alice lists the messages
-    alices_view = await alice_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 20 })
+    alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
     // Bobbo lists the messages
-    bobbos_view = await bobbo_chat.call('chat', 'list_page_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 10 })
-    bobbos_view.messages.forEach(msg => {
-      console.log(">>>>>>>", msg.entry);
-    });
-    console.log("LENGTH >>>>>>>", bobbos_view.messages.length);
-    
+    bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
     t.deepEqual(alices_view.messages.length, 4)
     t.deepEqual(bobbos_view.messages.length, 4)
-
+    console.log("ALICE ", alices_view);
+    console.log("BOBBO: ", bobbos_view);
+    
   })
 
 }

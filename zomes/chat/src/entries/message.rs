@@ -55,22 +55,13 @@ pub struct SignalMessageData {
     pub message_data: MessageData,
     pub channel_data: ChannelData,
 }
-
 /// Input to the list messages call
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 pub struct ListMessagesInput {
     pub channel: Channel,
-    pub chunk: Chunk,
-    pub active_chatter: bool,
-}
-/// Input to the list messages call
-#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
-pub struct ListMessagesPageInput {
-    channel: Channel,
-    earlier_than: Timestamp,
+    pub earliest_seen: Option<Timestamp>,
     // Keep expanding search interval until this count is reached
-    target_message_count: usize, // UI will say 20 to start
-    active_chatter: bool,
+    pub target_message_count: usize, // UI will say 20 to start
 }
 #[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
 pub struct Chunk {

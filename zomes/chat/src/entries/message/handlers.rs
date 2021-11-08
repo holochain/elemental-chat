@@ -10,8 +10,8 @@ use link::Link;
 use metadata::EntryDetails;
 
 use super::{
-    ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, ListMessagesPageInput,
-    MessageData, SigResults, SignalMessageData, SignalSpecificInput,
+    ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData,
+    SigResults, SignalMessageData, SignalSpecificInput,
 };
 
 /// Create a new message
@@ -34,16 +34,14 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let path: Path = channel.clone().into();
 
     // Add the current time components
-    let path = crate::pagination_helper::timestamp_into_path(path, sys_time()?, None)?;
+    let path = crate::pagination_helper::timestamp_into_path(path, sys_time()?)?;
 
     // Ensure the path exists
     path.ensure()?;
 
     // The actual hash we are going to hang this message on
     let path_hash = path.hash()?;
-    let hp: &Vec<_> = path.as_ref();
-    let hour = String::try_from(&hp[hp.len() - 1])?;
-    debug!("COMMITING TO HOUR:::  {:?}", hour);
+    debug!("committing message to hour {:?}", crate::pagination_helper::last_segment_from_path(&path)?);
     // Get the hash of the last_seen of this message
     let parent_hash_entry = match last_seen {
         LastSeen::Message(hash_entry) => hash_entry,
@@ -57,67 +55,65 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     Ok(message)
 }
 
-/// Using pagination to List all the messages on this channel
-pub(crate) fn list_page_messages(
-    list_message_input: ListMessagesPageInput,
-) -> ChatResult<ListMessages> {
-    let ListMessagesPageInput {
-        channel,
-        earlier_than,
-        target_message_count,
-        active_chatter: _,
-    } = list_message_input;
-
-    let path: Path = channel.clone().into();
-    let mut links =
-        crate::pagination_helper::get_page_links(path, earlier_than, target_message_count)?;
-    links.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
-    let sorted_messages = get_messages(links)?;
-    Ok(sorted_messages.into())
-}
-
-/// List all the messages on this channel
+/// Using batching to List all the messages on this channel
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
     let ListMessagesInput {
         channel,
-        chunk,
-        active_chatter: _,
+        earliest_seen,
+        target_message_count,
     } = list_message_input;
 
-    // Removing for now and expecting UI to call add_chatter once every 2 hours.
-    // Check if our agent key is active on this path and
-    // add it if it's not
-    //if active_chatter {
-    //    add_chatter(/*channel.chatters_path()*/)?;
-    //}
-
-    let mut links: Vec<Link> = Vec::new();
-    let mut counter = chunk.start;
-    loop {
-        // Get the channel hash
-        let path: Path = channel.clone().into();
-
-        // Add the chunk component
-        let path = add_chunk_path(path, counter)?;
-
-        // Ensure the path exists
-        path.ensure()?;
-
-        // Get the actual hash we are going to pull the messages from
-        let channel_entry_hash = path.hash()?;
-
-        // Get the message links on this channel
-        links.append(&mut get_links(channel_entry_hash.clone(), None)?.into_inner());
-        if counter == chunk.end {
-            break;
-        }
-        counter += 1
-    }
-
+    let path: Path = channel.into();
+    let mut links =
+        crate::pagination_helper::get_message_links(path, earliest_seen, target_message_count)?;
     links.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
     let sorted_messages = get_messages(links)?;
     Ok(sorted_messages.into())
 }
+
+/// Deprecated
+/// List all the messages on this channel
+// pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
+//     let ListMessagesInput {
+//         channel,
+//         chunk,
+//         active_chatter: _,
+//     } = list_message_input;
+
+//     // Removing for now and expecting UI to call add_chatter once every 2 hours.
+//     // Check if our agent key is active on this path and
+//     // add it if it's not
+//     //if active_chatter {
+//     //    add_chatter(/*channel.chatters_path()*/)?;
+//     //}
+
+//     let mut links: Vec<Link> = Vec::new();
+//     let mut counter = chunk.start;
+//     loop {
+//         // Get the channel hash
+//         let path: Path = channel.clone().into();
+
+//         // Add the chunk component
+//         let path = add_chunk_path(path, counter)?;
+
+//         // Ensure the path exists
+//         path.ensure()?;
+
+//         // Get the actual hash we are going to pull the messages from
+//         let channel_entry_hash = path.hash()?;
+
+//         // Get the message links on this channel
+//         links.append(&mut get_links(channel_entry_hash.clone(), None)?.into_inner());
+//         if counter == chunk.end {
+//             break;
+//         }
+//         counter += 1
+//     }
+
+//     links.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
+//     let sorted_messages = get_messages(links)?;
+//     Ok(sorted_messages.into())
+// }
 
 // pub(crate) fn _new_message_signal(message: SignalMessageData) -> ChatResult<()> {
 //     debug!(
@@ -149,7 +145,10 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
                 let signed_header = match headers.pop() {
                     Some(h) => h,
                     // Ignoring missing messages
-                    None => continue,
+                    None => {
+                        debug!("Ignoring missing messages");
+                        continue;
+                    }
                 };
 
                 // Create the message type for the UI

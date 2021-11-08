@@ -74,12 +74,13 @@ module.exports = async (orchestrator) => {
 
     // Alice lists the messages
     var msgs: any[] = [];
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} }));
+    let batch_payload = { channel: channel.entry, active_chatter: false, target_message_count: 2 }
+    msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
     console.log(_.map(msgs[0].messages, messageEntry));
     t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[0].messages, messageEntry));
     // Bobbo lists the messages
     await delay(2000) // TODO add consistency instead
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
     console.log('bobbo.list_messages: '+_.map(msgs[1].messages, messageEntry));
     t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[1].messages, messageEntry));
 
@@ -110,17 +111,14 @@ module.exports = async (orchestrator) => {
     t.deepEqual(sends[3].entry, recvs[3].entry);
     await delay(4000)
     // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} }));
+    msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
     console.log(_.map(msgs[2].messages, messageEntry));
     t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[2].messages, messageEntry));
     // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} }));
+    msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
     console.log(_.map(msgs[3].messages, messageEntry));
     t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[3].messages, messageEntry));
 
-    const allMessages = await bobbo_chat.call('chat', 'list_all_messages', { category: "General", chunk: {start:0, end: 1} })
-    t.equal(allMessages[0].channel.info.name, "Test Channel");
-    t.deepEqual(allMessages[0].messages.length, 4);
   })
 
 }
