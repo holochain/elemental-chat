@@ -148,7 +148,7 @@ fn list_messages(list_messages_input: ListMessagesInput) -> ExternResult<ListMes
 }
 
 #[hdk_extern]
-fn list_messages_batch(list_messages_input: ListMessagesBatchInput) -> ExternResult<ListMessages> {
+fn list_page_messages(list_messages_input: ListMessagesBatchInput) -> ExternResult<ListMessages> {
     Ok(message::handlers::list_messages_batch(list_messages_input)?)
 }
 
