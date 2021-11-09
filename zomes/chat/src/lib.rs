@@ -40,7 +40,7 @@ pub enum SignalPayload {
 // }
 
 #[hdk_extern]
-fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
+pub fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
     let sig: SignalPayload = signal.decode()?;
     trace!("Received remote signal {:?}", sig);
     Ok(emit_signal(&sig)?)
@@ -53,7 +53,7 @@ entry_defs![
 ];
 
 #[hdk_extern]
-fn init(_: ()) -> ExternResult<InitCallbackResult> {
+pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // grant unrestricted access to accept_cap_claim so other agents can send us claims
     let mut functions = BTreeSet::new();
     functions.insert((zome_info()?.zome_name, "recv_remote_signal".into()));
@@ -72,7 +72,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 
 #[hdk_extern]
-fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallbackResult> {
+pub fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallbackResult> {
     if hc_joining_code::skip_proof_sb(&data.dna_def.properties) {
         return Ok(ValidateCallbackResult::Valid);
     }
@@ -81,7 +81,7 @@ fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallba
 }
 
 #[hdk_extern]
-fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
+pub fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
     if hc_joining_code::is_read_only_instance() {
         return Err(ChatError::ReadOnly.into());
     }
@@ -89,12 +89,12 @@ fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
 }
 
 #[hdk_extern]
-fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
+pub fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
     validation::common_validatation(data)
 }
 
 #[hdk_extern]
-fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
+pub fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
     if hc_joining_code::is_read_only_instance() {
         return Err(ChatError::ReadOnly.into());
     }
@@ -102,17 +102,17 @@ fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
 }
 
 /*#[hdk_extern]
-fn signal_users_on_channel(message_data SignalMessageData) -> ChatResult<()> {
+fnpub  signal_users_on_channel(message_data SignalMessageData) -> ChatResult<()> {
     message::handlers::signal_users_on_channel(message_data)
 }*/
 
 #[hdk_extern]
-fn get_active_chatters(_: ()) -> ExternResult<ActiveChatters> {
+pub fn get_active_chatters(_: ()) -> ExternResult<ActiveChatters> {
     Ok(message::handlers::get_active_chatters()?)
 }
 
 #[hdk_extern]
-fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
+pub fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
     if hc_joining_code::is_read_only_instance() {
         return Err(ChatError::ReadOnly.into());
     }
@@ -120,7 +120,7 @@ fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
 }
 
 #[hdk_extern]
-fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> {
+pub fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> {
     if hc_joining_code::is_read_only_instance() {
         return Err(ChatError::ReadOnly.into());
     }
@@ -128,7 +128,7 @@ fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> 
 }
 
 #[hdk_extern]
-fn refresh_chatter(_: ()) -> ExternResult<()> {
+pub fn refresh_chatter(_: ()) -> ExternResult<()> {
     Ok(message::handlers::refresh_chatter()?)
 }
 
@@ -138,12 +138,12 @@ fn refresh_chatter(_: ()) -> ExternResult<()> {
 // }
 
 #[hdk_extern]
-fn list_channels(list_channels_input: ChannelListInput) -> ExternResult<ChannelList> {
+pub fn list_channels(list_channels_input: ChannelListInput) -> ExternResult<ChannelList> {
     Ok(channel::handlers::list_channels(list_channels_input)?)
 }
 
 #[hdk_extern]
-fn list_messages(list_messages_input: ListMessagesInput) -> ExternResult<ListMessages> {
+pub fn list_messages(list_messages_input: ListMessagesInput) -> ExternResult<ListMessages> {
     Ok(message::handlers::list_messages(list_messages_input)?)
 }
 
@@ -199,7 +199,7 @@ pub struct Stats {
 }
 
 #[hdk_extern]
-fn stats(list_channels_input: ChannelListInput) -> ExternResult<Stats> {
+pub fn stats(list_channels_input: ChannelListInput) -> ExternResult<Stats> {
     let (agents, active) = message::handlers::agent_stats()?;
     let (channels, messages) = channel::handlers::channel_stats(list_channels_input)?;
     Ok(Stats {
@@ -216,7 +216,7 @@ pub struct AgentStats {
     active: usize,
 }
 #[hdk_extern]
-fn agent_stats(_: ()) -> ExternResult<AgentStats> {
+pub fn agent_stats(_: ()) -> ExternResult<AgentStats> {
     let (agents, active) = message::handlers::agent_stats()?;
     Ok(AgentStats { agents, active })
 }

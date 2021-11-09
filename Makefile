@@ -60,7 +60,7 @@ $(WASM): FORCE
 .PHONY: test test-all test-unit test-e2e test-dna test-dna-debug test-stress test-sim2h test-node
 test-all:	test
 
-test:		test-unit test-e2e # test-stress # re-enable when Stress tests end reliably
+test:		test-unit test-e2e test-mock-hdk # test-stress # re-enable when Stress tests end reliably
 
 test-unit: $(DNA) FORCE
 	RUST_BACKTRACE=1 cargo test \
@@ -79,6 +79,10 @@ test-behavior: DNAs $(DNA) FORCE
 	    cd tests && ( [ -d  node_modules ] || npm install ) && npm run test:behavior
 
 test-e2e:	test-dna
+
+test-mock-hdk:
+	RUST_BACKTRACE=1 cargo test --manifest-path crates/test_mock_hdk/Cargo.toml \
+	    -- --nocapture
 
 #############################
 # █▀█ █▀▀ █░░ █▀▀ ▄▀█ █▀ █▀▀
