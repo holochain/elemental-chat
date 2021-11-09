@@ -2,7 +2,6 @@ import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
 import { localConductorConfig, delay, awaitIntegration } from './common'
 import { installAgents } from './installAgents'
-import { getTimestamp } from './utils'
 
 module.exports = async (orchestrator) => {
 
@@ -75,17 +74,17 @@ module.exports = async (orchestrator) => {
     await awaitIntegration(bobbo_chat)
 
     // Alice lists the messages
-    let alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })
+    let alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
     
-    let bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })
+    let bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
     
     if (alices_view.messages.length !== 2) {
       await delay(10000)
       console.log("Trying again...");
       
-      alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })
+      alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
    
-      bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 })     
+      bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })     
     }
     t.deepEqual(alices_view.messages.length, 2)
     t.deepEqual(bobbos_view.messages.length, 2)
@@ -116,12 +115,14 @@ module.exports = async (orchestrator) => {
     t.deepEqual(sends[3].entry, recvs[3].entry);
     await delay(4000)
     // Alice lists the messages
-    alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 20 })
+    alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 20 })
     // Bobbo lists the messages
-    bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 10 })
+    bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 10 })
     t.deepEqual(alices_view.messages.length, 4)
     t.deepEqual(bobbos_view.messages.length, 4)
-
+    console.log("ALICE ", alices_view);
+    console.log("BOBBO: ", bobbos_view);
+    
   })
 
 }

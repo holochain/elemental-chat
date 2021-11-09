@@ -43,7 +43,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let path_hash = path.hash()?;
     let hp: &Vec<_> = path.as_ref();
     let hour = String::try_from(&hp[hp.len() - 1])?;
-    debug!("COMMITING TO HOUR:::  {:?}", hour);
+    debug!("committing message to hour {:?}", hour);
     // Get the hash of the last_seen of this message
     let parent_hash_entry = match last_seen {
         LastSeen::Message(hash_entry) => hash_entry,

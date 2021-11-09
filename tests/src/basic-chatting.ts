@@ -2,7 +2,6 @@ import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
 import { localConductorConfig, delay } from './common'
 import { installAgents } from './installAgents'
-import { getTimestamp } from './utils'
 
 module.exports = async (orchestrator) => {
 
@@ -75,7 +74,7 @@ module.exports = async (orchestrator) => {
 
     // Alice lists the messages
     var msgs: any[] = [];
-    let batch_payload = { channel: channel.entry, active_chatter: false, earlier_than: getTimestamp(), target_message_count: 2 }
+    let batch_payload = { channel: channel.entry, active_chatter: false, target_message_count: 2 }
     msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
     console.log(_.map(msgs[0].messages, messageEntry));
     t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[0].messages, messageEntry));
