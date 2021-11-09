@@ -39,7 +39,7 @@ pub fn get_message_links(
                 last_segment_from_path(&earliest_seen_child_path).unwrap();
             let mut children = current_search_path.children()?.into_inner();
             children.retain(|child_link| {
-                link_is_earlier(child_link, &earliest_seen_child_segment).unwrap_or(false)
+                link_is_earlier(child_link, earliest_seen_child_segment).unwrap_or(false)
             });
             append_message_links_recursive(children, &mut links, target_count, depth)?;
         }
@@ -76,18 +76,19 @@ fn append_message_links_recursive(
     Ok(())
 }
 
-fn link_is_earlier(link: &Link, earlier_than: &str) -> ChatResult<bool> {
+fn link_is_earlier(link: &Link, earlier_than: i64) -> ChatResult<bool> {
     let path = Path::try_from(&link.tag)?;
     let segment = last_segment_from_path(&path)?;
-    Ok(&*segment < earlier_than)
+    Ok(segment < earlier_than)
 }
 
-fn last_segment_from_path(path: &Path) -> ChatResult<String> {
-    let bytes = path
+pub fn last_segment_from_path(path: &Path) -> ChatResult<i64> {
+    let component = path
         .as_ref()
         .last()
         .ok_or(ChatError::InvalidPaginationPath)?;
-    Ok(bytes.try_into()?)
+    let bytes: [u8; 8] = component.as_ref().try_into().map_err(|_| ChatError::InvalidPaginationPath)?;
+    Ok(i64::from_be_bytes(bytes))
 }
 
 /// Add the message from the Date type to this path
@@ -96,10 +97,10 @@ pub fn timestamp_into_path(path: Path, time: Timestamp) -> ChatResult<Path> {
     let time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(ms, ns), Utc);
     let mut components: Vec<_> = path.into();
 
-    components.push(format!("{}", time.year()).into());
-    components.push(format!("{}", time.month()).into());
-    components.push(format!("{}", time.day()).into());
+    components.push(i64::from(time.year()).to_be_bytes().to_vec().into());
+    components.push(i64::from(time.month()).to_be_bytes().to_vec().into());
+    components.push(i64::from(time.day()).to_be_bytes().to_vec().into());
     // DEV_MODE: This can be updated to sec() for testing
-    components.push(format!("{}", time.hour()).into());
+    components.push(i64::from(time.hour()).to_be_bytes().to_vec().into());
     Ok(components.into())
 }

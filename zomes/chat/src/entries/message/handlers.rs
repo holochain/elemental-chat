@@ -41,9 +41,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
 
     // The actual hash we are going to hang this message on
     let path_hash = path.hash()?;
-    let hp: &Vec<_> = path.as_ref();
-    let hour = String::try_from(&hp[hp.len() - 1])?;
-    debug!("committing message to hour {:?}", hour);
+    debug!("committing message to hour {:?}", crate::pagination_helper::last_segment_from_path(&path)?);
     // Get the hash of the last_seen of this message
     let parent_hash_entry = match last_seen {
         LastSeen::Message(hash_entry) => hash_entry,
