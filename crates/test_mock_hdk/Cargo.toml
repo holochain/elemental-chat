@@ -1,9 +1,0 @@
-[package]
-name = "test_batching"
-version = "0.1.0"
-authors = ["timo.carlin-burns@holo.host"]
-edition = "2018"
-
-[dev-dependencies]
-hdk = { version = "=0.0.107", features = ["mock"] }
-chat = { package = "elemental-chat", path = "../../zomes/chat", features = ["mock"] }

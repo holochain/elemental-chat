@@ -6,10 +6,6 @@ members = [
   "crates/joining_code",
 ]
 
-exclude = [
-  "crates/test_mock_hdk",
-]
-
 [profile.dev]
 opt-level = "z"
 

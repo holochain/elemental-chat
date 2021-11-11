@@ -52,7 +52,12 @@ $(DNA):		$(WASM) FORCE
 $(WASM): FORCE
 	@echo "Building  DNA WASM:"
 	@RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
-	    --release --target wasm32-unknown-unknown
+	    --release --target wasm32-unknown-unknown \
+		--workspace --exclude elemental-chat
+# Make sure to compile elemental-chat with 'mock' feature disabled
+	@RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
+	    --release --target wasm32-unknown-unknown \
+		-p elemental-chat --no-default-features
 	@echo "Optimizing wasms:"
 	@wasm-opt -Oz $(WASM) --output $(WASM)
 	@wasm-opt -Oz $(WASM2) --output $(WASM2)

@@ -26,8 +26,10 @@ holochain = { git = "https://github.com/holochain/holochain.git", rev = "0f96823
 futures = "0.3.1"
 nanoid = "0.3"
 observability = "0.1.2"
+proptest = "1.0.0"
 stream-cancel = "0.8.0"
 tokio = {version = "1.3", features = ["full"]}
 
 [features]
+default = ["mock"]
 mock = ["hdk/mock"]
