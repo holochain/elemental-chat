@@ -29,8 +29,8 @@ pub enum ChatError {
     InitFailure,
     #[error("Read only instance")]
     ReadOnly,
-    #[error("Expected pagination-related path to contain more segments")]
-    InvalidPaginationPath,
+    #[error("Expected batching-related path to contain more segments")]
+    InvalidBatchingPath,
 }
 
 pub type ChatResult<T> = Result<T, ChatError>;

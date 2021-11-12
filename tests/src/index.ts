@@ -8,12 +8,6 @@ orchestrator = new Orchestrator()
 require('./transient-nodes')(orchestrator)
 orchestrator.run()
 
-/* currently not using multi-chunk
-orchestrator = new Orchestrator()
-require('./multi-chunk')(orchestrator)
-orchestrator.run()
-*/
-
 orchestrator = new Orchestrator()
 require('./chat-signals')(orchestrator)
 orchestrator.run()
@@ -35,5 +29,5 @@ require('./unique-registration-code')(orchestrator)
 orchestrator.run()
 
 orchestrator = new Orchestrator()
-require('./pagination')(orchestrator)
+require('./batching')(orchestrator)
 orchestrator.run()

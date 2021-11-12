@@ -32,7 +32,6 @@ module.exports = async (orchestrator) => {
     const msg1 = {
       last_seen: { First: null },
       channel: channel.entry,
-      chunk: 0,
       entry: {
         uuid: uuidv4(),
         content: "Hello from alice :)",
@@ -47,7 +46,6 @@ module.exports = async (orchestrator) => {
     const msg2 = {
       last_seen: { First: null },
       channel: channel.entry,
-      chunk: 1,
       entry: {
         uuid: uuidv4(),
         content: "second messages",
@@ -62,7 +60,6 @@ module.exports = async (orchestrator) => {
     const msg3 = {
       last_seen: { First: null },
       channel: channel2.entry,
-      chunk: 0,
       entry: {
         uuid: uuidv4(),
         content: "Hello from bob :)",
