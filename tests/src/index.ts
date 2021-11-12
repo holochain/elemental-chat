@@ -33,3 +33,7 @@ orchestrator.run()
 orchestrator = new Orchestrator()
 require('./unique-registration-code')(orchestrator)
 orchestrator.run()
+
+orchestrator = new Orchestrator()
+require('./pagination')(orchestrator)
+orchestrator.run()

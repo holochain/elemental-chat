@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { localConductorConfig, delay } from './common'
+import { localConductorConfig, delay, awaitIntegration } from './common'
 import { installAgents } from './installAgents'
 
 module.exports = async (orchestrator) => {
@@ -25,7 +25,6 @@ module.exports = async (orchestrator) => {
 
     var sends: any[] = [];
     var recvs: any[] = [];
-    function messageEntry(m) { return m.entry }
 
     let first_message = {
       last_seen: { First: null },
@@ -33,19 +32,10 @@ module.exports = async (orchestrator) => {
       chunk: 0,
       entry: {
         uuid: uuidv4(),
-        content: 'x'.repeat(1025),
+        content: "Hello from alice :)",
       }
     };
 
-    //Send a messages that's too long
-    try {
-      await alice_chat.call('chat', 'create_message', first_message);
-      t.fail()
-    } catch(e) {
-      t.deepEqual(e,{ type: 'error', data: { type: 'internal_error', data: 'Source chain error: InvalidCommit error: Message too long' } })
-    }
-
-    first_message.entry.content = "Hello from alice :)";
     // Alice send a message
     sends.push(first_message);
     console.log(sends[0]);
@@ -64,26 +54,30 @@ module.exports = async (orchestrator) => {
         content: "Is anybody out there?",
       }
     });
+    await delay(10000)
     console.log(sends[1]);
     recvs.push(await alice_chat.call('chat', 'create_message', sends[1]));
     console.log(recvs[1]);
     t.deepEqual(sends[1].entry, recvs[1].entry);
 
-    const channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
-    console.log(channel_list);
+    await delay(10000)    
+    await awaitIntegration(bobbo_chat)
 
     // Alice lists the messages
-    var msgs: any[] = [];
-    let batch_payload = { channel: channel.entry, active_chatter: false, target_message_count: 2 }
-    msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
-    console.log(_.map(msgs[0].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[0].messages, messageEntry));
-    // Bobbo lists the messages
-    await delay(2000) // TODO add consistency instead
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
-    console.log('bobbo.list_messages: '+_.map(msgs[1].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[1].messages, messageEntry));
-
+    let alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
+    
+    let bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
+    
+    if (alices_view.messages.length !== 2) {
+      await delay(10000)
+      console.log("Trying again...");
+      
+      alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
+   
+      bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })     
+    }
+    t.deepEqual(alices_view.messages.length, 2)
+    t.deepEqual(bobbos_view.messages.length, 2)
     // Bobbo and Alice both reply to the same message
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
@@ -111,14 +105,14 @@ module.exports = async (orchestrator) => {
     t.deepEqual(sends[3].entry, recvs[3].entry);
     await delay(4000)
     // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
-    console.log(_.map(msgs[2].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[2].messages, messageEntry));
+    alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
     // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
-    console.log(_.map(msgs[3].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[3].messages, messageEntry));
-
+    bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
+    t.deepEqual(alices_view.messages.length, 4)
+    t.deepEqual(bobbos_view.messages.length, 4)
+    console.log("ALICE ", alices_view);
+    console.log("BOBBO: ", bobbos_view);
+    
   })
 
 }

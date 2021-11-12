@@ -71,7 +71,7 @@ module.exports = async (orchestrator) => {
     t.equal(receivedCount, 1)
 
     stats = await alice_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 2, active: 2, channels: 1, messages: 1});
+    t.deepEqual(stats, {agents: 2, active: 2, channels: 1, messages: 0}); // stats for messages will not be returned 
 
     await alice_chat.call('chat', 'signal_specific_chatters', {
       signal_message_data: signalMessageData,

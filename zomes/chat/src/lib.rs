@@ -10,6 +10,7 @@ pub use message::{
 };
 pub mod entries;
 pub mod error;
+pub mod pagination_helper;
 pub mod utils;
 pub mod validation;
 
@@ -164,29 +165,30 @@ pub struct ListAllMessagesInput {
     pub chunk: message::Chunk,
 }
 
-#[hdk_extern]
-fn list_all_messages(input: ListAllMessagesInput) -> ExternResult<AllMessagesList> {
-    let channels = channel::handlers::list_channels(ChannelListInput {
-        category: input.category.clone(),
-    })?;
-    let all_messages: Result<Vec<ChannelMessages>, ChatError> = channels
-        .channels
-        .into_iter()
-        .map(|channel| {
-            let list_messages_input = ListMessagesInput {
-                channel: channel.entry.clone(),
-                chunk: input.chunk.clone(),
-                active_chatter: false,
-            };
-            let messages = message::handlers::list_messages(list_messages_input)?;
-            Ok(ChannelMessages {
-                channel,
-                messages: messages.messages,
-            })
-        })
-        .collect();
-    Ok(AllMessagesList(all_messages?))
-}
+/// Deprecated
+// #[hdk_extern]
+// fn list_all_messages(input: ListAllMessagesInput) -> ExternResult<AllMessagesList> {
+//     let channels = channel::handlers::list_channels(ChannelListInput {
+//         category: input.category.clone(),
+//     })?;
+//     let all_messages: Result<Vec<ChannelMessages>, ChatError> = channels
+//         .channels
+//         .into_iter()
+//         .map(|channel| {
+//             let list_messages_input = ListMessagesInput {
+//                 channel: channel.entry.clone(),
+//                 chunk: input.chunk.clone(),
+//                 active_chatter: false,
+//             };
+//             let messages = message::handlers::list_messages(list_messages_input)?;
+//             Ok(ChannelMessages {
+//                 channel,
+//                 messages: messages.messages,
+//             })
+//         })
+//         .collect();
+//     Ok(AllMessagesList(all_messages?))
+// }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct Stats {
