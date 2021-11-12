@@ -60,7 +60,6 @@ async fn chat_away() {
     let long_msg = MessageInput {
         last_seen: LastSeen::First,
         channel: channel.entry.clone(),
-        chunk: 0,
         entry: Message {
             uuid: "long msg".into(),
             content: std::iter::repeat('x').take(1025).collect(),

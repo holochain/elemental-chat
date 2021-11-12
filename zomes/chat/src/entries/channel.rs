@@ -46,7 +46,6 @@ impl Channel {
 pub struct ChannelData {
     pub entry: Channel,
     pub info: ChannelInfo,
-    pub latest_chunk: u32,
 }
 
 /// Input to the list channels call

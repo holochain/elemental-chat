@@ -1,5 +1,4 @@
 /*use chat::channel::Channel;
-use chat::message::Chunk;
 use chat::ChannelData;
 use chat::ChannelInput;
 use chat::ChannelList;
@@ -136,7 +135,6 @@ async fn behavior() {
                             uuid,
                             content: "Hey".to_string(),
                         },
-                        chunk: 0,
                     },
                 )
                 .await;
@@ -184,7 +182,6 @@ async fn behavior() {
                 "list_messages",
                 ListMessagesInput {
                     channel: channel.clone(),
-                    chunk: Chunk { start: 0, end: 1 },
                     active_chatter: true,
                 },
             )

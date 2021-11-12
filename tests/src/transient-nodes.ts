@@ -66,7 +66,6 @@ const doTransientNodes = async (s, t, local) => {
   const msg1 = {
     last_seen: { First: null },
     channel: channel.entry,
-    chunk: 0,
     entry: {
       uuid: uuidv4(),
       content: "Hello from alice :)",

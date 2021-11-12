@@ -53,7 +53,6 @@ module.exports = async (orchestrator) => {
    let first_message = {
      last_seen: { First: null },
      channel: {category: "General", uuid: "123"},
-     chunk: 0,
      entry: {
        uuid: uuidv4(),
        content: 'x'.repeat(1),

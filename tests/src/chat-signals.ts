@@ -45,7 +45,6 @@ module.exports = async (orchestrator) => {
     const msg1 = {
       last_seen: { First: null },
       channel: channel.entry,
-      chunk: 0,
       entry: MESSAGE
     }
     await consistency([bob_chat, alice_chat]);

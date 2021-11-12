@@ -83,11 +83,11 @@ fn link_is_earlier(link: &Link, earlier_than: i64) -> ChatResult<bool> {
 }
 
 pub fn last_segment_from_path(path: &Path) -> ChatResult<i64> {
-    let component = path
+    let component = path.as_ref().last().ok_or(ChatError::InvalidBatchingPath)?;
+    let bytes: [u8; 8] = component
         .as_ref()
-        .last()
-        .ok_or(ChatError::InvalidPaginationPath)?;
-    let bytes: [u8; 8] = component.as_ref().try_into().map_err(|_| ChatError::InvalidPaginationPath)?;
+        .try_into()
+        .map_err(|_| ChatError::InvalidBatchingPath)?;
     Ok(i64::from_be_bytes(bytes))
 }
 

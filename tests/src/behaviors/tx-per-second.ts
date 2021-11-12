@@ -215,7 +215,7 @@ const doListMessages = async (msg, channel, activeAgents): Promise<Array<number>
     let i = 0;
     const counts : Array<number> = await Promise.all(
         activeAgents.map(async agent => {
-            const r = await agent.cell.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: {start:0, end: 1} })
+            const r = await agent.cell.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false})
             i+=1;
             console.log(`${i}--called list messages for: `, agent.agent.toString('base64'), r.messages.length)
             return r.messages.length
@@ -316,7 +316,6 @@ const send = async (i, cell, channel, signal: "signal" | "noSignal") => {
             uuid: uuidv4(),
             content: `message ${i}`,
         },
-        chunk: 0,
     }
     console.log(`creating message ${i}`)
     const messageData = await cell.call('chat', 'create_message', msg)
@@ -364,7 +363,7 @@ const gossipTrial = async (activeAgents: Agents, playerAgents: PlayerAgents, cha
     while (true) {
         let justReceived = 0;
         try {
-            justReceived = (await receivingCell.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, chunk: { start: 0, end: 1 } })).messages.length
+            justReceived = (await receivingCell.call('chat', 'list_messages', { channel: channel.entry })).messages.length
         } catch (e) {
             console.error("error while checking number of messages received", e)
         }

@@ -30,7 +30,6 @@ module.exports = async (orchestrator) => {
     let first_message = {
       last_seen: { First: null },
       channel: channel.entry,
-      chunk: 0,
       entry: {
         uuid: uuidv4(),
         content: 'x'.repeat(1025),
@@ -58,7 +57,6 @@ module.exports = async (orchestrator) => {
     sends.push({
       last_seen: { Message: recvs[0].entryHash },
       channel: channel.entry,
-      chunk: 0,
       entry: {
         uuid: uuidv4(),
         content: "Is anybody out there?",
@@ -88,7 +86,6 @@ module.exports = async (orchestrator) => {
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
       channel: channel.entry,
-      chunk: 0,
       entry: {
         uuid: uuidv4(),
         content: "I'm here",
@@ -97,7 +94,6 @@ module.exports = async (orchestrator) => {
     sends.push({
       last_seen: { Message: recvs[1].entryHash },
       channel: channel.entry,
-      chunk: 0,
       entry: {
         uuid: uuidv4(),
         content: "Anybody?",

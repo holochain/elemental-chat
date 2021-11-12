@@ -27,7 +27,6 @@ pub struct MessageInput {
     pub last_seen: LastSeen,
     pub channel: Channel,
     pub entry: Message,
-    pub chunk: u32,
 }
 
 /// The message type that goes to the UI
@@ -62,11 +61,6 @@ pub struct ListMessagesInput {
     pub earliest_seen: Option<Timestamp>,
     // Keep expanding search interval until this count is reached
     pub target_message_count: usize, // UI will say 20 to start
-}
-#[derive(Debug, Clone, Serialize, Deserialize, SerializedBytes)]
-pub struct Chunk {
-    pub start: u32,
-    pub end: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes)]
