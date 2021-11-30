@@ -1,4 +1,4 @@
-use chat::channel::*;
+/*use chat::channel::*;
 use chat::message::*;
 use chat::*;
 use hc_joining_code::Props;
@@ -6,7 +6,6 @@ use holochain::conductor::api::error::{ConductorApiError, ConductorApiResult};
 use holochain::sweettest::*;
 
 #[cfg(test)]
-#[ignore]
 #[tokio::test(flavor = "multi_thread")]
 async fn chat_away() {
     // Use prebuilt DNA bundle.
@@ -156,3 +155,4 @@ async fn chat_away() {
     // Bobbo got the same messages as Alice.
     assert_eq!(alice_msgs, bobbo_msgs);
 }
+*/
