@@ -1,6 +1,4 @@
-import { Orchestrator, Config, InstallAgentsHapps, InstalledHapp } from '@holochain/tryorama'
-import * as msgpack from '@msgpack/msgpack';
-import path from 'path'
+import { Config } from '@holochain/tryorama'
 
 export const RETRY_DELAY = 5000
 export const RETRY_COUNT = 16
@@ -9,114 +7,67 @@ export const RETRY_COUNT = 16
 // Read the docs for more on configuration.
 export const localConductorConfig = Config.gen()
 
-import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType, NetworkType } from '@holochain/tryorama'
-export const network = {
-  bootstrap_service: "https://bootstrap-staging.holo.host",
-    network_type: NetworkType.QuicBootstrap,
+import { TransportConfigType, ProxyConfigType, NetworkType } from '@holochain/tryorama'
+export const NETWORK = {
+  bootstrap_service: "https://holodev-bootstrap.holo.host/",
+  network_type: NetworkType.QuicBootstrap,
   transport_pool: [{
     type: TransportConfigType.Proxy,
     sub_transport: { type: TransportConfigType.Quic },
     proxy_config: {
       type: ProxyConfigType.RemoteProxyClient,
-      proxy_url: "kitsune-proxy://SYVd4CF3BdJ4DS7KwLLgeU3_DbHoZ34Y-qroZ79DOs8/kitsune-quic/h/165.22.32.11/p/5779/--",
-//        proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/147.75.54.129/p/5778/--",
-      //proxy_url: "kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/165.22.32.11/p/5778/--",
-      //proxy_url:"kitsune-proxy://nFCWLsuRC0X31UMv8cJxioL-lBRFQ74UQAsb8qL4XyM/kitsune-quic/h/192.168.0.203/p/33679/--",
-        //proxy_url: "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/164.90.142.115/p/10000/--"  // p1
-   }
+      proxy_url: "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/137.184.142.208/p/5788/--",
+    }
   }],
   tuning_params: {
-      gossip_strategy: "sharded-gossip",
-      gossip_loop_iteration_delay_ms: 2000, //number // default 10
+    // holo-nixpkgs settings
+    // gossip_strategy: "sharded-gossip",
+    // default_rpc_multi_remote_agent_count: 1,
+    // gossip_loop_iteration_delay_ms: 2000, // # Default was 10
+    // agent_info_expires_after_ms: 1000 * 60 * 30, // # Default was 20 minutes
+    tx2_channel_count_per_connection: 16, // # Default was 3
+    // default_rpc_multi_remote_request_grace_ms: 10,
+    // gossip_single_storage_arc_per_space: true,
+    // Test settings
+    gossip_loop_iteration_delay_ms: 200, //number // default 10
+    default_notify_remote_agent_count: 5, //number // default 5
+    default_notify_timeout_ms: 100, //number // default 1000
+    default_rpc_single_timeout_ms: 20000, // number // default 2000
+    default_rpc_multi_remote_agent_count: 2, //number // default 2
+    default_rpc_multi_timeout_ms: 2000, //number // default 2000
+    agent_info_expires_after_ms: 1000 * 60 * 20, //number // default 1000 * 60 * 20 (20 minutes)
+    tls_in_mem_session_storage: 512, // default 512
+    proxy_keepalive_ms: 1000 * 30, // default 1000 * 60 * 2 (2 minutes)
+    proxy_to_expire_ms: 1000 * 60 * 5 // default 1000 * 60 * 5 (5 minutes)
 
-      /// Default agent count for remote notify. [Default: 5]
-      default_notify_remote_agent_count:  5,
-
-      /// Default timeout for remote notify. [Default: 30s]
-      default_notify_timeout_ms: 1000 * 30,
-
-      /// Default timeout for rpc single. [Default: 30s]
-      default_rpc_single_timeout_ms: 1000 * 30,
-
-      /// Default agent count for rpc multi. [Default: 2]
-      default_rpc_multi_remote_agent_count: 1,
-
-      /// Default timeout for rpc multi. [Default: 30s]
-      default_rpc_multi_timeout_ms: 1000 * 30,
-
-      /// Default agent expires after milliseconds. [Default: 20 minutes]
-      agent_info_expires_after_ms: 1000 * 60 * 20,
-
-      /// Tls in-memory session storage capacity. [Default: 512]
-      tls_in_mem_session_storage: 512,
-
-      /// How often should NAT nodes refresh their proxy contract?
-      /// [Default: 2 minutes]
-      proxy_keepalive_ms: 1000 * 60 * 2,
-
-      /// How often should proxy nodes prune their ProxyTo list?
-      /// Note - to function this should be > proxy_keepalive_ms.
-      /// [Default: 5 minutes]
-      proxy_to_expire_ms: 1000 * 60 * 5,
-
-      /// Mainly used as the for_each_concurrent limit,
-      /// this restricts the number of active polled futures
-      /// on a single thread.
-      concurrent_limit_per_thread: 4096,
-
-      /// tx2 quic max_idle_timeout
-      /// [Default: 30 seconds]
-      tx2_quic_max_idle_timeout_ms: 1000 * 30,
-
-      /// tx2 pool max connection count
-      /// [Default: 4096]
-      tx2_pool_max_connection_count: 4096,
-
-      /// tx2 channel count per connection
-      /// [Default: 3]
-      tx2_channel_count_per_connection: 16,
-
-      /// tx2 timeout used for passive background operations
-      /// like reads / responds.
-      /// [Default: 30 seconds]
-      tx2_implicit_timeout_ms: 1000 * 30,
-
-      /// tx2 initial connect retry delay
-      /// (note, this delay is currenty exponentially backed off--
-      /// multiplied by 2x on every loop)
-      /// [Default: 200 ms]
-      tx2_initial_connect_retry_delay_ms: 200,
-
-      default_rpc_multi_remote_request_grace_ms: 10,
-      gossip_single_storage_arc_per_space: true
   }
 }
 
-export const networkedConductorConfig = Config.gen({ network })
+export const networkedConductorConfig = Config.gen({ NETWORK })
 
 export const delay = ms => new Promise(r => setTimeout(r, ms))
 
-export const awaitIntegration = async(cell) => {
-    while (true) {
-        const dump = await cell.stateDump()
-        console.log("integration dump was:", dump)
-        const idump = dump[0].integration_dump
-        if (idump.validation_limbo == 0 && idump.integration_limbo == 0) {
-            break
-        }
-        console.log("waiting 5 seconds for integration")
-        await delay(5000)
+export const awaitIntegration = async (cell) => {
+  while (true) {
+    const dump = await cell.stateDump()
+    console.log("integration dump was:", dump)
+    const idump = dump[0].integration_dump
+    if (idump.validation_limbo == 0 && idump.integration_limbo == 0) {
+      break
     }
+    console.log("waiting 5 seconds for integration")
+    await delay(5000)
+  }
 }
 
-export const consistency = async(cells) => {
+export const consistency = async (cells) => {
   // 20 Seconds.
   const MAX_TIMEOUT = 1000 * 20;
   var total_published = 0;
   for (const cell of cells) {
-        const dump = await cell.stateDump()
-        const sdump = dump[0].source_chain_dump
-        total_published += sdump.published_ops_count;
+    const dump = await cell.stateDump()
+    const sdump = dump[0].source_chain_dump
+    total_published += sdump.published_ops_count;
   }
   while (true) {
     var total_integrated = 0;
@@ -125,7 +76,7 @@ export const consistency = async(cells) => {
       const dump = await cell.stateDump()
       console.log("integration dump was:", dump)
       const idump = dump[0].integration_dump
-      if(idump.integrated >= total_published) {
+      if (idump.integrated >= total_published) {
         total_integrated += 1;
       } else {
         total_missing += total_published - idump.integrated;
@@ -133,21 +84,21 @@ export const consistency = async(cells) => {
       console.log("Missing ", total_missing, "ops. Waiting 0.5 seconds for integration")
       await delay(500)
     }
-    if(cells.length == total_integrated) {
+    if (cells.length == total_integrated) {
       return;
     }
   }
 }
 
-export const awaitPeers = async(cell, count) => {
-    while (true) {
-        const dump = await cell.stateDump()
-        console.log("peer dump was:", dump)
-        const peer_dump = dump[0].peer_dump
-        if (peer_dump.peers.length >= count) {
-            break
-        }
-        console.log("waiting 5 seconds for peers to reach", count)
-        await delay(5000)
+export const awaitPeers = async (cell, count) => {
+  while (true) {
+    const dump = await cell.stateDump()
+    console.log("peer dump was:", dump)
+    const peer_dump = dump[0].peer_dump
+    if (peer_dump.peers.length >= count) {
+      break
     }
+    console.log("waiting 5 seconds for peers to reach", count)
+    await delay(5000)
+  }
 }

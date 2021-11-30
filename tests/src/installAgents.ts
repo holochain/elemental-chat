@@ -5,7 +5,7 @@ import * as msgpack from '@msgpack/msgpack';
 import { InstalledHapp, Player } from '@holochain/tryorama';
 
 const dnaConfiguration = {
-  nick: 'elemental-chat',
+  role_id: 'elemental-chat',
 }
 const dnaPath = path.join(__dirname, "../../elemental-chat.dna")
 const jcFactoryDna = path.join(__dirname, "../../dnas/joining-code-factory.dna");
@@ -26,20 +26,20 @@ export const installJCHapp = async (conductor: Player): Promise<InstalledHapp> =
     installed_app_id: `holo_agent_override`,
     agent_key: holo_agent_override,
     dnas: [{
-      hash: await conductor.registerDna({path: jcFactoryDna}, conductor.scenarioUID),
-      nick: 'jc',
+      hash: await conductor.registerDna({ path: jcFactoryDna }, conductor.scenarioUID),
+      role_id: 'jc',
     }]
   })
   return happ
 }
 
-export const installAgents = async (conductor: Player, agentNames: string[], jcHapp?: InstalledHapp, memProofMutator= m => m): Promise<InstalledHapp[]> => {
+export const installAgents = async (conductor: Player, agentNames: string[], jcHapp?: InstalledHapp, memProofMutator = m => m): Promise<InstalledHapp[]> => {
   let holo_agent_override = undefined
   if (!!jcHapp) {
     holo_agent_override = Codec.AgentId.encode(jcHapp.agent)
   }
   console.log(`registering dna for: ${dnaPath}`)
-  const dnaHash = await conductor.registerDna({path: dnaPath}, conductor.scenarioUID, { skip_proof: !jcHapp, holo_agent_override})
+  const dnaHash = await conductor.registerDna({ path: dnaPath }, conductor.scenarioUID, { skip_proof: !jcHapp, holo_agent_override })
   const admin = conductor.adminWs()
 
   const agents: Array<InstalledHapp> = []
@@ -58,7 +58,7 @@ export const installAgents = async (conductor: Player, agentNames: string[], jcH
         role: "ROLE",
         record_locator: "RECORD_LOCATOR",
         registered_agent: Codec.AgentId.encode(agent_key)
-      });      
+      });
       const mutated = memProofMutator(membrane_proof)
       dna["membrane_proof"] = Array.from(msgpack.encode(mutated))
     }

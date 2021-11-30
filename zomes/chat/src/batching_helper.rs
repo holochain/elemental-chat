@@ -27,7 +27,7 @@ pub fn get_message_links(
     let root_path_length = channel.as_ref().len();
     let newest_included_hour_path = timestamp_into_path(channel, newest_included_hour)?;
     if newest_included_hour_path.exists()? {
-        links.append(&mut get_links(newest_included_hour_path.hash()?, None)?.into_inner());
+        links.append(&mut get_links(newest_included_hour_path.hash()?, None)?);
     }
 
     let mut earliest_seen_child_path = newest_included_hour_path;
@@ -37,7 +37,7 @@ pub fn get_message_links(
         if current_search_path.exists()? {
             let earliest_seen_child_segment =
                 last_segment_from_path(&earliest_seen_child_path).unwrap();
-            let mut children = current_search_path.children()?.into_inner();
+            let mut children = current_search_path.children()?;
             children.retain(|child_link| {
                 link_is_earlier(child_link, earliest_seen_child_segment).unwrap_or(false)
             });
@@ -61,11 +61,11 @@ fn append_message_links_recursive(
     children.sort_unstable_by_key(|grandchild_link| cmp::Reverse(grandchild_link.timestamp));
     for child_link in children {
         if depth == 0 {
-            let mut message_links = get_links(child_link.target, None)?.into_inner();
+            let mut message_links = get_links(child_link.target, None)?;
             links.append(&mut message_links);
         } else {
             let path = Path::try_from(&child_link.tag)?;
-            let grandchildren = path.children()?.into_inner();
+            let grandchildren = path.children()?;
             append_message_links_recursive(grandchildren, links, target_count, depth - 1)?;
         }
         if links.len() >= target_count {
