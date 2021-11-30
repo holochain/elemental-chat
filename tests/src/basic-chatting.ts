@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { localConductorConfig, delay } from './common'
+import { localConductorConfig, delay, awaitIntegration } from './common'
 import { installAgents } from './installAgents'
 
 module.exports = async (orchestrator) => {
@@ -13,7 +13,7 @@ module.exports = async (orchestrator) => {
 
     // install your happs into the coductors and destructuring the returned happ data using the same
     // array structure as you created in your installation array.
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor,  ["alice", 'bobbo'])
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor, ["alice", 'bobbo'])
     const [alice_chat] = alice_chat_happ.cells
     const [bobbo_chat] = bobbo_chat_happ.cells
 
@@ -40,8 +40,8 @@ module.exports = async (orchestrator) => {
     try {
       await alice_chat.call('chat', 'create_message', first_message);
       t.fail()
-    } catch(e) {
-      t.deepEqual(e,{ type: 'error', data: { type: 'internal_error', data: 'Source chain error: InvalidCommit error: Message too long' } })
+    } catch (e) {
+      t.deepEqual(e, { type: 'error', data: { type: 'internal_error', data: 'Source chain error: InvalidCommit error: Message too long' } })
     }
 
     first_message.entry.content = "Hello from alice :)";
@@ -77,9 +77,11 @@ module.exports = async (orchestrator) => {
     console.log(_.map(msgs[0].messages, messageEntry));
     t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[0].messages, messageEntry));
     // Bobbo lists the messages
-    await delay(2000) // TODO add consistency instead
+
+    await awaitIntegration(bobbo_chat)
+
     msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
-    console.log('bobbo.list_messages: '+_.map(msgs[1].messages, messageEntry));
+    console.log('bobbo.list_messages: ' + _.map(msgs[1].messages, messageEntry));
     t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[1].messages, messageEntry));
 
     // Bobbo and Alice both reply to the same message
@@ -105,7 +107,9 @@ module.exports = async (orchestrator) => {
     recvs.push(await alice_chat.call('chat', 'create_message', sends[3]));
     console.log(recvs[3]);
     t.deepEqual(sends[3].entry, recvs[3].entry);
-    await delay(4000)
+    await awaitIntegration(bobbo_chat)
+    await awaitIntegration(alice_chat)
+
     // Alice lists the messages
     msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
     console.log(_.map(msgs[2].messages, messageEntry));

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { localConductorConfig } from './common'
+import { localConductorConfig, awaitIntegration } from './common'
 import { installAgents } from "./installAgents";
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
@@ -12,8 +12,8 @@ module.exports = async (orchestrator) => {
     const [alice, bob] = await s.players([config, config], false)
     await alice.startup()
     await bob.startup()
-    const [alice_chat_happ] = await installAgents(alice,  ["alice"])
-    const [bob_chat_happ] = await installAgents(bob,  ['bobbo'])
+    const [alice_chat_happ] = await installAgents(alice, ["alice"])
+    const [bob_chat_happ] = await installAgents(bob, ['bobbo'])
     const [alice_chat] = alice_chat_happ.cells
     const [bob_chat] = bob_chat_happ.cells
 
@@ -68,15 +68,16 @@ module.exports = async (orchestrator) => {
     const r3 = await alice_chat.call('chat', 'create_message', msg3);
     t.deepEqual(r3.entry, msg3.entry);
 
+    await awaitIntegration(alice_chat)
+    await awaitIntegration(bob_chat)
+
+    let stats = await alice_chat.call('chat', 'stats', { category: "General" });
+    t.deepEqual(stats, { agents: 2, active: 2, channels: 2, messages: 0 }); // stats for messages is depricated 
+
     await delay(1500)
 
-    let stats = await alice_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 0}); // stats for messages is depricated 
-
-    await delay(1500)
-
-    stats = await bob_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 2, active: 2, channels: 2, messages: 0}); // stats for messages is depricated 
+    stats = await bob_chat.call('chat', 'stats', { category: "General" });
+    t.deepEqual(stats, { agents: 2, active: 2, channels: 2, messages: 0 }); // stats for messages is depricated 
 
   })
 }

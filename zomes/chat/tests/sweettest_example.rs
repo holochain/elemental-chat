@@ -3,6 +3,7 @@ use hc_joining_code::Props;
 use holochain::sweettest::*;
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore]
 async fn sweettest_example() {
     // Use prebuilt DNA bundle.
     // You must build the DNA bundle as a separate step before running the test.

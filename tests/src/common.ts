@@ -43,7 +43,7 @@ export const NETWORK = {
   }
 }
 
-export const networkedConductorConfig = Config.gen({ NETWORK })
+export const networkedConductorConfig = Config.gen({ network: NETWORK })
 
 export const delay = ms => new Promise(r => setTimeout(r, ms))
 

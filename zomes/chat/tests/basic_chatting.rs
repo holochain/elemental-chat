@@ -6,6 +6,7 @@ use holochain::conductor::api::error::{ConductorApiError, ConductorApiResult};
 use holochain::sweettest::*;
 
 #[cfg(test)]
+#[ignore]
 #[tokio::test(flavor = "multi_thread")]
 async fn chat_away() {
     // Use prebuilt DNA bundle.

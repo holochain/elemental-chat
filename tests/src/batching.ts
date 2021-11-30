@@ -13,7 +13,7 @@ module.exports = async (orchestrator) => {
 
     // install your happs into the coductors and destructuring the returned happ data using the same
     // array structure as you created in your installation array.
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor,  ["alice", 'bobbo'])
+    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor, ["alice", 'bobbo'])
     const [alice_chat] = alice_chat_happ.cells
     const [bobbo_chat] = bobbo_chat_happ.cells
 
@@ -58,21 +58,20 @@ module.exports = async (orchestrator) => {
     console.log(recvs[1]);
     t.deepEqual(sends[1].entry, recvs[1].entry);
 
-    await delay(10000)    
+    await awaitIntegration(alice_chat)
     await awaitIntegration(bobbo_chat)
 
     // Alice lists the messages
     let alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
-    
     let bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
-    
+
     if (alices_view.messages.length !== 2) {
       await delay(10000)
       console.log("Trying again...");
-      
+
       alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
-   
-      bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })     
+
+      bobbos_view = await bobbo_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
     }
     t.deepEqual(alices_view.messages.length, 2)
     t.deepEqual(bobbos_view.messages.length, 2)
@@ -99,7 +98,10 @@ module.exports = async (orchestrator) => {
     recvs.push(await alice_chat.call('chat', 'create_message', sends[3]));
     console.log(recvs[3]);
     t.deepEqual(sends[3].entry, recvs[3].entry);
-    await delay(4000)
+
+    await awaitIntegration(alice_chat)
+    await awaitIntegration(bobbo_chat)
+
     // Alice lists the messages
     alices_view = await alice_chat.call('chat', 'list_messages', { channel: channel.entry, active_chatter: false, target_message_count: 2 })
     // Bobbo lists the messages
@@ -108,7 +110,7 @@ module.exports = async (orchestrator) => {
     t.deepEqual(bobbos_view.messages.length, 4)
     console.log("ALICE ", alices_view);
     console.log("BOBBO: ", bobbos_view);
-    
+
   })
 
 }
