@@ -1,5 +1,6 @@
 use crate::timestamp::Timestamp;
 use hdk::{hash_path::path::Component, prelude::*};
+use uuid::Uuid;
 pub mod handlers;
 
 /// The actual channel data that is saved into the DHT
@@ -62,7 +63,8 @@ pub struct ChannelList {
 
 impl From<Channel> for Path {
     fn from(c: Channel) -> Self {
-        let path = vec![Component::from(c.category), Component::from(c.uuid)];
+        let u = Uuid::parse_str(&c.uuid).unwrap();
+        let path = vec![Component::from(c.category), Component::from(u.to_u128_le().to_le_bytes().to_vec())];
         Path::from(path)
     }
 }
@@ -72,9 +74,11 @@ impl TryFrom<&Path> for Channel {
 
     fn try_from(p: &Path) -> Result<Self, Self::Error> {
         let path: &Vec<_> = p.as_ref();
+        let u128 = u128::from_le_bytes(path[1].as_ref().try_into().expect("wrong length"));
+        let u = Uuid::from_u128(u128);
         let channel = Channel {
             category: String::try_from(&path[0])?,
-            uuid: String::try_from(&path[1])?,
+            uuid: u.to_string(),
         };
         Ok(channel)
     }
