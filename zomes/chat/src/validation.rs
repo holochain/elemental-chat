@@ -47,11 +47,11 @@ pub(crate) fn common_validatation(data: ValidateData) -> ExternResult<ValidateCa
 
 pub fn set_read_only_cap_tokens() -> ExternResult<()> {
     let mut functions: GrantedFunctions = BTreeSet::new();
-    functions.insert((zome_info()?.zome_name, "get_active_chatters".into()));
-    functions.insert((zome_info()?.zome_name, "list_channels".into()));
-    functions.insert((zome_info()?.zome_name, "list_messages".into()));
-    functions.insert((zome_info()?.zome_name, "stats".into()));
-    functions.insert((zome_info()?.zome_name, "agent_stats".into()));
+    functions.insert((zome_info()?.name, "get_active_chatters".into()));
+    functions.insert((zome_info()?.name, "list_channels".into()));
+    functions.insert((zome_info()?.name, "list_messages".into()));
+    functions.insert((zome_info()?.name, "stats".into()));
+    functions.insert((zome_info()?.name, "agent_stats".into()));
     create_cap_grant(CapGrantEntry {
         tag: "".into(),
         access: ().into(),

@@ -42,7 +42,7 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
     let path = Path::from(list_channels_input.category);
 
     // Get any channels on this path
-    let links = path.children()?.into_inner();
+    let links = path.children()?;
     let mut channels = Vec::with_capacity(links.len());
 
     let mut channel_data: HashMap<EntryHash, Channel> = HashMap::new();
@@ -57,8 +57,7 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
         let channel = Channel::try_from(&channel_path)?;
 
         // Get any channel info links on this channel
-        let channel_info =
-            get_links(channel_path.hash()?, Some(ChannelInfoTag::tag()))?.into_inner();
+        let channel_info = get_links(channel_path.hash()?, Some(ChannelInfoTag::tag()))?;
 
         // Find the latest
         let latest_info = channel_info
@@ -112,6 +111,6 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
 // Note: This function can get very heavy
 pub(crate) fn channel_stats(list_channels_input: ChannelListInput) -> ChatResult<(usize, usize)> {
     let channel_path = Path::from(list_channels_input.category);
-    let channel_links = channel_path.children()?.into_inner();
+    let channel_links = channel_path.children()?;
     Ok((channel_links.len(), 0))
 }

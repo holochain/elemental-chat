@@ -1,4 +1,4 @@
-use chat::channel::*;
+/*use chat::channel::*;
 use chat::message::*;
 use chat::*;
 use hc_joining_code::Props;
@@ -155,3 +155,4 @@ async fn chat_away() {
     // Bobbo got the same messages as Alice.
     assert_eq!(alice_msgs, bobbo_msgs);
 }
+*/

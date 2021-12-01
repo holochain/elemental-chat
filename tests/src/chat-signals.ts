@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { localConductorConfig, consistency } from './common'
+import { localConductorConfig, consistency, awaitIntegration } from './common'
 import { installAgents } from "./installAgents";
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
@@ -18,19 +18,19 @@ module.exports = async (orchestrator) => {
     }
     let receivedCount = 0
     bob.setSignalHandler((signal) => {
-      console.log("Received Signal:",signal)
+      console.log("Received Signal:", signal)
       t.deepEqual(signal.data.payload.signal_payload.messageData.entry, MESSAGE)
       receivedCount += 1
     })
-    const [alice_chat_happ] = await installAgents(alice,  ["alice"])
-    const [bob_chat_happ] = await installAgents(bob,  ['bobbo'])
+    const [alice_chat_happ] = await installAgents(alice, ["alice"])
+    const [bob_chat_happ] = await installAgents(bob, ['bobbo'])
     const [alice_chat] = alice_chat_happ.cells
     const [bob_chat] = bob_chat_happ.cells
 
     await s.shareAllNodes([alice, bob]);
 
-    let stats = await alice_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 0, active: 0, channels: 0, messages: 0});
+    let stats = await alice_chat.call('chat', 'stats', { category: "General" });
+    t.deepEqual(stats, { agents: 0, active: 0, channels: 0, messages: 0 });
 
     // bob declares self as chatter
     await bob_chat.call('chat', 'refresh_chatter', null);
@@ -69,8 +69,8 @@ module.exports = async (orchestrator) => {
     // bob should have gotten a signal becayse he's an active chatter
     t.equal(receivedCount, 1)
 
-    stats = await alice_chat.call('chat', 'stats', {category: "General"});
-    t.deepEqual(stats, {agents: 2, active: 2, channels: 1, messages: 0}); // stats for messages will not be returned 
+    stats = await alice_chat.call('chat', 'stats', { category: "General" });
+    t.deepEqual(stats, { agents: 2, active: 2, channels: 1, messages: 0 }); // stats for messages will not be returned 
 
     await alice_chat.call('chat', 'signal_specific_chatters', {
       signal_message_data: signalMessageData,
@@ -85,6 +85,8 @@ module.exports = async (orchestrator) => {
     }
     // bob should have gotten a 2nd signal because he's specified in the call
     t.equal(receivedCount, 2)
+    await awaitIntegration(alice_chat)
+    await awaitIntegration(bob_chat)
 
     const result = await alice_chat.call('chat', 'get_active_chatters');
     t.equal(result.chatters.length, 1)

@@ -1,5 +1,5 @@
-use hdk::prelude::*;
 use self::holo_hash::AgentPubKeyB64;
+use hdk::prelude::*;
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
 pub struct Props {
@@ -12,13 +12,14 @@ pub fn holo_agent(encoded_props: &SerializedBytes) -> ExternResult<AgentPubKey> 
     let maybe_props = Props::try_from(encoded_props.to_owned());
     if let Ok(props) = maybe_props {
         if let Some(a) = props.holo_agent_override {
-            return Ok(AgentPubKey::try_from(a).unwrap())
+            return Ok(AgentPubKey::try_from(a).unwrap());
         }
     }
     // This is a hard coded holo agent public key
-    return Ok(AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap())
+    return Ok(
+        AgentPubKey::try_from("uhCAkfzycXcycd-OS6HQHvhTgeDVjlkFdE2-XHz-f_AC_5xelQX1N").unwrap(),
+    );
 }
-
 
 pub fn skip_proof_sb(encoded_props: &SerializedBytes) -> bool {
     let maybe_props = Props::try_from(encoded_props.to_owned());
@@ -30,7 +31,7 @@ pub fn skip_proof_sb(encoded_props: &SerializedBytes) -> bool {
 
 // This is useful for test cases where we don't want to provide a membrane proof
 pub fn skip_proof() -> bool {
-    if let Ok(info) = zome_info() {
+    if let Ok(info) = dna_info() {
         return skip_proof_sb(&info.properties);
     }
     return false;

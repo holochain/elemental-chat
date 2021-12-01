@@ -2,7 +2,7 @@
 manifest_version: "1"
 name: elemental-chat
 description: ""
-slots:
+roles:
   - id: elemental-chat
     provisioning:
       strategy: create

@@ -4,16 +4,16 @@ import { RETRY_DELAY, RETRY_COUNT, localConductorConfig, networkedConductorConfi
 import { installAgents } from './installAgents'
 
 module.exports = async (orchestrator) => {
-    orchestrator.registerScenario('transient nodes-local', async (s, t) => {
-        await doTransientNodes(s, t, true)
-    })
-    /* Restore when tryorama double registerScenario bug fixed
-    orchestrator.registerScenario('transient nodes-proxied', async (s, t) => {
-        await doTransientNodes(s, t, false)
-    })*/
+  orchestrator.registerScenario('transient nodes-local', async (s, t) => {
+    await doTransientNodes(s, t, true)
+  })
+  /* Restore when tryorama double registerScenario bug fixed
+  orchestrator.registerScenario('transient nodes-proxied', async (s, t) => {
+      await doTransientNodes(s, t, false)
+  })*/
 }
 
-const gotChannelsAndMessages = async(t, name, happ, channelEntry, retry_count, retry_delay)  => {
+const gotChannelsAndMessages = async (t, name, happ, channelEntry, retry_count, retry_delay) => {
   var retries = retry_count
   while (true) {
     const channel_list = await happ.call('chat', 'list_channels', { category: "General" });
@@ -24,7 +24,7 @@ const gotChannelsAndMessages = async(t, name, happ, channelEntry, retry_count, r
     t.ok(r)
     console.log(`${name}'s message list:`, r);
     if (r.messages.length > 0) {
-      t.equal(r.messages.length,1)
+      t.equal(r.messages.length, 1)
       break;
     }
     else {
@@ -35,7 +35,7 @@ const gotChannelsAndMessages = async(t, name, happ, channelEntry, retry_count, r
       }
     }
     console.log(`retry ${retries}`);
-    await delay( retry_delay )
+    await delay(retry_delay)
   }
 }
 
@@ -50,8 +50,8 @@ const doTransientNodes = async (s, t, local) => {
 
 
 
-  const [alice_chat_happ] = await installAgents(alice,  ["alice"])
-  const [bob_chat_happ] = await installAgents(bob,  ['bobbo'])
+  const [alice_chat_happ] = await installAgents(alice, ["alice"])
+  const [bob_chat_happ] = await installAgents(bob, ['bobbo'])
   const [alice_chat] = alice_chat_happ.cells
   const [bob_chat] = bob_chat_happ.cells
 

@@ -151,7 +151,7 @@ use std::collections::HashSet;
 /// return the list of active chatters on a path.
 /// N.B.: assumes that the path has been ensured elsewhere.
 fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)> {
-    let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
+    let chatters = get_links(chatters_path.hash()?, None)?;
     debug!("num online chatters {}", chatters.len());
     let now = to_date(sys_time()?);
     let total = chatters.len();
@@ -272,7 +272,7 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
 // this is a relatively expensive call and really only for testing purposes
 pub(crate) fn agent_stats() -> ChatResult<(usize, usize)> {
     let chatters_path: Path = chatters_path();
-    let chatters = get_links(chatters_path.hash()?, None)?.into_inner();
+    let chatters = get_links(chatters_path.hash()?, None)?;
 
     let agents = chatters
         .into_iter()

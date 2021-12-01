@@ -1,30 +1,27 @@
 [package]
-authors = ["michael.dougherty@holo.host", "philip.beadle@holo.host", "david.meister@holo.host, tom.gowan@holo.host"]
-edition = "2018"
 name = "elemental-chat"
+authors = ["michael.dougherty@holo.host", "philip.beadle@holo.host", "david.meister@holo.host, tom.gowan@holo.host"]
 version = "0.2.1-alpha1"
+edition = "2018"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
 name = "chat"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 chrono = {version = "0.4.19", features = ['alloc', 'std']}
 derive_more = "0.99"
 hc_joining_code = {path = "../../crates/joining_code"}
-hdk = "=0.0.107"
+hdk = "=0.0.115"
 serde = "1.0"
 thiserror = "1.0"
-hc_utils = "=0.0.107"
-holo_hash = { version = "=0.0.7", features = ["encoding"]}
+hc_utils = "=0.0.115"
+holo_hash = { version = "=0.0.12", features = ["encoding"] }
 
 [dev-dependencies]
-holochain = { git = "https://github.com/holochain/holochain.git", rev = "0f96823dd7861b85780eb62936d1e27d53ea4e65", features = ["test_utils"] }
-# holochain = { path = "../../../chain/crates/holochain/"}
-#holochain_types = { git = "https://github.com/holochain/holochain.git", branch = "develop", features = ["test_utils"] }
-# holochain_types = { path = "../../../chain/crates/holochain_types/"}
+# holochain = "=0.0.117"
 futures = "0.3.1"
-nanoid = "0.3"
+nanoid = "0.4.0"
 observability = "0.1.2"
 stream-cancel = "0.8.0"
 tokio = {version = "1.3", features = ["full"]}

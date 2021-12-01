@@ -1,3 +1,4 @@
+/*
 use chat::{channel::Channel, ChannelData, ChannelInput, ChannelList, ChannelListInput};
 use hc_joining_code::Props;
 use holochain::sweettest::*;
@@ -66,3 +67,4 @@ async fn sweettest_example() {
     // rather than deep comparison of data serialized to JSON
     assert_eq!(channels.channels[0].entry, channel);
 }
+ */
