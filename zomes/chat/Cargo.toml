@@ -17,6 +17,7 @@ serde = "1.0"
 thiserror = "1.0"
 hc_utils = "=0.0.115"
 holo_hash = { version = "=0.0.12", features = ["encoding"] }
+uuid = "0.8.2"
 
 [dev-dependencies]
 # holochain = "=0.0.117"

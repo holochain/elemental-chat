@@ -4,6 +4,7 @@ use crate::{
     error::ChatResult,
 };
 use hdk::prelude::*;
+use hdk::hash_path::path::Component;
 use link::Link;
 use std::collections::HashMap;
 
@@ -37,10 +38,14 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     Ok(ChannelData::new(entry, info))
 }
 
+fn category_path(category: String) -> Path {
+    let path = vec![Component::from(category.as_bytes().to_vec())];
+    Path::from(path)
+}
+
 pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {
     // Get the category path
-    let path = Path::from(list_channels_input.category);
-
+    let path= category_path(list_channels_input.category);
     // Get any channels on this path
     let links = path.children()?;
     let mut channels = Vec::with_capacity(links.len());
@@ -110,7 +115,8 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
 
 // Note: This function can get very heavy
 pub(crate) fn channel_stats(list_channels_input: ChannelListInput) -> ChatResult<(usize, usize)> {
-    let channel_path = Path::from(list_channels_input.category);
+    let channel_path = category_path(list_channels_input.category);
+
     let channel_links = channel_path.children()?;
     Ok((channel_links.len(), 0))
 }
