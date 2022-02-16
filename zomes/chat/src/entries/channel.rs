@@ -10,6 +10,8 @@ use std;
 #[hdk_entry(id = "channel_info")]
 #[derive(Clone, PartialEq, Eq)]
 pub struct ChannelInfo {
+    pub category: String,
+    pub uuid: String,
     pub name: String,
     pub created_by: AgentPubKey,
     pub created_at: Timestamp,

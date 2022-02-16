@@ -20,6 +20,8 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
 
     // Create the channel info
     let info = ChannelInfo {
+        category: entry.category,
+        uuid: entry.uuid,
         // This agent
         created_by: agent_info()?.agent_initial_pubkey,
         // Right now
@@ -50,19 +52,19 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
     let links = path.children()?;
     let mut channels = Vec::with_capacity(links.len());
 
-    let mut channel_data: HashMap<EntryHash, Channel> = HashMap::new();
+    let mut channel_data: Vec<EntryHash> = Vec::new();
     // For each channel get the channel info links and choose the latest
-    for tag in links.into_iter().map(|link| link.tag) {
+    for target in links.into_iter().map(|link| link.target) {
         // Path links have their full path as the tag so
         // we don't need to get_links on the child.
         // The tag can be turned into the channel path
-        let channel_path = Path::try_from(&tag)?;
+        // let channel_path = Path::try_from(&tag)?;
 
-        // Turn the channel path into the channel
-        let channel = Channel::try_from(&channel_path)?;
+        // // Turn the channel path into the channel
+        // let channel = Channel::try_from(&channel_path)?;
 
         // Get any channel info links on this channel
-        let channel_info = get_links(channel_path.hash()?, Some(ChannelInfoTag::tag()))?;
+        let channel_info = get_links(target, Some(ChannelInfoTag::tag()))?;
 
         // Find the latest
         let latest_info = channel_info
@@ -84,11 +86,9 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
             None => continue,
         };
 
-        channel_data.insert(latest_info.target, channel);
+        channel_data.push(latest_info.target);
     }
     let chan_results_input = channel_data
-        .keys()
-        .cloned()
         .into_iter()
         .map(|t| GetInput::new(t.into(), GetOptions::default()))
         .collect();
@@ -97,14 +97,11 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
     for ele in all_channel_results_elements.into_iter() {
         if let Some(element) = ele {
             if let Some(info) = element.into_inner().1.to_app_option::<ChannelInfo>()? {
-                // Turn the entry into a ChannelInfo
-                let info_hash = hash_entry(&info)?;
-                if let Some(c) = channel_data.get(&info_hash) {
-                    channels.push(ChannelData {
-                        entry: c.clone(),
-                        info,
-                    })
-                }
+                // Turn the info into Channel
+                channels.push(ChannelData {
+                    entry: Channel { category: info.category, uuid: info.uuid },
+                    info,
+                })
             }
         }
     }
