@@ -68,8 +68,8 @@ module.exports = async (orchestrator) => {
     t.deepEqual(sends[1].entry, recvs[1].entry);
 
     const channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
-    console.log(channel_list);
-
+    console.log(channel_list.channels);
+    t.equal(channel_list.channels[0].info.name, "Test Channel")
     // // Alice lists the messages
     // var msgs: any[] = [];
     // let batch_payload = { channel: channel.entry, active_chatter: false, target_message_count: 2 }
