@@ -2,7 +2,7 @@
 //!
 //!
 //!
-use crate::{error::ChatResult, ChatError};
+use crate::{error::ChatResult, ChatError, utils::custom_try_from};
 use chrono::{DateTime, Datelike, NaiveDateTime, Timelike, Utc};
 use hdk::prelude::*;
 use std::cmp;
@@ -27,7 +27,7 @@ pub fn get_message_links(
     let root_path_length = channel.as_ref().len();
     let newest_included_hour_path = timestamp_into_path(channel, newest_included_hour)?;
     if newest_included_hour_path.exists()? {
-        links.append(&mut get_links(newest_included_hour_path.hash()?, None)?);
+        links.append(&mut get_links(newest_included_hour_path.path_entry_hash()?, None)?);
     }
 
     let mut earliest_seen_child_path = newest_included_hour_path;

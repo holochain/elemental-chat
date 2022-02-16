@@ -48,6 +48,7 @@ fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
 
 entry_defs![
     Path::entry_def(),
+    PathEntry::entry_def(),
     Message::entry_def(),
     ChannelInfo::entry_def()
 ];

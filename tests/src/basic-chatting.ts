@@ -70,54 +70,54 @@ module.exports = async (orchestrator) => {
     const channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
     console.log(channel_list);
 
-    // Alice lists the messages
-    var msgs: any[] = [];
-    let batch_payload = { channel: channel.entry, active_chatter: false, target_message_count: 2 }
-    msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
-    console.log(_.map(msgs[0].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[0].messages, messageEntry));
-    // Bobbo lists the messages
+    // // Alice lists the messages
+    // var msgs: any[] = [];
+    // let batch_payload = { channel: channel.entry, active_chatter: false, target_message_count: 2 }
+    // msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
+    // console.log(_.map(msgs[0].messages, messageEntry));
+    // t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[0].messages, messageEntry));
+    // // Bobbo lists the messages
 
-    await awaitIntegration(bobbo_chat)
+    // await awaitIntegration(bobbo_chat)
 
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
-    console.log('bobbo.list_messages: ' + _.map(msgs[1].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[1].messages, messageEntry));
+    // msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
+    // console.log('bobbo.list_messages: ' + _.map(msgs[1].messages, messageEntry));
+    // t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[1].messages, messageEntry));
 
-    // Bobbo and Alice both reply to the same message
-    sends.push({
-      last_seen: { Message: recvs[1].entryHash },
-      channel: channel.entry,
-      entry: {
-        uuid: uuidv4(),
-        content: "I'm here",
-      }
-    });
-    sends.push({
-      last_seen: { Message: recvs[1].entryHash },
-      channel: channel.entry,
-      entry: {
-        uuid: uuidv4(),
-        content: "Anybody?",
-      }
-    });
-    recvs.push(await bobbo_chat.call('chat', 'create_message', sends[2]));
-    console.log(recvs[2]);
-    t.deepEqual(sends[2].entry, recvs[2].entry);
-    recvs.push(await alice_chat.call('chat', 'create_message', sends[3]));
-    console.log(recvs[3]);
-    t.deepEqual(sends[3].entry, recvs[3].entry);
-    await awaitIntegration(bobbo_chat)
-    await awaitIntegration(alice_chat)
+    // // Bobbo and Alice both reply to the same message
+    // sends.push({
+    //   last_seen: { Message: recvs[1].entryHash },
+    //   channel: channel.entry,
+    //   entry: {
+    //     uuid: uuidv4(),
+    //     content: "I'm here",
+    //   }
+    // });
+    // sends.push({
+    //   last_seen: { Message: recvs[1].entryHash },
+    //   channel: channel.entry,
+    //   entry: {
+    //     uuid: uuidv4(),
+    //     content: "Anybody?",
+    //   }
+    // });
+    // recvs.push(await bobbo_chat.call('chat', 'create_message', sends[2]));
+    // console.log(recvs[2]);
+    // t.deepEqual(sends[2].entry, recvs[2].entry);
+    // recvs.push(await alice_chat.call('chat', 'create_message', sends[3]));
+    // console.log(recvs[3]);
+    // t.deepEqual(sends[3].entry, recvs[3].entry);
+    // await awaitIntegration(bobbo_chat)
+    // await awaitIntegration(alice_chat)
 
-    // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
-    console.log(_.map(msgs[2].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[2].messages, messageEntry));
-    // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
-    console.log(_.map(msgs[3].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[3].messages, messageEntry));
+    // // Alice lists the messages
+    // msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
+    // console.log(_.map(msgs[2].messages, messageEntry));
+    // t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[2].messages, messageEntry));
+    // // Bobbo lists the messages
+    // msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
+    // console.log(_.map(msgs[3].messages, messageEntry));
+    // t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[3].messages, messageEntry));
 
   })
 

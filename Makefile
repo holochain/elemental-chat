@@ -17,7 +17,7 @@ WASM2		= target/wasm32-unknown-unknown/release/profile.wasm
 dnas:
 	mkdir -p ./dnas
 dnas/joining-code-factory.dna:	dnas
-	curl 'https://holo-host.github.io/joining-code-happ/releases/downloads/0_1_2_alpha2/joining-code-factory.0_1_2_alpha2.dna' -o $@
+	curl 'https://holo-host.github.io/joining-code-happ/releases/downloads/0_2_0_alpha4/joining-code-factory.0_2_0_alpha4.dna' -o $@
 
 DNAs: dnas/joining-code-factory.dna
 
@@ -84,8 +84,11 @@ test-e2e:	test-dna
 # █▀█ █▀▀ █░░ █▀▀ ▄▀█ █▀ █▀▀
 # █▀▄ ██▄ █▄▄ ██▄ █▀█ ▄█ ██▄
 #############################
+# requirements
+# - cargo-edit crate: `cargo install cargo-edit`
+# - jq linux terminal tool : `sudo apt-get install jq`
 # How to make a release?
-# make update 
+# make update
 
 update:
 	echo '⚙️  Updating hdk crate...'
