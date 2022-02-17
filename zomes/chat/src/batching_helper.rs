@@ -86,7 +86,21 @@ pub fn find_existing_leaf(mut search_path: Path) -> Result<Option<(Path, SearchS
     // walk back down the tree storing the sibling info as we go
     while search_path.as_ref().len() < 4 {
         let children = search_path.children_paths()?;
-        let sibs: Vec<i64>  = children.into_iter().map(|path| {
+        let sibs: Vec<i64>  = children.into_iter()
+
+        // filter out any parts that are after our current path
+        .filter(|path| {
+            let level = search_path.as_ref().len()-1;
+            let component: &Component = &path.as_ref()[level];
+            match compontent_to_i64(component) {
+                Err(_) => false,
+                Ok(i) => {
+                    let (_, current) = current_siblings[level];
+                    i <= current
+                }
+            }
+        })
+        .map(|path| {
             match path.leaf() {
                 None => -1 as i64,  // TODO FIXME?
                 Some(component) => match compontent_to_i64(component) {Err(_)=> -1,Ok(i)=> i}
