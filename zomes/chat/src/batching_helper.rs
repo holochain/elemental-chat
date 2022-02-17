@@ -2,10 +2,13 @@
 //!
 //!
 //!
-use crate::{error::ChatResult, ChatError, utils::custom_try_from};
+use crate::{error::ChatResult, ChatError};
 use chrono::{DateTime, Datelike, NaiveDateTime, Timelike, Utc};
-use hdk::prelude::*;
-use std::cmp;
+use hdk::{prelude::*, hash_path::path::Component};
+//use std::cmp;
+
+// siblings is an ordered list the year/month/day/hours that are returned by calling path.children
+type Siblings = Vec<i64>;
 
 pub fn get_message_links(
     channel: Path,
@@ -24,12 +27,42 @@ pub fn get_message_links(
 
     let mut links = Vec::new();
 
-    let root_path_length = channel.as_ref().len();
+    let _root_path_length = channel.as_ref().len();
     let newest_included_hour_path = timestamp_into_path(channel, newest_included_hour)?;
-    if newest_included_hour_path.exists()? {
-        links.append(&mut get_links(newest_included_hour_path.path_entry_hash()?, None)?);
-    }
 
+    let /*mut */ search_path = newest_included_hour_path.clone();
+    let mut done = false;
+
+    // create the skeleton of the current siblings we are searching in the tree
+    let mut _current_siblings: Vec<(Option<Siblings>,i64)> = search_path.as_ref().into_iter().map(|c| {
+        (None, match compontent_to_i64(c) {Ok(i) => i, Err(_) => 0})}).collect();
+    while links.len() < target_count && !done {
+        if search_path.exists()? {
+            links.append(&mut get_links(newest_included_hour_path.path_entry_hash()?, None)?);
+        } else {/*
+            match previous_sibling(search_path) {
+                Some(path) => search_path = path,
+                None => match previous_cousin(search_path) {
+                    Some(path) => search_path = path,
+                    None => done = true
+                }
+            }*/
+            done = true
+        }
+    }
+/* 
+    fn siblings(path: Path) -> Result<Option<Path>, WasmError> {
+        match path.parent() {
+            None => Ok(None),
+            Some(parent) => {
+                let siblings = get_links(parent.path_entry_hash()?, None)?;
+                // TODO examine siblings to find which is previous to path
+                Ok(None)
+            }
+        }      
+    }
+*/
+    /* 
     let mut earliest_seen_child_path = newest_included_hour_path;
     let mut current_search_path = earliest_seen_child_path.parent().unwrap();
     let mut depth = 0;
@@ -48,10 +81,10 @@ pub fn get_message_links(
         current_search_path = earliest_seen_child_path.parent().unwrap();
         depth += 1;
     }
-
+*/
     Ok(links)
 }
-
+/* 
 fn append_message_links_recursive(
     mut children: Vec<Link>,
     links: &mut Vec<Link>,
@@ -80,15 +113,19 @@ fn link_is_earlier(link: &Link, earlier_than: i64) -> ChatResult<bool> {
     let path = Path::try_from(&link.tag)?;
     let segment = last_segment_from_path(&path)?;
     Ok(segment < earlier_than)
-}
+} */
 
-pub fn last_segment_from_path(path: &Path) -> ChatResult<i64> {
-    let component = path.as_ref().last().ok_or(ChatError::InvalidBatchingPath)?;
+pub fn compontent_to_i64(component: &Component) -> ChatResult<i64> {
     let bytes: [u8; 8] = component
         .as_ref()
         .try_into()
         .map_err(|_| ChatError::InvalidBatchingPath)?;
     Ok(i64::from_be_bytes(bytes))
+}
+
+pub fn last_segment_from_path(path: &Path) -> ChatResult<i64> {
+    let component = path.as_ref().last().ok_or(ChatError::InvalidBatchingPath)?;
+    compontent_to_i64(component)
 }
 
 /// Add the message from the Date type to this path

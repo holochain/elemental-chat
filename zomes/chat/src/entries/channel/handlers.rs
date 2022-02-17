@@ -6,7 +6,6 @@ use crate::{
 use hdk::prelude::*;
 use hdk::hash_path::path::Component;
 use link::Link;
-use std::collections::HashMap;
 
 /// Create a new channel
 /// This effectively just stores channel info on the
@@ -20,8 +19,8 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
 
     // Create the channel info
     let info = ChannelInfo {
-        category: entry.category,
-        uuid: entry.uuid,
+        category: entry.category.clone(),
+        uuid: entry.uuid.clone(),
         // This agent
         created_by: agent_info()?.agent_initial_pubkey,
         // Right now
@@ -99,7 +98,7 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
             if let Some(info) = element.into_inner().1.to_app_option::<ChannelInfo>()? {
                 // Turn the info into Channel
                 channels.push(ChannelData {
-                    entry: Channel { category: info.category, uuid: info.uuid },
+                    entry: Channel { category: info.category.clone(), uuid: info.uuid.clone() },
                     info,
                 })
             }
