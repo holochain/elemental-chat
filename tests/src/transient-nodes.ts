@@ -15,11 +15,11 @@ module.exports = async (orchestrator) => {
 
 const gotChannelsAndMessages = async (t, name, happ, channelEntry, retry_count, retry_delay) => {
   var retries = retry_count
-  while (true) {
+  while (true) {  
     const channel_list = await happ.call('chat', 'list_channels', { category: "General" });
     console.log(`${name}'s channel list:`, channel_list.channels);
     let batch_payload = { channel: channelEntry, active_chatter: false, target_message_count: 2 }
-
+    
     const r = await happ.call('chat', 'list_messages', batch_payload)
     t.ok(r)
     console.log(`${name}'s message list:`, r);
@@ -97,15 +97,15 @@ const doTransientNodes = async (s, t, local) => {
   console.log("checking to see if carol can see the message via bob")
   await gotChannelsAndMessages(t, "carol", carol_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
 
-  // This above loop SHOULD work because carol should get the message via bob, but it doesn't
-  // So we try starting up alice and getting the message gossiped that way, but that also
-  // doesn't work!
-  await alice.startup()
-  if (local) {
-    await s.shareAllNodes([carol, alice]);
-  }
-  console.log("******************************************************************")
-  console.log("checking to see if carol can see the message via alice after back on")
-  await gotChannelsAndMessages(t, "carol", carol_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
+  // // This above loop SHOULD work because carol should get the message via bob, but it doesn't
+  // // So we try starting up alice and getting the message gossiped that way, but that also
+  // // doesn't work!
+  // await alice.startup()
+  // if (local) {
+  //   await s.shareAllNodes([carol, alice]);
+  // }
+  // console.log("******************************************************************")
+  // console.log("checking to see if carol can see the message via alice after back on")
+  // await gotChannelsAndMessages(t, "carol", carol_chat, channel.entry, RETRY_COUNT, RETRY_DELAY)
 
 }

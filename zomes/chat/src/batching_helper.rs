@@ -39,12 +39,18 @@ pub fn get_message_links(
     let (search_path, _current_siblings) =
         find_existing_leaf(search_path)?.ok_or(ChatError::InvalidBatchingPath)?;
 
+    // TODO: This needs to be improved
     while links.len() < target_count && !done {
         if search_path.exists()? {
-            links.append(&mut get_links(
-                newest_included_hour_path.path_entry_hash()?,
-                None,
-            )?);
+            let l = &mut get_links(newest_included_hour_path.path_entry_hash()?, None)?;
+            if l.len() == 0 || l.len() == links.len() {
+                done = true
+            }
+
+            if !links.iter().any(|i| l.iter().any(|l1| i == l1)) {
+                debug!("get links {:?}", l);
+                links.append(l);
+            }
         } else {
             /*
             match previous_sibling(search_path) {
@@ -122,6 +128,9 @@ pub fn find_existing_leaf(mut search_path: Path) -> Result<Option<(Path, SearchS
             })
             .collect();
         // set the current sib to the last one
+        if sibs.len() == 0 {
+            break;
+        }
         let last_sib = sibs[sibs.len() - 1];
         current_siblings[search_path.as_ref().len() - 1] = (Some(sibs), last_sib);
         search_path.append_component(last_sib.to_be_bytes().to_vec().into());

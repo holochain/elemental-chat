@@ -4,9 +4,9 @@ let orchestrator = new Orchestrator()
 require('./basic-chatting')(orchestrator)
 orchestrator.run()
 
-// orchestrator = new Orchestrator()
-// require('./transient-nodes')(orchestrator)
-// orchestrator.run()
+orchestrator = new Orchestrator()
+require('./transient-nodes')(orchestrator)
+orchestrator.run()
 
 orchestrator = new Orchestrator()
 require('./chat-signals')(orchestrator)

@@ -50,10 +50,10 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
         LastSeen::Message(hash_entry) => hash_entry,
         LastSeen::First => path_hash.clone(),
     };
-      // Turn the reply to and timestamp into a link tag
+    // Turn the reply to and timestamp into a link tag
     let tag = LastSeenKey::new(parent_hash_entry, message.created_at);
     create_link(path_hash, message.entry_hash.clone(), LinkTag::from(tag))?;
-    
+
     // Return the message for the UI
     Ok(message)
 }
