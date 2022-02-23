@@ -31,6 +31,8 @@ pub enum ChatError {
     ReadOnly,
     #[error("Expected batching-related path to contain more segments")]
     InvalidBatchingPath,
+    #[error("Generic Error: {0}")]
+    Generic(&'static str),
 }
 
 pub type ChatResult<T> = Result<T, ChatError>;
