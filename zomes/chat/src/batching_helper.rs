@@ -66,22 +66,6 @@ pub fn get_message_links(
     Ok(clean_links_list)
 }
 
-// fn get_path_entry(hash: EntryHash) -> ChatResult<PathEntry> {
-//     match get_details(hash, GetOptions::default())? {
-//         Some(Details::Entry(EntryDetails { entry, .. })) => {
-//             match PathEntry::try_from(entry.clone()) {
-//                 Ok(e) => Ok(e),
-//                 Err(_) => Err(ChatError::Generic(
-//                     "Could not convert get_links result to requested type",
-//                 )),
-//             }
-//         }
-//         _ => Err(ChatError::Generic(
-//             "get_details did not return an app entry",
-//         )),
-//     }
-// }
-
 fn append_message_links_recursive(
     mut children: Vec<Link>,
     links: &mut Vec<Link>,
@@ -132,25 +116,5 @@ pub fn timestamp_into_path(path: Path, time: Timestamp) -> ChatResult<Path> {
     components.push(i64::from(time.day()).to_be_bytes().to_vec().into());
     // DEV_MODE: This can be updated to sec() for testing
     components.push(i64::from(time.hour()).to_be_bytes().to_vec().into());
-    Ok(components.into())
-}
-
-pub fn depth_timestamp_into_path(path: Path, time: Timestamp, depth: i64) -> ChatResult<Path> {
-    let (ms, ns) = time.as_seconds_and_nanos();
-    let time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(ms, ns), Utc);
-    let mut components: Vec<_> = path.into();
-    if depth >= 0 {
-        components.push(i64::from(time.year()).to_be_bytes().to_vec().into());
-    }
-    if depth >= 1 {
-        components.push(i64::from(time.month()).to_be_bytes().to_vec().into());
-    }
-    if depth >= 2 {
-        components.push(i64::from(time.day()).to_be_bytes().to_vec().into());
-    }
-    if depth >= 3 {
-        // DEV_MODE: This can be updated to sec() for testing
-        components.push(i64::from(time.hour()).to_be_bytes().to_vec().into());
-    }
     Ok(components.into())
 }
