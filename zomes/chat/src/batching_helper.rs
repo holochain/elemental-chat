@@ -7,6 +7,10 @@ use chrono::{DateTime, Datelike, NaiveDateTime, Timelike, Utc};
 use hdk::prelude::*;
 use std::cmp;
 
+pub fn get_previous_hour(time: Timestamp) -> Result<Timestamp, TimestampError> {
+    time - std::time::Duration::from_secs(60 * 60)
+}
+
 pub fn get_message_links(
     channel: Path,
     earliest_seen: Option<Timestamp>,
@@ -27,7 +31,10 @@ pub fn get_message_links(
     let root_path_length = channel.as_ref().len();
     let newest_included_hour_path = timestamp_into_path(channel, newest_included_hour)?;
     if newest_included_hour_path.exists()? {
-        links.append(&mut get_links(newest_included_hour_path.hash()?, None)?);
+        links.append(&mut get_links(
+            newest_included_hour_path.path_entry_hash()?,
+            None,
+        )?);
     }
 
     let mut earliest_seen_child_path = newest_included_hour_path;
@@ -35,12 +42,13 @@ pub fn get_message_links(
     let mut depth = 0;
     while links.len() < target_count && current_search_path.as_ref().len() >= root_path_length {
         if current_search_path.exists()? {
-            let earliest_seen_child_segment =
-                last_segment_from_path(&earliest_seen_child_path).unwrap();
-            let mut children = current_search_path.children()?;
-            children.retain(|child_link| {
-                link_is_earlier(child_link, earliest_seen_child_segment).unwrap_or(false)
-            });
+            // let earliest_seen_child_segment =
+            //     last_segment_from_path(&earliest_seen_child_path).unwrap();
+            let children = current_search_path.children()?;
+            // This was just an optimization which we are going to loose
+            // children.retain(|child_link| {
+            //     link_is_earlier(child_link, earliest_seen_child_segment).unwrap_or(false)
+            // });
             append_message_links_recursive(children, &mut links, target_count, depth)?;
         }
 
@@ -48,8 +56,14 @@ pub fn get_message_links(
         current_search_path = earliest_seen_child_path.parent().unwrap();
         depth += 1;
     }
+    let mut clean_links_list = Vec::new();
+    links.iter().for_each(|l| {
+        if !clean_links_list.iter().any(|ll| ll == l) {
+            clean_links_list.push(l.clone())
+        }
+    });
 
-    Ok(links)
+    Ok(clean_links_list)
 }
 
 fn append_message_links_recursive(
@@ -64,8 +78,8 @@ fn append_message_links_recursive(
             let mut message_links = get_links(child_link.target, None)?;
             links.append(&mut message_links);
         } else {
-            let path = Path::try_from(&child_link.tag)?;
-            let grandchildren = path.children()?;
+            // let grandchildren = get_path_entry(child_link.target)?; //current_search_path.children()?;
+            let grandchildren = get_links(child_link.target, None)?;
             append_message_links_recursive(grandchildren, links, target_count, depth - 1)?;
         }
         if links.len() >= target_count {
@@ -76,11 +90,11 @@ fn append_message_links_recursive(
     Ok(())
 }
 
-fn link_is_earlier(link: &Link, earlier_than: i64) -> ChatResult<bool> {
-    let path = Path::try_from(&link.tag)?;
-    let segment = last_segment_from_path(&path)?;
-    Ok(segment < earlier_than)
-}
+// fn link_is_earlier(link: &Link, earlier_than: i64) -> ChatResult<bool> {
+//     let path = Path::try_from(&link.tag)?;
+//     let segment = last_segment_from_path(&path)?;
+//     Ok(segment < earlier_than)
+// }
 
 pub fn last_segment_from_path(path: &Path) -> ChatResult<i64> {
     let component = path.as_ref().last().ok_or(ChatError::InvalidBatchingPath)?;

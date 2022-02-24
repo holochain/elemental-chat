@@ -41,13 +41,13 @@ export const installAgents = async (conductor: Player, agentNames: string[], jcH
   console.log(`registering dna for: ${dnaPath}`)
   const dnaHash = await conductor.registerDna({ path: dnaPath }, conductor.scenarioUID, { skip_proof: !jcHapp, holo_agent_override })
   const admin = conductor.adminWs()
-
+  
   const agents: Array<InstalledHapp> = []
   for (const i in agentNames) {
     const agent = agentNames[i]
     console.log(`generating key for: ${agent}:`)
     const agent_key = await admin.generateAgentPubKey()
-    console.log(`${agent} pubkey:`, agent_key.toString('base64'))
+    console.log(`${agent} pubkey:`, Codec.AgentId.encode(agent_key))
 
     let dna = {
       hash: dnaHash,

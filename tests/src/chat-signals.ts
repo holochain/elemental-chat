@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { localConductorConfig, consistency, awaitIntegration } from './common'
 import { installAgents } from "./installAgents";
+const { Codec } = require("@holo-host/cryptolib");
 
 const delay = ms => new Promise(r => setTimeout(r, ms))
 
@@ -90,7 +91,7 @@ module.exports = async (orchestrator) => {
 
     const result = await alice_chat.call('chat', 'get_active_chatters');
     t.equal(result.chatters.length, 1)
-    t.equal(result.chatters[0].toString('base64'), bob_chat.cellId[1].toString('base64'))
+    t.equal(Codec.AgentId.encode(result.chatters[0]), Codec.AgentId.encode(bob_chat.cellId[1]))
 
     await alice_chat.call('chat', 'signal_specific_chatters', {
       signal_message_data: signalMessageData,
