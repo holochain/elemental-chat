@@ -3,19 +3,44 @@ use crate::{
     error::ChatResult,
     message::{Message, MessageInput},
     utils::{get_local_header, to_date},
-    SignalPayload,
+    SignalPayload, channel::Channel,
 };
 use hdk::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
+use std::time::Duration;
 
 use super::{
     ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData,
     SigResults, SignalMessageData, SignalSpecificInput,
 };
 
+
 /// Create a new message
-pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
+pub(crate) fn create_test_messages(channel: Channel) -> ChatResult<()> {
+    // create 10 messages spread out accross the years
+    let mut time = Timestamp::from_micros(200000000);
+    let message = MessageInput {
+        last_seen : LastSeen::First,
+        channel: channel.clone(),
+        entry: Message {
+            uuid: "".into(),
+            content: "".into(),
+        },
+    };
+    for _i in 0..10 {
+        time = time.saturating_add(&Duration::new(100000000,0));
+        create_message(message.clone(), time)?;
+    }
+    // plus two more in the same first year
+    time = time.saturating_add(&Duration::new(10,0));
+    create_message(message.clone(), time)?;
+    time = time.saturating_add(&Duration::new(10,0));
+    create_message(message, time)?;
+    Ok(())
+}
+/// Create a new message
+pub(crate) fn create_message(message_input: MessageInput, time: Timestamp) -> ChatResult<MessageData> {
     let MessageInput {
         last_seen,
         channel,
@@ -34,7 +59,7 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let path: Path = channel.clone().into();
 
     // Add the current time components
-    let path = crate::batching_helper::timestamp_into_path(path, sys_time()?)?;
+    let path = crate::batching_helper::timestamp_into_path(path, time)?;
 
     // Ensure the path exists
     path.ensure()?;
@@ -42,8 +67,8 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     // The actual hash we are going to hang this message on
     let path_hash = path.path_entry_hash()?;
     debug!(
-        "committing message to hour {:?}",
-        crate::batching_helper::last_segment_from_path(&path)?
+        "committing message to {:?}",
+        crate::batching_helper::pretty_path(&path)
     );
     // Get the hash of the last_seen of this message
     let parent_hash_entry = match last_seen {

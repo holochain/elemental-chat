@@ -10,9 +10,6 @@ use hdk::{hash_path::path::Component, prelude::*};
 //use std::cmp;
 use std::convert::TryInto;
 
-// siblings is an ordered list the year/month/day/hours paths that are returned by calling path.children
-type Siblings = Vec<i64>;
-
 pub fn get_message_links(
     channel: Path,
     earliest_seen: Option<Timestamp>,
@@ -34,32 +31,24 @@ pub fn get_message_links(
     let newest_included_hour_path = timestamp_into_path(channel, newest_included_hour)?;
 
     let search_path = newest_included_hour_path.clone();
-    let mut done = false;
+    let mut done: bool;
 
-    let (search_path, _current_siblings) =
-        find_existing_leaf(search_path)?.ok_or(ChatError::InvalidBatchingPath)?;
+    // create the skeleton of the current siblings we are searching in the tree by finding the first existing leaf
+    // with placeholders for lazy loading the actual siblings in case we get what we want where we are
+    let mut current_siblings = SearchState::new(search_path.clone())?;
 
-    // TODO: This needs to be improved
-    while links.len() < target_count && !done {
-        if search_path.exists()? {
-            let l = &mut get_links(newest_included_hour_path.path_entry_hash()?, None)?;
-            if l.len() == 0 || l.len() == links.len() {
-                done = true
-            }
+    done = !current_siblings.find_existing_leaf()?;
 
-            if !links.iter().any(|i| l.iter().any(|l1| i == l1)) {
-                debug!("get links {:?}", l);
-                links.append(l);
-            }
+    debug!("cur_sibs {:?}", current_siblings);
+
+    while !done {
+        debug!("search_path {:?}", pretty_path(&current_siblings.path));
+        let l = &mut get_links(current_siblings.path.path_entry_hash()?, None)?;
+        debug!("appending {} {:?}", l.len(), l);
+        links.append(l);
+        if links.len() < target_count {
+            done = !current_siblings.find_previous_leaf()?;
         } else {
-            /*
-            match previous_sibling(search_path) {
-                Some(path) => search_path = path,
-                None => match previous_cousin(search_path) {
-                    Some(path) => search_path = path,
-                    None => done = true
-                }
-            }*/
             done = true
         }
     }
@@ -67,83 +56,241 @@ pub fn get_message_links(
     Ok(links)
 }
 
-type SearchState = Vec<(Option<Siblings>, i64)>;
+// siblings is an ordered list the year/month/day/hours that are returned by calling path.children
+type Siblings = Vec<i64>;
+#[derive(Debug)]
+pub struct Level {
+    maybe_sibs: Option<Siblings>,
+    current: i64, // current sib
+}
+#[derive(Debug)]
+pub struct SearchState {
+    path: Path,
+    level: usize,
+    levels: Vec<Level>,
+}
+const TREE_DEPTH: usize = 6;
+const TREE_TOP: usize = 2;
 
-pub fn find_existing_leaf(mut search_path: Path) -> Result<Option<(Path, SearchState)>, WasmError> {
-    // create the skeleton of the current siblings we are searching in the tree by finding the first existing leaf
-    // with placeholders for lazy loading the actual siblings in case we get what we want where we are
-    let mut current_siblings: SearchState = search_path
-        .as_ref()
-        .into_iter()
-        .filter_map(|c| match compontent_to_i64(c) {
-            Ok(i) => Some((None, i)),
-            Err(_) => None,
-        })
-        .collect();
-
-    if current_siblings.len() != 4 {
-        debug!("Path isn't of correct depth! {:?}", current_siblings);
-        return Err(ChatError::InvalidBatchingPath.into());
-    }
-
-    // walk up the tree till we find something that exists
-    while !search_path.exists()? {
-        match search_path.parent() {
-            None =>
-            // if there's no parent, then there's nothing on this whole path so we can return that there is no such path
-            {
-                return Ok(None)
-            }
-            Some(parent) => {
-                search_path = parent;
-            }
+impl SearchState {
+    pub fn new(path: Path) -> ChatResult<Self> {
+        // check that our path is starting at a leaf
+        if path.as_ref().len() != TREE_DEPTH {
+            return Err(ChatError::InvalidBatchingPath.into());
         }
-    }
 
-    // walk back down the tree storing the sibling info as we go
-    while search_path.as_ref().len() < 4 {
-        let children = search_path.children_paths()?;
-        let sibs: Vec<i64> = children
+        let levels = path
+            .as_ref()
             .into_iter()
-            // filter out any parts that are after our current path
-            .filter(|path| {
-                let level = search_path.as_ref().len() - 1;
-                let component: &Component = &path.as_ref()[level];
-                match compontent_to_i64(component) {
-                    Err(_) => false,
-                    Ok(i) => {
-                        let (_, current) = current_siblings[level];
-                        i <= current
-                    }
-                }
-            })
-            .map(|path| {
-                match path.leaf() {
-                    None => -1 as i64, // TODO FIXME?
-                    Some(component) => match compontent_to_i64(component) {
-                        Err(_) => -1,
-                        Ok(i) => i,
-                    },
-                }
+            .skip(TREE_TOP)
+            .filter_map(|c| match compontent_to_i64(c) {
+                Ok(i) => Some(Level {
+                    maybe_sibs: None,
+                    current: i,
+                }),
+                Err(_) => None,
             })
             .collect();
-        // set the current sib to the last one
-        if sibs.len() == 0 {
-            break;
-        }
-        let last_sib = sibs[sibs.len() - 1];
-        current_siblings[search_path.as_ref().len() - 1] = (Some(sibs), last_sib);
-        search_path.append_component(last_sib.to_be_bytes().to_vec().into());
+
+        Ok(SearchState {
+            path,
+            level: TREE_DEPTH - TREE_TOP - 1, // level is zero based index
+            levels,
+        })
+    }
+    pub fn get_level(&self) -> &Level {
+        //        debug!("get level of {:?} @ {}", self.levels, self.level);
+        &self.levels[self.level]
+    }
+    pub fn get_sibs(&mut self) -> &Option<Siblings> {
+        &self.get_level().maybe_sibs
+    }
+    pub fn get_current(&self) -> i64 {
+        self.get_level().current
+    }
+    pub fn set_sibs(&mut self, sibs: Siblings) {
+        debug!("setting: {:?} at level: {}", sibs, self.level);
+        let current = sibs[sibs.len() - 1];
+        self.levels[self.level].maybe_sibs = Some(sibs);
+        self.levels[self.level].current = current;
+    }
+    pub fn up(&mut self) {
+        self.level -= 1;
+    }
+    pub fn down(&mut self) {
+        self.level += 1;
+    }
+    pub fn at_bottom(&self) -> bool {
+        self.level == TREE_DEPTH - TREE_TOP - 1
     }
 
-    Ok(Some((search_path, current_siblings)))
+    /// find an existing leaf on the time tree starting from the search path given, and returning the path found,
+    /// as well as the search state found time path portions while searching for that first path
+    pub fn find_existing_leaf(self: &mut SearchState) -> Result<bool, WasmError> {
+        let mut search_path = self.path.clone();
+        debug!("starting with {:?}", self);
+        debug!("search_path {:?}", pretty_path(&search_path));
+
+        // we only want to walk the date part of the path which is the last 4 components.
+        let mut level = TREE_DEPTH;
+
+        // walk up the tree till we find something that exists
+        while !search_path.exists()? && level >= TREE_TOP {
+            level -= 1;
+            self.up();
+            match search_path.parent() {
+                None => {
+                    // if there's no parent (shouldn't happen), then there's nothing on this whole path so we can return that there is no such path
+                    return Ok(false);
+                }
+                Some(parent) => {
+                    search_path = parent;
+                }
+            }
+        }
+
+        debug!(
+            "search_path {}, level: {}",
+            pretty_path(&search_path),
+            level
+        );
+
+        // if we got above the top of the tree, then there's nothing on this whole tree so we can return None
+        if search_path.as_ref().len() == TREE_TOP - 1 {
+            return Ok(false);
+        }
+        debug!("walked up search_path {}", pretty_path(&search_path));
+
+        // walk back down the tree storing the sibling info as we go
+        while search_path.as_ref().len() < TREE_DEPTH {
+            self.down();
+            debug!(
+                "finding sibs {} @ {}",
+                pretty_path(&search_path),
+                self.level
+            );
+            let sibs = find_children(&search_path)?;
+            debug!("sibs @ LEVEL {:?} {}", sibs, self.level);
+            // set the current sib to the last one
+            if sibs.len() == 0 {
+                break;
+            }
+            let last_sib = sibs[sibs.len() - 1];
+            self.set_sibs(sibs);
+            search_path.append_component(last_sib.to_be_bytes().to_vec().into());
+            debug!("search path now: {}", pretty_path(&search_path))
+        }
+        debug!("ending with {:?}", self);
+        debug!("ending search_path {}", pretty_path(&search_path));
+        self.path = search_path;
+        Ok(true)
+    }
+
+    /// looks for the previous leaf, perhaps by searching up and back down the tree
+    /// Assumes that the current search_path does exist, but not necessarily that any
+    /// siblings were loaded into the SearchState at that part of the tree
+    pub fn find_previous_leaf(&mut self) -> Result<bool, WasmError> {
+        debug!("finding previous leaf");
+
+        loop {
+            let found;
+            // if we hadn't done a siblings search before for this level of the tree, do so now
+            if self.get_sibs().is_none() {
+                debug!("sibs is None, searching...");
+                let x = self.find_siblings()?;
+                self.set_sibs(x.clone());
+                debug!("siblings found: {:?}", x);
+                found = true;
+            } else {
+                // move the the previous sib at this level if possible
+                found = self.previous_sib();
+                if !found {
+                    // if there was no previous sib, then check to see
+                    // if we were are allready at the top.  If so there's no previous leaf
+                    if self.level == 0 {
+                        debug!("top and no sibs");
+                        return Ok(false);
+                    }
+                    // clear this level and go up
+                    self.levels[self.level].maybe_sibs = None;
+                    self.level -= 1;
+                    debug!("going up to {}", self.level);
+                }
+                debug!("previous_sib result: {:?}", self.levels);
+            }
+            self.set_path();
+            if found {
+                // if this is the bottom level, the we have found a leaf
+                if self.at_bottom() {
+                    debug!("found leaf setting path: {}", pretty_path(&self.path));
+                    return Ok(true);
+                }
+                // otherwise go down
+                self.level += 1;
+                debug!("going down to {}", self.level);
+            }
+        }
+    }
+
+    fn set_path(&mut self) {
+        let mut components: Vec<Component> = vec![];
+        components.push(self.path.as_ref()[0].clone());
+        components.push(self.path.as_ref()[1].clone());
+        for level in &self.levels {
+            components.push(level.current.to_be_bytes().to_vec().into());
+        }
+        self.path = Path::from(components);
+        debug!("level: {} levels: {:?}", self.level, self.levels);
+        debug!("path: {}", pretty_path(&self.path));
+    }
+
+    fn previous_sib(&mut self) -> bool {
+        let current = self.get_current();
+        if let Some(ref mut sibs) = self.levels[self.level].maybe_sibs {
+            sibs.retain(|sib| *sib < current);
+            //debug!("retained: {:?}", self.get_sibs());
+            if let Some(last) = sibs.last() {
+                self.levels[self.level].current = *last;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    fn find_siblings(&self) -> ChatResult<Vec<i64>> {
+        let x = self.path.as_ref()[0..(self.level + TREE_TOP)].to_vec();
+        let p = Path::from(x);
+        debug!("find_sibs path {}", pretty_path(&p));
+        find_children(&p)
+    }
+}
+
+fn find_children(path: &Path) -> ChatResult<Vec<i64>> {
+    let sibs: Result<Vec<_>, _> = path
+        .children_paths()?
+        .into_iter()
+        .map(last_segment_from_path)
+        .collect();
+    let mut r = sibs?;
+    r.sort();
+    Ok(r)
+}
+
+pub fn pretty_path(path: &Path) -> String {
+    let p: Vec<String> = path
+        .as_ref()
+        .into_iter()
+        .skip(TREE_TOP)
+        .map(|c| compontent_to_i64(c).unwrap().to_string())
+        .collect();
+    p.join(".")
 }
 
 pub fn compontent_to_i64(component: &Component) -> ChatResult<i64> {
     let bytes: [u8; 8] = component
         .as_ref()
         .try_into()
-        .map_err(|_| ChatError::InvalidBatchingPath)?;
+        .map_err(|_| ChatError::InvalidBatchingCompontent)?;
     Ok(i64::from_be_bytes(bytes))
 }
 
@@ -162,41 +309,10 @@ pub fn tag_to_i64(tag: &LinkTag) -> ChatResult<i64> {
     Ok(i64::from_be_bytes(bytes))
 }*/
 
-pub fn last_segment_from_path(path: &Path) -> ChatResult<i64> {
+pub fn last_segment_from_path(path: Path) -> ChatResult<i64> {
     let component = path.as_ref().last().ok_or(ChatError::InvalidBatchingPath)?;
     compontent_to_i64(component)
 }
-
-/*
-fn append_message_links_recursive(
-    mut children: Vec<Link>,
-    links: &mut Vec<Link>,
-    target_count: usize,
-    depth: u8,
-) -> ChatResult<()> {
-    children.sort_unstable_by_key(|grandchild_link| cmp::Reverse(grandchild_link.timestamp));
-    for child_link in children {
-        if depth == 0 {
-            let mut message_links = get_links(child_link.target, None)?;
-            links.append(&mut message_links);
-        } else {
-            let path = Path::try_from(&child_link.tag)?;
-            let grandchildren = path.children()?;
-            append_message_links_recursive(grandchildren, links, target_count, depth - 1)?;
-        }
-        if links.len() >= target_count {
-            break;
-        }
-    }
-
-    Ok(())
-}
-
-fn link_is_earlier(link: &Link, earlier_than: i64) -> ChatResult<bool> {
-    let path = Path::try_from(&link.tag)?;
-    let segment = last_segment_from_path(&path)?;
-    Ok(segment < earlier_than)
-} */
 
 /// Add the message from the Date type to this path
 pub fn timestamp_into_path(path: Path, time: Timestamp) -> ChatResult<Path> {
@@ -207,62 +323,6 @@ pub fn timestamp_into_path(path: Path, time: Timestamp) -> ChatResult<Path> {
     components.push(i64::from(time.year()).to_be_bytes().to_vec().into());
     components.push(i64::from(time.month()).to_be_bytes().to_vec().into());
     components.push(i64::from(time.day()).to_be_bytes().to_vec().into());
-    // DEV_MODE: This can be updated to sec() for testing
     components.push(i64::from(time.hour()).to_be_bytes().to_vec().into());
     Ok(components.into())
 }
-
-/*
-    fn siblings(path: Path) -> Result<Option<Path>, WasmError> {
-        match path.parent() {
-            None => Ok(None),
-            Some(parent) => {
-                let siblings = get_links(parent.path_entry_hash()?, None)?;
-                // TODO examine siblings to find which is previous to path
-                Ok(None)
-            }
-        }
-    }
-*/
-/*
-    let mut earliest_seen_child_path = newest_included_hour_path;
-    let mut current_search_path = earliest_seen_child_path.parent().unwrap();
-    let mut depth = 0;
-    while links.len() < target_count && current_search_path.as_ref().len() >= root_path_length {
-        if current_search_path.exists()? {
-            let earliest_seen_child_segment =
-                last_segment_from_path(&earliest_seen_child_path).unwrap();
-            let mut children = current_search_path.children()?;
-            children.retain(|child_link| {
-                link_is_earlier(child_link, earliest_seen_child_segment).unwrap_or(false)
-            });
-            append_message_links_recursive(children, &mut links, target_count, depth)?;
-        }
-
-        earliest_seen_child_path = current_search_path;
-        current_search_path = earliest_seen_child_path.parent().unwrap();
-        depth += 1;    // create the skeleton of the current siblings we are searching in the tree by finding the first existing leaf
-    // with placeholders for lazy loading the actual siblings in case we get what we want where we are
-    let mut current_siblings: Vec<(Option<Siblings>,i64)> = search_path.as_ref().into_iter().map(|c| {
-        (None, match compontent_to_i64(c) {Ok(i) => i, Err(_) => 0})}).collect();
-
-    if current_siblings.len() != 4 {
-        debug!("Path isn't of correct depth!");
-        return Err(ChatError::InvalidBatchingPath.into())
-    }
-
-    // walk up the tree till we find something that exists
-    let level =
-    while (!search_path.exists?) {
-        match search_path.parent() {
-            None =>
-                // if there's no parent, then there's nothing on this whole path so we can return an empty list
-                return Ok(vec![]),
-            Some(parent) => {
-                let sibs = parent.children()?;
-
-            }
-    }
-
-    }
-*/

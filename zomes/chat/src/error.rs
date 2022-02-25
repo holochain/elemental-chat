@@ -31,6 +31,8 @@ pub enum ChatError {
     ReadOnly,
     #[error("Expected batching-related path to contain more segments")]
     InvalidBatchingPath,
+    #[error("Bad batching component")]
+    InvalidBatchingCompontent,
 }
 
 pub type ChatResult<T> = Result<T, ChatError>;
