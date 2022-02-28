@@ -11,13 +11,13 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 chrono = {version = "0.4.19", features = ['alloc', 'std']}
 derive_more = "0.99"
-hc_joining_code = {path = "../../crates/joining_code"}
-hdk = "=0.0.122"
+hdk = "=0.0.123"
 serde = "1.0"
 thiserror = "1.0"
-hc_utils = "=0.0.122"
-holo_hash = { version = "=0.0.19", features = ["encoding"] }
+hc_utils = "=0.0.123"
+holo_hash = { version = "=0.0.20", features = ["encoding"] }
 uuid = "0.8.2"
+hc_joining_code = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.123", package = "hc_joining_code"}
 
 [dev-dependencies]
 # holochain = "=0.0.117"

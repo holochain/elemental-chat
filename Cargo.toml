@@ -3,7 +3,7 @@
 members = [
   "zomes/chat",
   "zomes/profile",
-  "crates/joining_code",
+  "zomes/membrane_manager",
 ]
 
 [profile.dev]
