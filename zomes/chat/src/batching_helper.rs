@@ -177,7 +177,7 @@ impl SearchState {
             }
             let last_sib = sibs[sibs.len() - 1];
             self.set_sibs(sibs);
-            search_path.append_component(last_sib.to_be_bytes().to_vec().into());
+            search_path.append_component(last_sib.to_le_bytes().to_vec().into());
             debug!("search path now: {}", pretty_path(&search_path))
         }
         debug!("ending with {:?}", self);
@@ -237,7 +237,7 @@ impl SearchState {
         components.push(self.path.as_ref()[0].clone());
         components.push(self.path.as_ref()[1].clone());
         for level in &self.levels {
-            components.push(level.current.to_be_bytes().to_vec().into());
+            components.push(level.current.to_le_bytes().to_vec().into());
         }
         self.path = Path::from(components);
         debug!("level: {} levels: {:?}", self.level, self.levels);
@@ -291,7 +291,7 @@ pub fn compontent_to_i64(component: &Component) -> ChatResult<i64> {
         .as_ref()
         .try_into()
         .map_err(|_| ChatError::InvalidBatchingCompontent)?;
-    Ok(i64::from_be_bytes(bytes))
+    Ok(i64::from_le_bytes(bytes))
 }
 
 /*
@@ -306,7 +306,7 @@ pub fn tag_to_i64(tag: &LinkTag) -> ChatResult<i64> {
         return Err(ChatError::InvalidBatchingPath)
     }
     let bytes: [u8; 8] = *pop8(tag_vec);
-    Ok(i64::from_be_bytes(bytes))
+    Ok(i64::from_le_bytes(bytes))
 }*/
 
 pub fn last_segment_from_path(path: Path) -> ChatResult<i64> {
@@ -320,9 +320,9 @@ pub fn timestamp_into_path(path: Path, time: Timestamp) -> ChatResult<Path> {
     let time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(ms, ns), Utc);
     let mut components: Vec<_> = path.into();
 
-    components.push(i64::from(time.year()).to_be_bytes().to_vec().into());
-    components.push(i64::from(time.month()).to_be_bytes().to_vec().into());
-    components.push(i64::from(time.day()).to_be_bytes().to_vec().into());
-    components.push(i64::from(time.hour()).to_be_bytes().to_vec().into());
+    components.push(i64::from(time.year()).to_le_bytes().to_vec().into());
+    components.push(i64::from(time.month()).to_le_bytes().to_vec().into());
+    components.push(i64::from(time.day()).to_le_bytes().to_vec().into());
+    components.push(i64::from(time.hour()).to_le_bytes().to_vec().into());
     Ok(components.into())
 }
