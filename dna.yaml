@@ -7,5 +7,7 @@ properties:
 zomes:
   - name: chat
     bundled: "target/wasm32-unknown-unknown/release/chat.wasm"
+  - name: membrane_manager
+    bundled: "target/wasm32-unknown-unknown/release/membrane_manager.wasm"
   - name: profile
     bundled: "target/wasm32-unknown-unknown/release/profile.wasm"

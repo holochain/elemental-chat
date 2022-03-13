@@ -1,8 +1,8 @@
 {
-    "hdk": "0.0.122",
-    "holo_hash": "0.0.19",
-    "hc_utils": "0.0.122",
-    "holochain": "0.0.126",
-    "holochain_rev": "v0_0_126",
-    "holonix_rev": "bcdacbc95f6c77215ce1a22a4ffe58d41813f0e3"
+    "hdk": "0.0.123",
+    "hc_utils": "0.0.123",
+    "holo_hash": "0.0.20",
+    "holochain": "0.0.127",
+    "holochain_rev": "v0_0_127",
+    "holonix_rev": "52158409f9b76b442e592e8f06632b0e57a6c365"
 }

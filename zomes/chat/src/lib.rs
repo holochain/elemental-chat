@@ -64,21 +64,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
         access: ().into(),
         functions,
     })?;
-    validation::set_read_only_cap_tokens()?;
-    if hc_joining_code::skip_proof() {
-        Ok(InitCallbackResult::Pass)
-    } else {
-        return hc_joining_code::init_validate_and_create_joining_code();
-    }
-}
-
-#[hdk_extern]
-fn genesis_self_check(data: GenesisSelfCheckData) -> ExternResult<ValidateCallbackResult> {
-    if hc_joining_code::skip_proof_sb(&data.dna_def.properties) {
-        return Ok(ValidateCallbackResult::Valid);
-    }
-    let holo_agent_key = hc_joining_code::holo_agent(&data.dna_def.properties)?;
-    hc_joining_code::validate_joining_code(holo_agent_key, data.agent_key, data.membrane_proof)
+    Ok(InitCallbackResult::Pass)
 }
 
 #[hdk_extern]
@@ -90,8 +76,12 @@ fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
 }
 
 #[hdk_extern]
-fn validate(data: ValidateData) -> ExternResult<ValidateCallbackResult> {
-    validation::common_validatation(data)
+fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
+    // validation::common_validatation(data)
+    match op {
+        Op::StoreEntry { entry, .. } => validation::__validate_create_entry(entry),
+        _ => Ok(ValidateCallbackResult::Valid),
+    }
 }
 
 #[hdk_extern]

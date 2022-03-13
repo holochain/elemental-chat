@@ -1,15 +1,14 @@
 [package]
-name = "profile"
+name = "membrane_manager"
 version = "0.1.0"
 authors = ["zo-el <joel.ulahanna@holo.host>"]
 edition = "2018"
 
 [lib]
-name = "profile"
+name = "membrane_manager"
 crate-type = [ "cdylib", "rlib" ]
-doctest = false
 
 [dependencies]
+membrane_manager_lib = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.123", package = "membrane_manager_lib"}
 hdk = "=0.0.123"
 hc_utils = "=0.0.123"
-profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.123", package = "profile"}
