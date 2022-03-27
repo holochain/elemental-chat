@@ -7,7 +7,7 @@
 #
 SHELL		= bash
 DNANAME		= elemental-chat
-DNA		= $(DNANAME).dna
+DNA			= $(DNANAME).dna
 HAPP		= $(DNANAME).happ
 WASM		= target/wasm32-unknown-unknown/release/chat.wasm
 WASM2		= target/wasm32-unknown-unknown/release/profile.wasm
@@ -32,17 +32,17 @@ nix-%:
 # Internal targets; require a Nix environment in order to be deterministic.
 # - Uses the version of `hc` and `holochain` on the system PATH.
 # - Normally called from within a Nix environment, eg. run `nix-shell`
-.PHONY:		rebuild install build build-cargo build-dna
-rebuild:	clean build
+.PHONY: rebuild install build build-cargo build-dna
+rebuild: clean build
 
-install:	build
+install: build
 
-build:	build-cargo build-dna
+build: build-cargo build-dna
 
-build:		$(DNA)
+build: $(DNA)
 
 # Package the DNA from the built target release WASM
-$(DNA):		$(WASM) FORCE
+$(DNA):	 $(WASM) FORCE
 	@echo "Packaging DNA:"
 	@hc dna pack . -o $(DNA)
 	@hc app pack . -o $(HAPP)
@@ -58,9 +58,9 @@ $(WASM): FORCE
 	@wasm-opt -Oz $(WASM2) --output $(WASM2)
 
 .PHONY: test test-all test-unit test-e2e test-dna test-dna-debug test-stress test-sim2h test-node
-test-all:	test
+test-all: test
 
-test:		test-unit test-e2e # test-stress # re-enable when Stress tests end reliably
+test: test-unit test-e2e # test-stress # re-enable when Stress tests end reliably
 
 test-unit: $(DNA) FORCE
 	RUST_BACKTRACE=1 cargo test \
@@ -78,7 +78,7 @@ test-behavior: DNAs $(DNA) FORCE
 	@echo "Starting Scenario tests in $$(pwd)..."; \
 	    cd tests && ( [ -d  node_modules ] || npm install ) && npm run test:behavior
 
-test-e2e:	test-dna
+test-e2e: test-dna
 
 #############################
 # █▀█ █▀▀ █░░ █▀▀ ▄▀█ █▀ █▀▀
