@@ -1,4 +1,4 @@
-pub use channel::{ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
+pub use channel::{Channel, ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
 pub use entries::{channel, message};
 pub use error::{ChatError, ChatResult};
 pub use hc_joining_code;
@@ -85,11 +85,20 @@ fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
 }
 
 #[hdk_extern]
+fn create_test_messages(input: message::handlers::InsertTestMessages) -> ExternResult<()> {
+    message::handlers::create_test_messages(input.channel, input.number_of_messages)?;
+    Ok(())
+}
+
+#[hdk_extern]
 fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
     if hc_joining_code::is_read_only_instance() {
         return Err(ChatError::ReadOnly.into());
     }
-    Ok(message::handlers::create_message(message_input)?)
+    Ok(message::handlers::create_message(
+        message_input,
+        sys_time()?,
+    )?)
 }
 
 /*#[hdk_extern]

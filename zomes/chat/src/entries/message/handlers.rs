@@ -1,4 +1,5 @@
 use crate::{
+    channel::Channel,
     error::ChatError,
     error::ChatResult,
     message::{Message, MessageInput},
@@ -8,14 +9,51 @@ use crate::{
 use hdk::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
+use std::time::Duration;
 
 use super::{
     ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData,
     SigResults, SignalMessageData, SignalSpecificInput,
 };
 
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct InsertTestMessages {
+    pub channel: Channel,
+    pub number_of_messages: i32,
+}
 /// Create a new message
-pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageData> {
+pub(crate) fn create_test_messages(channel: Channel, number_of_messages: i32) -> ChatResult<()> {
+    debug!("Committing {} messages", number_of_messages);
+    // create 10 messages spread out accross the years
+    let mut time = Timestamp::from_micros(200000000);
+    let message = MessageInput {
+        last_seen: LastSeen::First,
+        channel: channel.clone(),
+        entry: Message {
+            uuid: "".into(),
+            content: "".into(),
+        },
+    };
+    for _i in 0..number_of_messages {
+        time = time.saturating_add(&Duration::new(100000000, 0));
+        // debug!("Creating a message at : {:?}", time);
+        create_message(message.clone(), time)?;
+    }
+    // plus two more in the same first year
+    time = time.saturating_add(&Duration::new(10, 0));
+    // debug!("Creating second to last message at : {:?}", time);
+    create_message(message.clone(), time)?;
+    // debug!("Creating last message at : {:?}", time);
+    time = time.saturating_add(&Duration::new(10, 0));
+    create_message(message, time)?;
+    Ok(())
+}
+
+/// Create a new message
+pub(crate) fn create_message(
+    message_input: MessageInput,
+    time: Timestamp,
+) -> ChatResult<MessageData> {
     let MessageInput {
         last_seen,
         channel,
@@ -34,26 +72,26 @@ pub(crate) fn create_message(message_input: MessageInput) -> ChatResult<MessageD
     let path: Path = channel.clone().into();
 
     // Add the current time components
-    let path = crate::batching_helper::timestamp_into_path(path, sys_time()?)?;
+    let path = crate::batching_helper::timestamp_into_path(path, time)?;
 
     // Ensure the path exists
     path.ensure()?;
 
     // The actual hash we are going to hang this message on
     let path_hash = path.path_entry_hash()?;
-    debug!(
-        "committing message to hour {:?}",
-        crate::batching_helper::last_segment_from_path(&path)?
-    );
+    // debug!(
+    //     "committing message to hour {:?}",
+    //     crate::batching_helper::last_segment_from_path(&path)?
+    // );
     // Get the hash of the last_seen of this message
     let parent_hash_entry = match last_seen {
         LastSeen::Message(hash_entry) => hash_entry,
         LastSeen::First => path_hash.clone(),
     };
-      // Turn the reply to and timestamp into a link tag
+    // Turn the reply to and timestamp into a link tag
     let tag = LastSeenKey::new(parent_hash_entry, message.created_at);
     create_link(path_hash, message.entry_hash.clone(), LinkTag::from(tag))?;
-    
+
     // Return the message for the UI
     Ok(message)
 }
@@ -71,6 +109,7 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
         crate::batching_helper::get_message_links(path, earliest_seen, target_message_count)?;
     links.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
     let sorted_messages = get_messages(links)?;
+    debug!("Total lenght of messages {:?}", sorted_messages.len());
     Ok(sorted_messages.into())
 }
 
