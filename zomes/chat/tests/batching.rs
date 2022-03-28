@@ -7,9 +7,9 @@ use holochain::sweettest::*;
 use proptest::prelude::*;
 
 proptest! {
-    #![proptest_config(ProptestConfig::with_cases(5))]
+    #![proptest_config(ProptestConfig::with_cases(10))]
     #[test]
-    fn test_batching(length in 1i32..20) {
+    fn test_batching(length in 1000i32..1001) {
         match tokio::runtime::Runtime::new() {
             Ok(rt) => {
                 let _ = rt.block_on(async move {
@@ -74,7 +74,7 @@ proptest! {
                     let lmpi = ListMessagesInput {
                         channel: channel.entry.clone(),
                         earliest_seen: Some(time),
-                        target_message_count: 100,
+                        target_message_count: length as usize + 2,
                     };
 
                     let alice_msgs: ListMessages = conductor
