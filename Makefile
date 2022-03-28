@@ -17,7 +17,7 @@ WASM2		= target/wasm32-unknown-unknown/release/profile.wasm
 dnas:
 	mkdir -p ./dnas
 dnas/joining-code-factory.dna:	dnas
-	curl 'https://holo-host.github.io/joining-code-happ/releases/downloads/0_2_1/joining-code-factory.0_2_1.dna' -o $@
+	curl 'https://holo-host.github.io/joining-code-happ/releases/downloads/0_2_2/joining-code-factory.0_2_2.dna' -o $@
 
 DNAs: dnas/joining-code-factory.dna
 
@@ -121,4 +121,4 @@ clean:
 	    tests/node_modules \
 	    .cargo \
 	    target \
-	    $(DNA)
+	    dnas

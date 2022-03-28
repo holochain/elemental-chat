@@ -90,7 +90,12 @@ pub(crate) fn create_message(
     };
     // Turn the reply to and timestamp into a link tag
     let tag = LastSeenKey::new(parent_hash_entry, message.created_at);
-    create_link(path_hash, message.entry_hash.clone(), LinkTag::from(tag))?;
+    create_link(
+        path_hash,
+        message.entry_hash.clone(),
+        HdkLinkType::Paths,
+        LinkTag::from(tag),
+    )?;
 
     // Return the message for the UI
     Ok(message)
@@ -303,7 +308,12 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
     if !is_active_chatter(path.clone())? {
-        create_link(path.path_entry_hash()?, agent.into(), agent_tag.clone())?;
+        create_link(
+            path.path_entry_hash()?,
+            agent.into(),
+            HdkLinkType::Paths,
+            agent_tag.clone(),
+        )?;
     }
     Ok(())
 }

@@ -52,7 +52,9 @@ export const awaitIntegration = async (cell) => {
     const dump = await cell.stateDump()
     console.log("integration dump was:", dump)
     const idump = dump[0].integration_dump
-    if (idump.validation_limbo == 0 && idump.integration_limbo == 0) {
+    if (idump.validation_limbo == 0 
+      // && idump.integration_limbo == 0
+      ) {
       break
     }
     console.log("waiting 5 seconds for integration")

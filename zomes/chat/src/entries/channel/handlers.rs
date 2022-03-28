@@ -33,7 +33,12 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     let info_hash = hash_entry(&info)?;
 
     // link the channel info to the path
-    create_link(path.path_entry_hash()?, info_hash, ChannelInfoTag::tag())?;
+    create_link(
+        path.path_entry_hash()?,
+        info_hash,
+        HdkLinkType::Paths,
+        ChannelInfoTag::tag(),
+    )?;
 
     // Return the channel and the info for the UI
     Ok(ChannelData::new(entry, info))
