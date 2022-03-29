@@ -2,7 +2,7 @@ import { Player, DnaPath, PlayerConfig, Config, InstallAgentsHapps, InstalledAge
 import { ScenarioApi } from '@holochain/tryorama/lib/api';
 import * as _ from 'lodash'
 import { v4 as uuidv4 } from "uuid";
-import { network as defaultNetworkConfig } from '../common'
+import { NETWORK as defaultNetworkConfig } from '../common'
 import { installAgents } from '../installAgents'
 const path = require('path')
 
@@ -52,7 +52,7 @@ export const defaultConfig = {
 type Agents = Array<{ hAppId: string, agent: Buffer, cell: Cell, playerIdx: number }>
 type PlayerAgents = Array<Agents>
 
-const selectActiveAgents = (count: number, playerAgents: PlayerAgents): Agents => {
+const selectActiveAgents = (count: number, playerAgents: any): Agents => {
     if (count > playerAgents.length * playerAgents[0].length) {
         throw new Error(`not enough agents to make ${count} active`)
     }
@@ -108,7 +108,7 @@ const parseStateDump = ([unused, stateDumpRelevant]: StateDump): StateDumpReleva
     }
 }
 
-const waitAllPeers = async (totalPeers: number, playerAgents: PlayerAgents, allPlayers: Player[]) => {
+const waitAllPeers = async (totalPeers: number, playerAgents: any, allPlayers: Player[]) => {
     let now = Date.now()
     console.log(`Start waiting for peer stores at ${new Date(now).toLocaleString("en-US")}`)
     // Wait for all agents to have complete peer stores.
@@ -165,14 +165,14 @@ const waitActivePeers = async (percentNeeded: number, totalPeers: number, active
     return endWaitPeers - startWait
 }
 
-const activateAgents = async (count: number, playerAgents: PlayerAgents): Promise<Agents> => {
+const activateAgents = async (count: number, playerAgents): Promise<Agents> => {
     const activeAgents = selectActiveAgents(count, playerAgents);
     _activateAgents(activeAgents, playerAgents);
     _waitAgentsActivated(activeAgents);
     return activeAgents;
 }
 
-const _activateAgents = async (activeAgents: Agents, playerAgents: PlayerAgents) => {
+const _activateAgents = async (activeAgents: Agents, playerAgents) => {
     let now = Date.now()
 
     console.log(`Start calling refresh chatter for ${activeAgents.length} agents at ${new Date(now).toLocaleString("en-US")}`)
@@ -226,7 +226,7 @@ const doListMessages = async (msg, channel, activeAgents): Promise<Array<number>
     return counts
 }
 
-const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: PlayerAgents, allPlayers: Player[], channel: any }> => {
+const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents, allPlayers: Player[], channel: any }> => {
     let network;
     if (local) {
         network = { transport_pool: [], bootstrap_service: undefined }
@@ -278,7 +278,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
     }
 
     // install chat on all the conductors
-    const playerAgents: PlayerAgents = await Promise.all(allPlayers.map(async (player, i) => {
+    const playerAgents = await Promise.all(allPlayers.map(async (player, i) => {
         console.log("installing player", i)
         // console.log("installation", installation)
         //        const agents = await player.installAgentsHapps(installation)
@@ -287,7 +287,7 @@ const setup = async (s: ScenarioApi, t, config, local): Promise<{ playerAgents: 
         //const installedAgentHapps: InstalledAgentHapps = agents.
         return agents.map((happs) => {
             const [{ hAppId, agent, cells: [cell] }] = [happs];
-            console.log(`PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString('base64')}`)
+            console.log(`PlayerIdx: ${i} DNA HASH: ${cell.cellId[0].toString()}`)
             return { hAppId, agent, cell, playerIdx: i }
         })
     }))
@@ -354,7 +354,7 @@ const sendConcurrently = async (agents: Agents, channel, messagesToSend: number,
     await Promise.all(messagePromises)
 }
 
-const gossipTrial = async (activeAgents: Agents, playerAgents: PlayerAgents, channel, messagesToSend: number): Promise<number> => {
+const gossipTrial = async (activeAgents: Agents, playerAgents, channel, messagesToSend: number): Promise<number> => {
     const receivingCell = playerAgents[0][0].cell
     const start = Date.now()
     await sendConcurrently(activeAgents, channel, messagesToSend, "noSignal")
@@ -487,7 +487,7 @@ const sendOnInterval = async (senders: number, agents: Agents, channel, period: 
 
 const PEER_CONSISTENCY_PERCENT = 90
 
-const phaseTrial = async (config, phase, playerAgents: PlayerAgents, allPlayers: Player[], channel) => {
+const phaseTrial = async (config, phase, playerAgents, allPlayers: Player[], channel) => {
     const period = phase.period
     const messagesInPeriod = phase.messages
     const senders = phase.senders
