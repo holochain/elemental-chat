@@ -488,7 +488,10 @@ const phaseTrial = async (config, phase, playerAgents, allPlayers: Player[], cha
         conductor.setSignalHandler((signal) => {
             const { data: { cellId: [dnaHash, agentKey], payload: payload } } = signal
             const now = Date.now()
-            const latency = now - payload.signal_payload.messageData.createdAt[0]*1000
+            console.log(">>", payload.signal_payload.messageData.createdAt);
+            console.log(">>", now);
+            
+            const latency = now - (payload.signal_payload.messageData.createdAt/1000)
             let tranch:number
             if (latency < 5000) {
                 tranch = 5000
@@ -509,6 +512,11 @@ const phaseTrial = async (config, phase, playerAgents, allPlayers: Player[], cha
             }
             const key = agentKey.toString('base64')
             totalSignalsReceived += 1
+            console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            
             console.log(`${key} got signal with latency ${latency}. Total so far: ${totalSignalsReceived}`)
         })
     }
