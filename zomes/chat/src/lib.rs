@@ -85,7 +85,7 @@ fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
 }
 
 #[hdk_extern]
-fn insert_fake_messages(input: message::handlers::FakeMessages) -> ExternResult<()> {
+fn insert_fake_messages(input: message::handlers::InsertFakeMessagesPayload) -> ExternResult<()> {
     message::handlers::insert_fake_messages(input)?;
     Ok(())
 }

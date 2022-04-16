@@ -1,14 +1,20 @@
 #![allow(dead_code)] // FIXME(timo): remove before merging
 
-use std::sync::{
-    atomic::{AtomicU32, Ordering::SeqCst},
-    Arc,
+use std::{
+    sync::{
+        atomic::{AtomicU32, Ordering::SeqCst},
+        Arc,
+    },
+    time::Duration,
 };
 
 // use chat::channel::*;
 // use chat::message::*;
-use chat::*;
-use chrono::TimeZone;
+use chat::{
+    message::handlers::{FakeMessage, InsertFakeMessagesPayload},
+    *,
+};
+use chrono::{DateTime, TimeZone, Timelike};
 use hc_joining_code::Props;
 // use holochain::conductor::api::error::{ConductorApiError, ConductorApiResult};
 use holochain::sweettest::*;
@@ -25,12 +31,6 @@ use proptest::{prelude::*, test_runner::TestRunner};
 // - [ ] Get to a place where we have the proptest randomizing and holochain usable in each iteration
 // - [ ] Write the zome call
 
-#[derive(Debug)]
-struct InsertFakeMessagePayload {
-    content: String,
-    timestamp: Timestamp,
-}
-
 prop_compose! {
     fn generate_timestamp()(
         hour in (0_u32..3),
@@ -45,25 +45,29 @@ prop_compose! {
 prop_compose! {
     fn generate_message_history(length: usize)(
         timestamps in prop::collection::vec(generate_timestamp(), length)
-    ) -> Vec<InsertFakeMessagePayload> {
-        timestamps.into_iter().enumerate().map(|(i, timestamp)| InsertFakeMessagePayload { content: format!("{}", i), timestamp}).collect()
+    ) -> Vec<FakeMessage> {
+        timestamps.into_iter().enumerate().map(|(i, timestamp)| FakeMessage { content: format!("{}", i), timestamp}).collect()
     }
 }
 
 #[derive(Debug)]
 struct TestInput {
-    message_history: Vec<InsertFakeMessagePayload>,
-    index: usize,
+    message_history: Vec<FakeMessage>,
+    earliest_seen: Timestamp,
+    target_message_count: usize,
 }
 
 prop_compose! {
     fn generate_test_input(length: usize)(
         message_history in generate_message_history(length),
-        index in (0..length)
+        index in (0..length),
+        target_message_count in 0..(length + 2)
     ) -> TestInput {
+        dbg!(index, target_message_count);
         TestInput {
+            earliest_seen: message_history[index].timestamp.clone(),
             message_history,
-            index,
+            target_message_count,
         }
     }
 }
@@ -128,8 +132,8 @@ async fn test_batching() {
             format!("Test #{}", channel_idx)
         }
 
-        async fn run(&self, _test_input: TestInput) {
-            let _channel: ChannelData = self
+        async fn run(&self, test_input: TestInput) {
+            let channel: ChannelData = self
                 .conductor
                 .call(
                     &self.alice_chat,
@@ -144,40 +148,45 @@ async fn test_batching() {
                 )
                 .await;
 
-            // insert_fake_messages(test_input.message_history);
-            // for message in message_history {
-            //     // Insert a message into the DHT at an arbitrary timestamp
-            //     zome_call("insert_fake_message", message)
-            // }
+            // Insert messages with artificial timestamps into the DHT
+            let _: () = self
+                .conductor
+                .call(
+                    &self.alice_chat,
+                    "insert_fake_messages",
+                    InsertFakeMessagesPayload {
+                        messages: test_input.message_history.clone(),
+                        channel: channel.entry.clone(),
+                    },
+                )
+                .await;
 
-            // let earliest_seen = message_history[index];
-            // let messages = timeout(zome_call("list_messages", earliest_seen), ...);
+            let ListMessages { messages } = tokio::time::timeout(
+                Duration::from_millis(2000),
+                self.conductor.call(
+                    &self.alice_chat,
+                    "list_messages",
+                    ListMessagesInput {
+                        channel: channel.entry,
+                        earliest_seen: Some(test_input.earliest_seen.clone()),
+                        target_message_count: test_input.target_message_count,
+                    },
+                ),
+            )
+            .await
+            .unwrap();
 
-            // assert!(messages.all(|m| m.timestamp < earliest_seen.timestamp));
-            // assert!(messages.is_sorted());
-            // Ok(())
+            let messages: Vec<_> = messages.into_iter().map(original_fake_message).collect();
 
-            // let _: () = conductor.call(alice_chat, "create_test_messages", message::handlers::InsertTestMessages {
-            //     channel: channel.entry.clone(),
-            //     number_of_messages: length.clone(),
-            // }).await;
-            // let time = Timestamp::now();
-            // let lmpi = ListMessagesInput {
-            //     channel: channel.entry.clone(),
-            //     earliest_seen: Some(time),
-            //     target_message_count: length as usize + 2,
-            // };
+            let input = test_input.message_history.clone();
 
-            // let alice_msgs: ListMessages = conductor
-            // .call(alice_chat, "list_messages", lmpi.clone())
-            // .await;
-
-            // assert_eq!(
-            //     alice_msgs.messages.len(),
-            //     length as usize + 2
-            // );
-
-            // assert!(alice_msgs.messages.iter().all(|m| m.created_at < time));
+            assert_eq!(
+                messages,
+                expected_messages(test_input),
+                "(returned messages) == (expected_messages). input: {:?}",
+                input
+            );
+            dbg!("compared equal", messages.len());
         }
     }
 
@@ -188,7 +197,7 @@ async fn test_batching() {
         move || {
             let mut runner =
                 TestRunner::new(proptest::test_runner::Config::with_source_file(file!()));
-            runner.run(&generate_test_input(90), move |test_input| {
+            runner.run(&generate_test_input(22), move |test_input| {
                 tokio::runtime::Handle::current().block_on(shared_test_state.run(test_input));
                 Ok(())
             })
@@ -204,4 +213,185 @@ async fn test_batching() {
         .await;
 
     test_result.unwrap();
+}
+
+fn expected_messages(test_input: TestInput) -> Vec<FakeMessage> {
+    fn same_hour(a: &Timestamp, b: &Timestamp) -> bool {
+        DateTime::try_from(a).unwrap().time().hour() == DateTime::try_from(b).unwrap().time().hour()
+    }
+
+    let TestInput {
+        message_history: mut messages,
+        earliest_seen,
+        target_message_count,
+    } = test_input;
+    messages.retain(|m| m.timestamp < earliest_seen);
+    messages.sort_by_key(|m| m.timestamp);
+    let (only_included_if_same_hour, included) =
+        messages.split_at(messages.len().saturating_sub(target_message_count));
+    let earliest_included_hour = if let Some(m) = included.first() {
+        &m.timestamp
+    } else {
+        return Vec::new();
+    };
+    let final_cutoff = only_included_if_same_hour
+        .iter()
+        .rposition(|m| !same_hour(&m.timestamp, &earliest_included_hour))
+        .unwrap_or(0);
+    messages.drain(0..final_cutoff);
+    messages
+}
+
+fn original_fake_message(returned_message: MessageData) -> FakeMessage {
+    FakeMessage {
+        content: returned_message.entry.content,
+        timestamp: returned_message.created_at,
+    }
+}
+
+#[test]
+fn expected_messages_works() {
+    assert_eq!(
+        expected_messages(TestInput {
+            message_history: vec![
+                FakeMessage {
+                    content: "0".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "1".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "2".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "3".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "4".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "5".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "6".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "7".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "8".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "9".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "10".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "11".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "12".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "13".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "14".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "15".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "16".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "17".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "18".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "19".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "20".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                },
+                FakeMessage {
+                    content: "21".to_owned(),
+                    timestamp: Timestamp::from(
+                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+                    )
+                }
+            ],
+            earliest_seen: Timestamp::from(
+                chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
+            ),
+            target_message_count: 1
+        }),
+        vec![],
+    );
 }

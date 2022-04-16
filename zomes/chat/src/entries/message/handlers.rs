@@ -19,39 +19,34 @@ use super::{
 };
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
-pub struct FakeMessages(Vec<FakeMessage>);
+pub struct InsertFakeMessagesPayload {
+    pub messages: Vec<FakeMessage>,
+    pub channel: Channel,
+}
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
-struct FakeMessage {
-    content: String,
-    timestamp: Timestamp,
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone, PartialEq, Eq)]
+pub struct FakeMessage {
+    pub content: String,
+    pub timestamp: Timestamp,
 }
 
 /// Create a new message
-pub(crate) fn insert_fake_messages(messages: FakeMessages) -> ChatResult<()> {
-    debug!("Inserting fake messages {:?}", messages);
-    // // create 10 messages spread out accross the years
-    // let mut time = Timestamp::from_micros(200000000);
-    // let message = MessageInput {
-    //     last_seen: LastSeen::First,
-    //     channel: channel.clone(),
-    //     entry: Message {
-    //         uuid: "".into(),
-    //         content: "".into(),
-    //     },
-    // };
-    // for _i in 0..number_of_messages {
-    //     time = time.saturating_add(&Duration::new(100000000, 0));
-    //     // debug!("Creating a message at : {:?}", time);
-    //     create_message(message.clone(), time)?;
-    // }
-    // // plus two more in the same first year
-    // time = time.saturating_add(&Duration::new(10, 0));
-    // // debug!("Creating second to last message at : {:?}", time);
-    // create_message(message.clone(), time)?;
-    // // debug!("Creating last message at : {:?}", time);
-    // time = time.saturating_add(&Duration::new(10, 0));
-    // create_message(message, time)?;
+pub(crate) fn insert_fake_messages(input: InsertFakeMessagesPayload) -> ChatResult<()> {
+    debug!("Inserting fake messages");
+    for FakeMessage { content, timestamp } in input.messages {
+        create_message(
+            MessageInput {
+                last_seen: LastSeen::First,
+                channel: input.channel.clone(),
+                entry: Message {
+                    uuid: "".into(),
+                    content,
+                },
+            },
+            timestamp,
+        )?;
+    }
+
     Ok(())
 }
 
