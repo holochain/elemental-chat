@@ -32,7 +32,6 @@ pub struct FakeMessage {
 
 /// Create a new message
 pub(crate) fn insert_fake_messages(input: InsertFakeMessagesPayload) -> ChatResult<()> {
-    debug!("Inserting fake messages {:?}", input);
     for FakeMessage { content, timestamp } in input.messages {
         create_message(
             MessageInput {
@@ -104,7 +103,6 @@ pub(crate) fn create_message(
 
 /// Using batching to List all the messages on this channel
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
-    debug!("listing messages {:?}", list_message_input);
     let ListMessagesInput {
         channel,
         earliest_seen,
@@ -118,9 +116,7 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     links.reverse();
     let messages = get_messages(links)?;
     debug!("Total length of messages {:?}", messages.len());
-    let output = Ok(messages.into());
-    debug!("removeme(timo) messages: {:?}", output);
-    output
+    Ok(messages.into())
 }
 
 // pub(crate) fn _new_message_signal(message: SignalMessageData) -> ChatResult<()> {

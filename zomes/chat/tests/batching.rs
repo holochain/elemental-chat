@@ -1,5 +1,3 @@
-#![allow(dead_code)] // FIXME(timo): remove before merging
-
 use std::{
     sync::{
         atomic::{AtomicU32, Ordering::SeqCst},
@@ -8,28 +6,16 @@ use std::{
     time::Duration,
 };
 
-// use chat::channel::*;
-// use chat::message::*;
 use chat::{
     message::handlers::{FakeMessage, InsertFakeMessagesPayload},
-    *,
+    Channel, ChannelData, ChannelInput, ListMessages, ListMessagesInput, Timestamp,
 };
+
 use chrono::{DateTime, TimeZone, Timelike};
 use hc_joining_code::Props;
-// use holochain::conductor::api::error::{ConductorApiError, ConductorApiResult};
 use holochain::sweettest::*;
 use holochain_types::prelude::DnaFile;
 use proptest::{prelude::*, test_runner::TestRunner};
-
-// Two main time consuming parts to this test:
-// - Writing the zome call
-// - Getting the holochain setup right. (What part of the holochain setup can we re-use between iterations?)
-// - Using proptest for my first time and figuring out how to use it
-//
-// Possible next steps:
-// - [x] Get to a place where we have the proptest randomizing, and can print the inputs
-// - [ ] Get to a place where we have the proptest randomizing and holochain usable in each iteration
-// - [ ] Write the zome call
 
 prop_compose! {
     fn generate_timestamp()(
@@ -43,8 +29,8 @@ prop_compose! {
 }
 
 prop_compose! {
-    fn generate_message_history(length: usize)(
-        timestamps in prop::collection::vec(generate_timestamp(), length)
+    fn generate_message_history()(
+        timestamps in prop::collection::vec(generate_timestamp(), 1..30)
     ) -> Vec<FakeMessage> {
         timestamps.into_iter().enumerate().map(|(i, timestamp)| FakeMessage { content: format!("{}", i), timestamp}).collect()
     }
@@ -58,13 +44,13 @@ struct TestInput {
 }
 
 prop_compose! {
-    fn generate_test_input(length: usize)(
-        message_history in generate_message_history(length),
-        index in (0..length),
-        // target_message_count in 0..(length + 2)
-    ) -> TestInput {
+    fn generate_test_input()(message_history in generate_message_history())
+        (
+            index in (0..message_history.len()), message_history in Just(message_history)
+        )
+     -> TestInput {
         TestInput {
-            earliest_seen: message_history[index].timestamp.clone(),
+            earliest_seen: message_history[index].timestamp,
             message_history,
             target_message_count: 20,
         }
@@ -86,7 +72,7 @@ impl SharedTestState {
 
         // Install apps with single DNA
         let apps = conductor
-            .setup_app_for_agents("elemental-chat", &agents, &[dna.into()])
+            .setup_app_for_agents("elemental-chat", &agents, &[dna])
             .await
             .unwrap();
         let ((alice_cell,),) = apps.into_tuples();
@@ -141,7 +127,7 @@ impl SharedTestState {
                 "list_messages",
                 ListMessagesInput {
                     channel: channel.entry,
-                    earliest_seen: Some(test_input.earliest_seen.clone()),
+                    earliest_seen: Some(test_input.earliest_seen),
                     target_message_count: test_input.target_message_count,
                 },
             ),
@@ -195,11 +181,14 @@ async fn test_batching() {
         let shared_test_state = Arc::clone(&shared_test_state);
         move || {
             let mut runner = TestRunner::new(proptest::test_runner::Config {
+                // Make sure that proptest knows the source location so it knows where to put the .regressions file
                 source_file: Some(file!()),
+                // Limit how long the test takes (each iteration takes ~1 second)
+                cases: 10,
                 max_shrink_time: 1000 * 20,
                 ..Default::default()
             });
-            runner.run(&generate_test_input(22), move |test_input| {
+            runner.run(&generate_test_input(), move |test_input| {
                 tokio::runtime::Handle::current().block_on(shared_test_state.run(test_input));
                 Ok(())
             })
@@ -246,13 +235,6 @@ fn expected_messages(test_input: TestInput) -> Vec<String> {
     }
 
     messages.into_iter().map(|m| m.content).collect()
-}
-
-fn original_fake_message(returned_message: MessageData) -> FakeMessage {
-    FakeMessage {
-        content: returned_message.entry.content,
-        timestamp: returned_message.created_at,
-    }
 }
 
 #[test]

@@ -107,7 +107,12 @@ pub fn get_message_links(
             let children = current_search_path.children()?;
             debug!(
                 "current_search_path {:?} depth {} children {:?}",
-                current_search_path, depth, children
+                current_search_path,
+                depth,
+                children
+                    .iter()
+                    .map(|l| (&l.tag, l.timestamp))
+                    .collect::<Vec<_>>()
             );
             let mut children = children
                 .into_iter()
