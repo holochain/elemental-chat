@@ -50,7 +50,7 @@ prop_compose! {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct TestInput {
     message_history: Vec<FakeMessage>,
     earliest_seen: Timestamp,
@@ -61,14 +61,105 @@ prop_compose! {
     fn generate_test_input(length: usize)(
         message_history in generate_message_history(length),
         index in (0..length),
-        target_message_count in 0..(length + 2)
+        // target_message_count in 0..(length + 2)
     ) -> TestInput {
-        dbg!(index, target_message_count);
         TestInput {
             earliest_seen: message_history[index].timestamp.clone(),
             message_history,
-            target_message_count,
+            target_message_count: 20,
         }
+    }
+}
+
+struct SharedTestState {
+    conductor: SweetConductor,
+    alice_chat: SweetZome,
+    next_channel: AtomicU32,
+}
+
+impl SharedTestState {
+    async fn new(dna: DnaFile) -> Self {
+        // Set up conductor
+        let mut conductor = SweetConductor::from_standard_config().await;
+
+        let agents = SweetAgents::get(conductor.keystore(), 1).await;
+
+        // Install apps with single DNA
+        let apps = conductor
+            .setup_app_for_agents("elemental-chat", &agents, &[dna.into()])
+            .await
+            .unwrap();
+        let ((alice_cell,),) = apps.into_tuples();
+        let alice_chat = alice_cell.zome("chat");
+
+        // Setup complete.
+        SharedTestState {
+            conductor,
+            alice_chat,
+            next_channel: AtomicU32::new(0),
+        }
+    }
+
+    fn next_channel_name(&self) -> String {
+        let channel_idx = self.next_channel.fetch_add(1, SeqCst);
+        format!("Test #{}", channel_idx)
+    }
+
+    async fn run(&self, test_input: TestInput) {
+        let channel: ChannelData = self
+            .conductor
+            .call(
+                &self.alice_chat,
+                "create_channel",
+                ChannelInput {
+                    name: self.next_channel_name(),
+                    entry: Channel {
+                        category: "General".into(),
+                        uuid: uuid::Uuid::new_v4().to_string(),
+                    },
+                },
+            )
+            .await;
+
+        // Insert messages with artificial timestamps into the DHT
+        let _: () = self
+            .conductor
+            .call(
+                &self.alice_chat,
+                "insert_fake_messages",
+                InsertFakeMessagesPayload {
+                    messages: test_input.message_history.clone(),
+                    channel: channel.entry.clone(),
+                },
+            )
+            .await;
+
+        let ListMessages { messages } = tokio::time::timeout(
+            Duration::from_millis(15_000),
+            self.conductor.call(
+                &self.alice_chat,
+                "list_messages",
+                ListMessagesInput {
+                    channel: channel.entry,
+                    earliest_seen: Some(test_input.earliest_seen.clone()),
+                    target_message_count: test_input.target_message_count,
+                },
+            ),
+        )
+        .await
+        .unwrap();
+
+        let mut messages: Vec<_> = messages.into_iter().map(|m| m.entry.content).collect();
+        messages.sort();
+
+        let mut expected = expected_messages(test_input.clone());
+        expected.sort();
+
+        assert_eq!(
+            messages, expected,
+            "(returned messages) == (expected_messages). input: {:?}",
+            test_input
+        );
     }
 }
 
@@ -98,105 +189,16 @@ async fn test_batching() {
 
     let shared_test_state = SharedTestState::new(dna).await;
 
-    struct SharedTestState {
-        conductor: SweetConductor,
-        alice_chat: SweetZome,
-        next_channel: AtomicU32,
-    }
-
-    impl SharedTestState {
-        async fn new(dna: DnaFile) -> Self {
-            // Set up conductor
-            let mut conductor = SweetConductor::from_standard_config().await;
-
-            let agents = SweetAgents::get(conductor.keystore(), 1).await;
-
-            // Install apps with single DNA
-            let apps = conductor
-                .setup_app_for_agents("elemental-chat", &agents, &[dna.into()])
-                .await
-                .unwrap();
-            let ((alice_cell,),) = apps.into_tuples();
-            let alice_chat = alice_cell.zome("chat");
-
-            // Setup complete.
-            SharedTestState {
-                conductor,
-                alice_chat,
-                next_channel: AtomicU32::new(0),
-            }
-        }
-
-        fn next_channel_name(&self) -> String {
-            let channel_idx = self.next_channel.fetch_add(1, SeqCst);
-            format!("Test #{}", channel_idx)
-        }
-
-        async fn run(&self, test_input: TestInput) {
-            let channel: ChannelData = self
-                .conductor
-                .call(
-                    &self.alice_chat,
-                    "create_channel",
-                    ChannelInput {
-                        name: self.next_channel_name(),
-                        entry: Channel {
-                            category: "General".into(),
-                            uuid: uuid::Uuid::new_v4().to_string(),
-                        },
-                    },
-                )
-                .await;
-
-            // Insert messages with artificial timestamps into the DHT
-            let _: () = self
-                .conductor
-                .call(
-                    &self.alice_chat,
-                    "insert_fake_messages",
-                    InsertFakeMessagesPayload {
-                        messages: test_input.message_history.clone(),
-                        channel: channel.entry.clone(),
-                    },
-                )
-                .await;
-
-            let ListMessages { messages } = tokio::time::timeout(
-                Duration::from_millis(2000),
-                self.conductor.call(
-                    &self.alice_chat,
-                    "list_messages",
-                    ListMessagesInput {
-                        channel: channel.entry,
-                        earliest_seen: Some(test_input.earliest_seen.clone()),
-                        target_message_count: test_input.target_message_count,
-                    },
-                ),
-            )
-            .await
-            .unwrap();
-
-            let messages: Vec<_> = messages.into_iter().map(original_fake_message).collect();
-
-            let input = test_input.message_history.clone();
-
-            assert_eq!(
-                messages,
-                expected_messages(test_input),
-                "(returned messages) == (expected_messages). input: {:?}",
-                input
-            );
-            dbg!("compared equal", messages.len());
-        }
-    }
-
     let shared_test_state = Arc::new(shared_test_state);
 
     let test_result = tokio::task::spawn_blocking({
         let shared_test_state = Arc::clone(&shared_test_state);
         move || {
-            let mut runner =
-                TestRunner::new(proptest::test_runner::Config::with_source_file(file!()));
+            let mut runner = TestRunner::new(proptest::test_runner::Config {
+                source_file: Some(file!()),
+                max_shrink_time: 1000 * 20,
+                ..Default::default()
+            });
             runner.run(&generate_test_input(22), move |test_input| {
                 tokio::runtime::Handle::current().block_on(shared_test_state.run(test_input));
                 Ok(())
@@ -215,9 +217,11 @@ async fn test_batching() {
     test_result.unwrap();
 }
 
-fn expected_messages(test_input: TestInput) -> Vec<FakeMessage> {
+fn expected_messages(test_input: TestInput) -> Vec<String> {
     fn same_hour(a: &Timestamp, b: &Timestamp) -> bool {
-        DateTime::try_from(a).unwrap().time().hour() == DateTime::try_from(b).unwrap().time().hour()
+        let a = DateTime::try_from(a).unwrap();
+        let b = DateTime::try_from(b).unwrap();
+        a.signed_duration_since(b).num_hours().abs() == 0 && a.time().hour() == b.time().hour()
     }
 
     let TestInput {
@@ -234,12 +238,14 @@ fn expected_messages(test_input: TestInput) -> Vec<FakeMessage> {
     } else {
         return Vec::new();
     };
-    let final_cutoff = only_included_if_same_hour
+    if let Some(different_hour_idx) = only_included_if_same_hour
         .iter()
-        .rposition(|m| !same_hour(&m.timestamp, &earliest_included_hour))
-        .unwrap_or(0);
-    messages.drain(0..final_cutoff);
-    messages
+        .rposition(|m| !same_hour(&m.timestamp, earliest_included_hour))
+    {
+        messages.drain(0..=different_hour_idx);
+    }
+
+    messages.into_iter().map(|m| m.content).collect()
 }
 
 fn original_fake_message(returned_message: MessageData) -> FakeMessage {
@@ -256,142 +262,47 @@ fn expected_messages_works() {
             message_history: vec![
                 FakeMessage {
                     content: "0".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
+                    timestamp: Timestamp::from(chrono::Utc.ymd(2022, 1, 1).and_hms(0, 0, 0))
                 },
                 FakeMessage {
                     content: "1".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "2".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "3".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "4".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "5".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "6".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "7".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "8".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "9".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "10".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "11".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "12".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "13".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "14".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "15".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "16".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "17".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "18".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "19".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "20".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
-                },
-                FakeMessage {
-                    content: "21".to_owned(),
-                    timestamp: Timestamp::from(
-                        chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-                    )
+                    timestamp: Timestamp::from(chrono::Utc.ymd(2022, 1, 1).and_hms(0, 0, 0))
                 }
             ],
-            earliest_seen: Timestamp::from(
-                chrono::Utc.ymd(2022 + 0, 1 + 0, 1 + 0).and_hms(0, 0, 0)
-            ),
+            earliest_seen: Timestamp::from(chrono::Utc.ymd(2022, 1, 1).and_hms(0, 0, 0)),
             target_message_count: 1
         }),
-        vec![],
+        Vec::<String>::new(),
+    );
+
+    assert_eq!(
+        expected_messages(TestInput {
+            message_history: vec![
+                FakeMessage {
+                    content: "0".to_owned(),
+                    timestamp: Timestamp::from(chrono::Utc.ymd(2022, 1, 2).and_hms(2, 0, 0)),
+                },
+                FakeMessage {
+                    content: "1".to_owned(),
+                    timestamp: Timestamp::from(chrono::Utc.ymd(2022, 1, 1).and_hms(1, 0, 0)),
+                },
+            ],
+            earliest_seen: Timestamp::from(chrono::Utc.ymd(2022, 2, 1).and_hms(0, 0, 0)),
+            target_message_count: 1
+        }),
+        vec!["0".to_owned()]
+    );
+
+    // TODO: The real implementation has a bug here
+    assert_eq!(
+        expected_messages(TestInput {
+            message_history: vec![FakeMessage {
+                content: "13".to_owned(),
+                timestamp: Timestamp::from(chrono::Utc.ymd(2022, 3, 2).and_hms(0, 0, 0))
+            }],
+            earliest_seen: Timestamp::from(chrono::Utc.ymd(2022, 3, 2).and_hms(1, 0, 0)),
+            target_message_count: 0,
+        }),
+        Vec::<String>::new()
     );
 }

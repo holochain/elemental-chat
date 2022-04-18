@@ -32,7 +32,7 @@ pub struct FakeMessage {
 
 /// Create a new message
 pub(crate) fn insert_fake_messages(input: InsertFakeMessagesPayload) -> ChatResult<()> {
-    debug!("Inserting fake messages");
+    debug!("Inserting fake messages {:?}", input);
     for FakeMessage { content, timestamp } in input.messages {
         create_message(
             MessageInput {
@@ -94,7 +94,7 @@ pub(crate) fn create_message(
     create_link(
         path_hash,
         message.entry_hash.clone(),
-        HdkLinkType::Paths,
+        HdkLinkType::Any,
         LinkTag::from(tag),
     )?;
 
@@ -104,6 +104,7 @@ pub(crate) fn create_message(
 
 /// Using batching to List all the messages on this channel
 pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult<ListMessages> {
+    debug!("listing messages {:?}", list_message_input);
     let ListMessagesInput {
         channel,
         earliest_seen,
@@ -113,10 +114,13 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     let path: Path = channel.into();
     let mut links =
         crate::batching_helper::get_message_links(path, earliest_seen, target_message_count)?;
-    links.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
-    let sorted_messages = get_messages(links)?;
-    debug!("Total lenght of messages {:?}", sorted_messages.len());
-    Ok(sorted_messages.into())
+    // Make sure links are in timestamp-ascending order
+    links.reverse();
+    let messages = get_messages(links)?;
+    debug!("Total length of messages {:?}", messages.len());
+    let output = Ok(messages.into());
+    debug!("removeme(timo) messages: {:?}", output);
+    output
 }
 
 // pub(crate) fn _new_message_signal(message: SignalMessageData) -> ChatResult<()> {
@@ -312,7 +316,7 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
         create_link(
             path.path_entry_hash()?,
             agent.into(),
-            HdkLinkType::Paths,
+            HdkLinkType::Any,
             agent_tag.clone(),
         )?;
     }

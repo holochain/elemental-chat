@@ -7,65 +7,65 @@ use chrono::{DateTime, Datelike, NaiveDateTime, Timelike, Utc};
 use hdk::{hash_path::path::Component, prelude::*};
 use std::cmp;
 
-struct TimeChunk {
-    channel: Path,
-    // [Year, [Month, [Day, [Hour]]]]
-    time_segments: Vec<i32>,
-}
+// struct TimeChunk {
+//     channel: Path,
+//     // [Year, [Month, [Day, [Hour]]]]
+//     time_segments: Vec<i32>,
+// }
 
-const MAX_TIME_SEGMENTS: usize = 4;
+// const MAX_TIME_SEGMENTS: usize = 4;
 
-impl TimeChunk {
-    fn new(channel: Path, time: Timestamp) -> ChatResult<Self> {
-        let time: DateTime<Utc> = time.try_into()?;
-        Ok(TimeChunk {
-            channel,
-            time_segments: vec![
-                time.year() as i32,
-                time.month() as i32,
-                time.day() as i32,
-                time.hour() as i32,
-            ],
-        })
-    }
+// impl TimeChunk {
+//     fn new(channel: Path, time: Timestamp) -> ChatResult<Self> {
+//         let time: DateTime<Utc> = time.try_into()?;
+//         Ok(TimeChunk {
+//             channel,
+//             time_segments: vec![
+//                 time.year() as i32,
+//                 time.month() as i32,
+//                 time.day() as i32,
+//                 time.hour() as i32,
+//             ],
+//         })
+//     }
 
-    fn path(&self) -> Path {
-        let mut components: Vec<_> = self.channel.clone().into();
-        components.extend(
-            self.time_segments
-                .iter()
-                .map(|s| s.to_be_bytes().to_vec().into()),
-        );
-        components.into()
-    }
+//     fn path(&self) -> Path {
+//         let mut components: Vec<_> = self.channel.clone().into();
+//         components.extend(
+//             self.time_segments
+//                 .iter()
+//                 .map(|s| s.to_be_bytes().to_vec().into()),
+//         );
+//         components.into()
+//     }
 
-    fn children(&self) -> ChatResult<Children> {
-        let links = get_links(self.path().path_entry_hash()?, None)?;
-        if self.time_segments.len() == MAX_TIME_SEGMENTS {
-            Ok(Children::Messages(links))
-        } else {
-            Ok(Children::TimeChunks(
-                links
-                    .into_iter()
-                    .map(|l| {
-                        let segment = segment_from_link(&l)?;
-                        let mut time_segments = self.time_segments.clone();
-                        time_segments.push(segment);
-                        Ok(TimeChunk {
-                            channel: self.channel.clone(),
-                            time_segments,
-                        })
-                    })
-                    .collect::<ChatResult<_>>()?,
-            ))
-        }
-    }
-}
+//     fn children(&self) -> ChatResult<Children> {
+//         let links = get_links(self.path().path_entry_hash()?, None)?;
+//         if self.time_segments.len() == MAX_TIME_SEGMENTS {
+//             Ok(Children::Messages(links))
+//         } else {
+//             Ok(Children::TimeChunks(
+//                 links
+//                     .into_iter()
+//                     .map(|l| {
+//                         let segment = segment_from_link(&l)?;
+//                         let mut time_segments = self.time_segments.clone();
+//                         time_segments.push(segment);
+//                         Ok(TimeChunk {
+//                             channel: self.channel.clone(),
+//                             time_segments,
+//                         })
+//                     })
+//                     .collect::<ChatResult<_>>()?,
+//             ))
+//         }
+//     }
+// }
 
-enum Children {
-    Messages(Vec<Link>),
-    TimeChunks(Vec<TimeChunk>),
-}
+// enum Children {
+//     Messages(Vec<Link>),
+//     TimeChunks(Vec<TimeChunk>),
+// }
 
 pub fn get_previous_hour(time: Timestamp) -> Result<Timestamp, TimestampError> {
     time - std::time::Duration::from_secs(60 * 60)
@@ -105,9 +105,14 @@ pub fn get_message_links(
             let earliest_seen_child_segment =
                 last_segment_from_path(&earliest_seen_child_path).unwrap();
             let children = current_search_path.children()?;
+            debug!(
+                "current_search_path {:?} depth {} children {:?}",
+                current_search_path, depth, children
+            );
             let mut children = children
                 .into_iter()
-                .map(|l| Ok((segment_from_link(&l)?, l)))
+                .filter_map(|l| path_component_from_link(&l).ok().map(|c| (c, l))) // filter out non-path links
+                .map(|(c, l)| Ok((segment_from_component(&c)?, l)))
                 .collect::<Result<Vec<_>, ChatError>>()?;
 
             children.retain(|(segment, _)| *segment < earliest_seen_child_segment);
@@ -137,7 +142,8 @@ fn append_message_links_recursive(
             let grandchildren = get_links(link.target, None)?;
             let grandchildren = grandchildren
                 .into_iter()
-                .map(|l| Ok((segment_from_link(&l)?, l)))
+                .filter_map(|l| path_component_from_link(&l).ok().map(|c| (c, l))) // filter out non-path links
+                .map(|(c, l)| Ok((segment_from_component(&c)?, l)))
                 .collect::<Result<Vec<_>, ChatError>>()?;
             append_message_links_recursive(grandchildren, links, target_count, depth - 1)?;
         }
@@ -147,12 +153,6 @@ fn append_message_links_recursive(
     }
 
     Ok(())
-}
-
-fn segment_from_link(link: &Link) -> ChatResult<i32> {
-    let component = path_component_from_link(link)?;
-    let segment = segment_from_component(&component)?;
-    Ok(segment)
 }
 
 fn path_component_from_link(link: &Link) -> Result<Component, SerializedBytesError> {
