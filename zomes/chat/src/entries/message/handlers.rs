@@ -110,10 +110,8 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     } = list_message_input;
 
     let path: Path = channel.into();
-    let mut links =
+    let links =
         crate::batching_helper::get_message_links(path, earliest_seen, target_message_count)?;
-    // Make sure links are in timestamp-ascending order
-    links.reverse();
     let messages = get_messages(links)?;
     debug!("Total length of messages {:?}", messages.len());
     Ok(messages.into())
