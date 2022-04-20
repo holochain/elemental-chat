@@ -11,6 +11,11 @@ pub fn get_previous_hour(time: Timestamp) -> Result<Timestamp, TimestampError> {
     time - std::time::Duration::from_secs(60 * 60)
 }
 
+/// Returns at least `target_count` messages that are all earlier than `earliest_seen`.
+///
+/// Navigates a tree of timestamp-based links to find messages.
+/// We used to link all the messages for a channel in the same place,
+/// but it was too slow to load them, so we created this tree to reduce the work done per zome call.
 pub fn get_message_links(
     channel: Path,
     earliest_seen: Option<Timestamp>,
@@ -45,15 +50,11 @@ pub fn get_message_links(
             let earliest_seen_child_segment =
                 last_segment_from_path(&earliest_seen_child_path).unwrap();
             let children = current_search_path.children()?;
-            debug!(
-                "current_search_path {:?} depth {} children {:?}",
-                current_search_path,
-                depth,
-                children
-                    .iter()
-                    .map(|l| (&l.tag, l.timestamp))
-                    .collect::<Vec<_>>()
-            );
+
+            let raw_children = children
+                .iter()
+                .map(|l| format!("{{ tag: {:?} timestamp: {:?} }}, ", l.tag, l.timestamp))
+                .collect::<String>();
             let mut children = children
                 .into_iter()
                 .filter_map(|l| path_component_from_link(&l).ok().map(|c| (c, l))) // filter out non-path links
@@ -61,7 +62,13 @@ pub fn get_message_links(
                 .collect::<Result<Vec<_>, ChatError>>()?;
 
             children.retain(|(segment, _)| *segment < earliest_seen_child_segment);
+
+            let link_count_before = links.len();
             append_message_links_recursive(children, &mut links, target_count, depth)?;
+
+            let links_added = links.get(link_count_before..).unwrap_or(&[]);
+            debug!("batching: Finished including all descendants of node in tree (depth {:?} current_search_path {:?}).
+            Raw children {:?}. Messages added {:?}", depth, current_search_path, raw_children, links_added);
         }
 
         earliest_seen_child_path = current_search_path;
