@@ -27,39 +27,21 @@ module.exports = async (orchestrator) => {
     });
     console.log(channel);
 
-    var sends: any[] = [];
-    var recvs: any[] = [];
+    const num_messages = 10
+    let micros = 200000000
+    const messages: { content: string, timestamp : number }[] = []
 
-    let message = {
-      last_seen: { First: null },
-      channel: channel.entry,
-      entry: {
-        uuid: uuidv4(),
-        content: "",
-      },
-    };
-    /*
-    // Alice send 5 messages
-    for (let i=1 ;i<=5; i++) {
-      message.entry.content = `Hello ${i}` 
-      recvs.push(await alice_chat.call('chat', 'create_message', message));
-      await delay(500)
+    for (let i = 0; i < num_messages; i++) {
+      micros += (100000000 * 1000_000)
+      messages.push({ content: "", timestamp: micros })
     }
-    await delay(3000)
-    // send 5 more
-    for (let i=1 ;i<=5; i++) {
-      message.entry.content = `Hello ${i+5}` 
-      recvs.push(await alice_chat.call('chat', 'create_message', message));
-    }*/
 
-    let messages = [...new Array(10)].map(i => ({
-      content: `${i}th message`,
-      timestamp: Date.now()
-    }))
+    micros += (10 * 1000_000)
+    messages.push({ content: "", timestamp: micros })
+    micros += (10 * 1000_000)
+    messages.push({ content: "", timestamp: micros })
 
-    recvs.push(
-      await alice_chat.call("chat", "insert_fake_messages", { channel: channel.entry, messages })
-    );
+    await alice_chat.call("chat", "insert_fake_messages", { channel: channel.entry, messages })
 
     await awaitIntegration(alice_chat);
     await awaitIntegration(bobbo_chat);
