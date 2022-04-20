@@ -52,8 +52,13 @@ module.exports = async (orchestrator) => {
       recvs.push(await alice_chat.call('chat', 'create_message', message));
     }*/
 
+    let messages = [...new Array(10)].map(i => ({
+      content: `${i}th message`,
+      timestamp: Date.now()
+    }))
+
     recvs.push(
-      await alice_chat.call("chat", "create_test_messages", {channel: channel.entry, number_of_messages: 10})
+      await alice_chat.call("chat", "insert_fake_messages", { channel: channel.entry, messages })
     );
 
     await awaitIntegration(alice_chat);
