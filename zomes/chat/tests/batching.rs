@@ -136,10 +136,10 @@ impl SharedTestState {
         .unwrap();
 
         let mut messages: Vec<_> = messages.into_iter().map(|m| m.entry.content).collect();
-        messages.sort();
+        messages.sort_unstable();
 
         let mut expected = expected_messages(test_input.clone());
-        expected.sort();
+        expected.sort_unstable();
 
         assert_eq!(
             messages, expected,
@@ -219,7 +219,7 @@ fn expected_messages(test_input: TestInput) -> Vec<String> {
         target_message_count,
     } = test_input;
     messages.retain(|m| m.timestamp < earliest_seen);
-    messages.sort_by_key(|m| m.timestamp);
+    messages.sort_unstable_by_key(|m| m.timestamp);
     let (only_included_if_same_hour, included) =
         messages.split_at(messages.len().saturating_sub(target_message_count));
     let earliest_included_hour = if let Some(m) = included.first() {
