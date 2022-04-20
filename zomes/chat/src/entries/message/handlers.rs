@@ -112,8 +112,13 @@ pub(crate) fn list_messages(list_message_input: ListMessagesInput) -> ChatResult
     let path: Path = channel.into();
     let links =
         crate::batching_helper::get_message_links(path, earliest_seen, target_message_count)?;
-    let messages = get_messages(links)?;
+    let mut messages = get_messages(links)?;
     debug!("Total length of messages {:?}", messages.len());
+
+    // Return messages in timestamp-ascending order.
+    // This is not strictly necessary because the UI does not care about order.
+    // Without this, some of our tests may fail spuriously when called on an hour boundary.
+    messages.sort_unstable_by_key(|m| m.created_at);
     Ok(messages.into())
 }
 
