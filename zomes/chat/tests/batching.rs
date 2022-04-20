@@ -210,7 +210,7 @@ fn expected_messages(test_input: TestInput) -> Vec<String> {
     fn same_hour(a: &Timestamp, b: &Timestamp) -> bool {
         let a = DateTime::try_from(a).unwrap();
         let b = DateTime::try_from(b).unwrap();
-        a.signed_duration_since(b).num_hours().abs() == 0 && a.time().hour() == b.time().hour()
+        a.signed_duration_since(b).num_hours() == 0 && a.time().hour() == b.time().hour()
     }
 
     let TestInput {
