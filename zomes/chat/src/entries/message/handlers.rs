@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_imports)] // FIXME(timo): remove before merging
-
 use crate::{
     channel::Channel,
     error::ChatError,
@@ -11,7 +9,6 @@ use crate::{
 use hdk::prelude::*;
 use link::Link;
 use metadata::EntryDetails;
-use std::time::Duration;
 
 use super::{
     ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData,
