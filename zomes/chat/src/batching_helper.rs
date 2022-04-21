@@ -85,6 +85,9 @@ fn append_message_links_recursive(
     target_count: usize,
     depth: u8,
 ) -> ChatResult<()> {
+    // It's important to sort by segment instead of timestamp,
+    // since in the proptest, fake messages are inserted with chosen time-path-segments,
+    // but the timestamp is not fake and still represents the system time.
     children.sort_unstable_by_key(|(segment, _)| cmp::Reverse(*segment));
     for (_, link) in children {
         if depth == 0 {
