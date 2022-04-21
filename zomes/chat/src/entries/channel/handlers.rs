@@ -36,7 +36,7 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
     create_link(
         path.path_entry_hash()?,
         info_hash,
-        HdkLinkType::Paths,
+        HdkLinkType::Any,
         ChannelInfoTag::tag(),
     )?;
 
