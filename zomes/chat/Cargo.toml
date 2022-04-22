@@ -11,18 +11,19 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 chrono = {version = "0.4.19", features = ['alloc', 'std']}
 derive_more = "0.99"
-hdk = "=0.0.123"
+hdk = "=0.0.126"
 serde = "1.0"
 thiserror = "1.0"
-hc_utils = "=0.0.123"
-holo_hash = { version = "=0.0.20", features = ["encoding"] }
+hc_utils = "=0.0.126"
+holo_hash = { version = "=0.0.21", features = ["encoding"] }
 uuid = "0.8.2"
-hc_joining_code = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.123", package = "hc_joining_code"}
+hc_joining_code = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.126", package = "hc_joining_code"}
 getrandom = { version = "0.2", features = ["js"] }
 is_sorted = "0.1.1"
 
 [dev-dependencies]
-holochain = "=0.0.127"
+holochain = "=0.0.131"
+holochain_types = "=0.0.31"
 futures = "0.3.1"
 nanoid = "0.4.0"
 observability = "0.1.2"

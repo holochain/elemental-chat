@@ -1,6 +1,6 @@
 {
   # git ls-remote https://github.com/holochain/holonix staging
-  holonixRevision = "52158409f9b76b442e592e8f06632b0e57a6c365";
+  holonixRevision = "44542b5c0cdc984454fad96fbec313b7b1c8ca7c";
 
-  holochainVersionId = "v0_0_127";
+  holochainVersionId = "v0_0_131";
 }
