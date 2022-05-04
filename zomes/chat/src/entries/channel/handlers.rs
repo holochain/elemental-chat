@@ -85,12 +85,16 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
             });
 
         // If there is none we will skip this channel
-        let latest_info = match latest_info {
-            Some(l) => l,
+        let latest_info: EntryHash = match latest_info {
+            // XXX: we expect this target to always be to an Entry.
+            //      if it's *not*, this is going to get weird!
+            //      The HDK should probably have a better mechanism
+            //      for matching on composite hash types like AnyLinkable
+            Some(l) => l.target.retype(holo_hash::hash_type::Entry),
             None => continue,
         };
 
-        channel_data.push(latest_info.target);
+        channel_data.push(latest_info);
     }
     let chan_results_input = channel_data
         .into_iter()
