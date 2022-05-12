@@ -43,7 +43,7 @@ build: $(DNA)
 
 # Package the DNA from the built target release WASM
 $(DNA):	 $(WASM) FORCE
-	@echo "Packaging DNA:"
+	@echo "Packaging DNA: hc path: `which hc`"
 	@hc dna pack . -o $(DNA)
 	@hc app pack . -o $(HAPP)
 	@ls -l $@
