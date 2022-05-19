@@ -58,12 +58,10 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // grant unrestricted access to accept_cap_claim so other agents can send us claims
     let mut functions = BTreeSet::new();
     functions.insert((zome_info()?.name, "recv_remote_signal".into()));
-
     functions.insert((zome_info()?.name, "list_messages".into()));
     functions.insert((zome_info()?.name, "get_messages".into()));
     functions.insert((zome_info()?.name, "active_chatters".into()));
     functions.insert((zome_info()?.name, "get_active_chatters".into()));
-    functions.insert((zome_info()?.name, "signal_specific_chatters".into()));
     functions.insert((zome_info()?.name, "signal_chatters".into()));
     functions.insert((zome_info()?.name, "is_active_chatter".into()));
     functions.insert((zome_info()?.name, "refresh_chatter".into()));
