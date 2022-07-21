@@ -1,8 +1,8 @@
 [package]
 name = "profile"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["zo-el <joel.ulahanna@holo.host>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "profile"
@@ -10,6 +10,6 @@ crate-type = [ "cdylib", "rlib" ]
 doctest = false
 
 [dependencies]
-hdk = "0"
+hdk = "=0.0.138"
 hc_utils = "0"
 profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.102", package = "profile"}

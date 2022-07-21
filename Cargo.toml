@@ -2,6 +2,7 @@
 
 members = [
   "zomes/chat",
+  "zomes/chat_integrity",
   "zomes/profile",
   "crates/joining_code",
 ]

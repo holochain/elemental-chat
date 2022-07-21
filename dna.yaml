@@ -3,8 +3,13 @@ manifest_version: "1"
 name: elemental-chat
 uid: 9a28aac8-337c-11eb-adc1-0Z02acw20115
 properties: ~
-zomes:
-  - name: chat
-    bundled: "target/wasm32-unknown-unknown/release/chat.wasm"
-  - name: profile
-    bundled: "target/wasm32-unknown-unknown/release/profile.wasm"
+integrity:
+  zomes:
+    - name: chat-integrity
+      bundled: 'target/wasm32-unknown-unknown/release/test_integrity.wasm'
+coordinator:
+  zomes:
+    - name: chat
+      bundled: "target/wasm32-unknown-unknown/release/chat.wasm"
+    - name: profile
+      bundled: "target/wasm32-unknown-unknown/release/profile.wasm"

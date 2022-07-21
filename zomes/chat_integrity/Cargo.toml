@@ -1,0 +1,13 @@
+[package]
+authors = ["przemek.klimek@holo.host"]
+edition = "2021"
+name = "chat_integrity"
+version = "0.3.0-alpha1"
+
+[lib]
+name = "chat_integrity"
+crate-type = [ "cdylib", "rlib" ]
+
+[dependencies]
+serde = "1.0.139"
+holochain_deterministic_integrity = "=0.0.10"
