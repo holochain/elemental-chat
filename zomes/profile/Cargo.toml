@@ -10,6 +10,4 @@ crate-type = [ "cdylib", "rlib" ]
 doctest = false
 
 [dependencies]
-hdk = "=0.0.138"
-hc_utils = "0"
-profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.102", package = "profile"}
+profile = {git = "https://github.com/holochain/hc-zome-lib", rev = "e9e874901499e2ce154b884b315f58c18207d845", package = "membrane_manager_utils"}

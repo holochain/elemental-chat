@@ -15,7 +15,7 @@ hc_joining_code = {path = "../../crates/joining_code"}
 hdk = "=0.0.138"
 serde = "=1.0.139"
 thiserror = "1.0"
-hc_utils = "0"
+hc_utils = {git = "https://github.com/holochain/hc-utils", rev = "58a5654ce09f411110bd6a810ae181fd8f41cae1", package = "hc_utils"}
 
 [dev-dependencies]
 #holochain = { git = "https://github.com/holochain/holochain.git", branch = "develop", features = ["test_utils"] }

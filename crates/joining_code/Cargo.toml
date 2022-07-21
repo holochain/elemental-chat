@@ -9,7 +9,7 @@ name = "hc_joining_code"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-hdk = "0"
-serde = "1.0"
+hdk = "=0.0.138"
+serde = "=1.0.139"
 derive_more = "0.99"
-holo_hash = "0"
+holo_hash = {git = "https://github.com/holochain/holochain.git", rev = "f7ff004c0925cf19a52d90ff7f8df8ec6d8f170a", package = "holo_hash"}
