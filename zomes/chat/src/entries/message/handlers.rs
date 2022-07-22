@@ -279,10 +279,10 @@ pub(crate) fn is_active_chatter(chatters_path: Path) -> ChatResult<bool> {
     let query_result: Vec<Element> = query(header_filter)?;
     let now = to_date(sys_time()?);
     let mut pass = false;
-    for x in query_result {
-        match x.header() {
+    for x in query_result.into_iter() {
+        match x.into_inner().0.into_inner().0.into_content() {
             Header::CreateLink(c) => {
-                if c.base_address == base {
+                if c.base_address.retype(holo_hash::hash_type::Entry) == base {
                     let link_time = to_date(c.timestamp);
                     if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
                         pass = true;
@@ -311,7 +311,7 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
     if !is_active_chatter(path.clone())? {
         create_link(
             path.path_entry_hash()?,
-            agent.into(),
+            agent,
             HdkLinkType::Any,
             agent_tag.clone(),
         )?;

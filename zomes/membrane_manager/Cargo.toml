@@ -9,6 +9,6 @@ name = "membrane_manager"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-hdk = "=0.0.126"
-hc_utils = "=0.0.126"
-membrane_manager_lib = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.126", package = "membrane_manager_lib"}
+hdk = { version = "=0.0.132", features = ["encoding"] }
+hc_utils = "=0.0.132"
+membrane_manager_lib = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.132", package = "membrane_manager_lib"}

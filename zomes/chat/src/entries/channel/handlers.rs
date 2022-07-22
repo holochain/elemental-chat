@@ -85,12 +85,12 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
             });
 
         // If there is none we will skip this channel
-        let latest_info = match latest_info {
-            Some(l) => l,
+        let latest_info: EntryHash = match latest_info.and_then(|l| l.target.into_entry_hash()) {
+            Some(h) => h,
             None => continue,
         };
 
-        channel_data.push(latest_info.target);
+        channel_data.push(latest_info);
     }
     let chan_results_input = channel_data
         .into_iter()
