@@ -1,14 +1,14 @@
 let
-  config = import ./config.nix;
-  holonixPath = builtins.fetchTarball "https://github.com/holochain/holonix/archive/${config.holonixRevision}.tar.gz";
+  holonixPath = (import ./nix/sources.nix).holonix;
   holonix = import (holonixPath) {
-    inherit (config) holochainVersionId;
+    holochainVersionId = "custom";
+    holochainVersion = import ./holochain_version.nix;
   };
   nixpkgs = holonix.pkgs;
 in nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
   packages = with nixpkgs; [
-    binaryen
-    nodejs-16_x
+    niv
+    nixpkgs.binaryen
   ];
 }
