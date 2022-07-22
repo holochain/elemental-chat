@@ -1,19 +1,19 @@
+use super::{
+    ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData,
+    SigResults, SignalMessageData, SignalSpecificInput,
+};
 use crate::{
     channel::Channel,
     error::ChatError,
     error::ChatResult,
     message::{Message, MessageInput},
-    utils::{get_local_header, to_date},
+    utils::{get_local_action, to_date},
     SignalPayload,
 };
-use hdk::prelude::*;
+pub use chat_integrity::ChannelInfo;
+use hdk::{hash_path::path::TypedPath, prelude::*};
 use link::Link;
 use metadata::EntryDetails;
-
-use super::{
-    ActiveChatters, LastSeen, LastSeenKey, ListMessages, ListMessagesInput, MessageData,
-    SigResults, SignalMessageData, SignalSpecificInput,
-};
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct InsertFakeMessagesPayload {
@@ -59,18 +59,17 @@ pub(crate) fn create_message(
     } = message_input;
 
     // Commit the message
-    let header_hash = create_entry(&entry)?;
+    let action_hash = create_entry(chat_integrity::EntryTypes::Message(entry.clone()))?;
 
-    // Get the local header and create the message type for the UI
-    let header = get_local_header(&header_hash)?.ok_or(ChatError::MissingLocalHeader)?;
-    let message = MessageData::new(header, entry)?;
+    // Get the local action and create the message type for the UI
+    let action = get_local_action(&action_hash)?.ok_or(ChatError::MissingLocalAction)?;
+    let message = MessageData::new(action, entry)?;
 
     // Get the channel hash
     let path: Path = channel.clone().into();
 
     // Add the current time components
     let path = crate::batching_helper::timestamp_into_path(path, time)?;
-
     // Ensure the path exists
     path.ensure()?;
 
@@ -90,7 +89,7 @@ pub(crate) fn create_message(
     create_link(
         path_hash,
         message.entry_hash.clone(),
-        HdkLinkType::Any,
+        chat_integrity::LinkTypes::Message,
         LinkTag::from(tag),
     )?;
 
@@ -142,11 +141,11 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
     for ele in all_msg_results_elements.into_iter() {
         match ele {
             Some(Details::Entry(EntryDetails {
-                entry, mut headers, ..
+                entry, mut actions, ..
             })) => {
                 // Turn the entry into a MessageEntry
                 let message: Message = entry.try_into()?;
-                let signed_header = match headers.pop() {
+                let signed_action = match actions.pop() {
                     Some(h) => h,
                     // Ignoring missing messages
                     None => {
@@ -156,7 +155,7 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
                 };
 
                 // Create the message type for the UI
-                messages.push(MessageData::new(signed_header.header().clone(), message)?)
+                messages.push(MessageData::new(signed_action.action().clone(), message)?)
             }
             // Message is missing. This could be an error but we are
             // going to ignore it.
@@ -166,8 +165,11 @@ fn get_messages(links: Vec<Link>) -> ChatResult<Vec<MessageData>> {
     Ok(messages)
 }
 
-pub fn chatters_path() -> Path {
-    Path::from("chatters")
+pub fn chatters_path() -> ChatResult<TypedPath> {
+    Ok(TypedPath::new(
+        LinkType::try_from(chat_integrity::LinkTypes::Channel)?,
+        Path::from("chatters"),
+    ))
 }
 
 /*  At some point maybe add back in chatters  on a channel, but for now
@@ -195,8 +197,12 @@ use std::collections::HashSet;
 
 /// return the list of active chatters on a path.
 /// N.B.: assumes that the path has been ensured elsewhere.
-fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)> {
-    let chatters = get_links(chatters_path.path_entry_hash()?, None)?;
+fn active_chatters(chatters_path: TypedPath) -> ChatResult<(usize, Vec<AgentPubKey>)> {
+    let chatters = get_links(
+        chatters_path.path_entry_hash()?,
+        LinkTypeRange::from(LinkType::try_from(chat_integrity::LinkTypes::Chatter)?),
+        None,
+    )?;
     debug!("num online chatters {}", chatters.len());
     let now = to_date(sys_time()?);
     let total = chatters.len();
@@ -232,7 +238,7 @@ fn active_chatters(chatters_path: Path) -> ChatResult<(usize, Vec<AgentPubKey>)>
 
 pub(crate) fn get_active_chatters() -> ChatResult<ActiveChatters> {
     let me = agent_info()?.agent_latest_pubkey;
-    let chatters_path: Path = chatters_path();
+    let chatters_path = chatters_path()?;
     let (_total, mut chatters) = active_chatters(chatters_path)?;
     chatters.retain(|a| *a != me);
     Ok(ActiveChatters { chatters })
@@ -257,7 +263,7 @@ pub(crate) fn signal_specific_chatters(input: SignalSpecificInput) -> ChatResult
 
 pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatResult<SigResults> {
     let me = agent_info()?.agent_latest_pubkey;
-    let chatters_path: Path = chatters_path();
+    let chatters_path = chatters_path()?;
     let (total, mut active_chatters) = active_chatters(chatters_path)?;
     active_chatters.retain(|a| *a != me);
     debug!("sending to {:?}", active_chatters);
@@ -272,16 +278,16 @@ pub(crate) fn signal_chatters(signal_message_data: SignalMessageData) -> ChatRes
     Ok(SigResults { total, sent })
 }
 
-pub(crate) fn is_active_chatter(chatters_path: Path) -> ChatResult<bool> {
+pub(crate) fn is_active_chatter(chatters_path: TypedPath) -> ChatResult<bool> {
     let base = chatters_path.path_entry_hash()?;
     let filter = QueryFilter::new();
-    let header_filter = filter.header_type(HeaderType::CreateLink);
-    let query_result: Vec<Element> = query(header_filter)?;
+    let action_filter = filter.action_type(ActionType::CreateLink);
+    let query_result: Vec<Record> = query(action_filter)?;
     let now = to_date(sys_time()?);
     let mut pass = false;
     for x in query_result.into_iter() {
         match x.into_inner().0.into_inner().0.into_content() {
-            Header::CreateLink(c) => {
+            Action::CreateLink(c) => {
                 if c.base_address.retype(holo_hash::hash_type::Entry) == base {
                     let link_time = to_date(c.timestamp);
                     if now.signed_duration_since(link_time).num_hours() < CHATTER_REFRESH_HOURS {
@@ -304,7 +310,7 @@ pub(crate) fn is_active_chatter(chatters_path: Path) -> ChatResult<bool> {
 // TODO: re add chatter/channel instead of global
 // simplified and expected as a zome call
 pub(crate) fn refresh_chatter() -> ChatResult<()> {
-    let path: Path = chatters_path();
+    let path = chatters_path()?;
     path.ensure()?;
     let agent = agent_info()?.agent_latest_pubkey;
     let agent_tag = agent_to_tag(&agent);
@@ -312,7 +318,7 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
         create_link(
             path.path_entry_hash()?,
             agent,
-            HdkLinkType::Any,
+            chat_integrity::LinkTypes::Chatter,
             agent_tag.clone(),
         )?;
     }
@@ -321,8 +327,12 @@ pub(crate) fn refresh_chatter() -> ChatResult<()> {
 
 // this is a relatively expensive call and really only for testing purposes
 pub(crate) fn agent_stats() -> ChatResult<(usize, usize)> {
-    let chatters_path: Path = chatters_path();
-    let chatters = get_links(chatters_path.path_entry_hash()?, None)?;
+    let chatters_path = chatters_path()?;
+    let chatters = get_links(
+        chatters_path.path_entry_hash()?,
+        LinkTypeRange::from(LinkType::try_from(chat_integrity::LinkTypes::Chatter)?),
+        None,
+    )?;
 
     let agents = chatters
         .into_iter()

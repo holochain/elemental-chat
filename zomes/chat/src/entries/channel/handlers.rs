@@ -3,7 +3,7 @@ use crate::{
     channel::{Channel, ChannelInput},
     error::ChatResult,
 };
-use hdk::hash_path::path::Component;
+use hdk::hash_path::path::{Component, TypedPath};
 use hdk::prelude::*;
 use link::Link;
 
@@ -11,12 +11,19 @@ use link::Link;
 /// This effectively just stores channel info on the
 /// path that is `category:channel_id`
 pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelData> {
+    debug!(">>>>>>>>>>>>>>>>>>");
     let ChannelInput { name, entry } = channel_input;
-
+    debug!(">>>>>>>>>>>>>>>>>>");
     // Create the path for this channel
     let path: Path = entry.clone().into();
-    path.ensure()?;
-
+    debug!(">>>>>>>>>>>>>>>>>>");
+    let type_path: TypedPath = TypedPath::new(
+        LinkType::try_from(chat_integrity::LinkTypes::Channel)?,
+        path,
+    );
+    debug!(">>>>>>>>>>>>>>>>>>");
+    type_path.ensure()?;
+    debug!(">>>>>>>>>>>>>>>>>>");
     // Create the channel info
     let info = ChannelInfo {
         category: entry.category.clone(),
@@ -27,31 +34,34 @@ pub(crate) fn create_channel(channel_input: ChannelInput) -> ChatResult<ChannelD
         created_at: sys_time()?,
         name,
     };
-
+    debug!(">>>>>>>>>>>>>>>>>>");
     // Commit the channel info
-    create_entry(&info)?;
+    create_entry(chat_integrity::EntryTypes::ChannelInfo(info.clone()))?;
     let info_hash = hash_entry(&info)?;
-
+    debug!(">>>>>>>>>>>>>>>>>>");
     // link the channel info to the path
     create_link(
-        path.path_entry_hash()?,
+        type_path.path_entry_hash()?,
         info_hash,
-        HdkLinkType::Any,
+        chat_integrity::LinkTypes::Channel,
         ChannelInfoTag::tag(),
     )?;
-
+    debug!(">>>>>>>>>>>>>>>>>>");
     // Return the channel and the info for the UI
     Ok(ChannelData::new(entry, info))
 }
 
-fn category_path(category: String) -> Path {
+fn category_path(category: String) -> ChatResult<TypedPath> {
     let path = vec![Component::from(category.as_bytes().to_vec())];
-    Path::from(path)
+    Ok(TypedPath::new(
+        LinkType::try_from(chat_integrity::LinkTypes::Channel)?,
+        Path::from(path),
+    ))
 }
 
 pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult<ChannelList> {
     // Get the category path
-    let path = category_path(list_channels_input.category);
+    let path = category_path(list_channels_input.category)?;
     // Get any channels on this path
     let links = path.children()?;
     let mut channels = Vec::with_capacity(links.len());
@@ -68,7 +78,11 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
         // let channel = Channel::try_from(&channel_path)?;
 
         // Get any channel info links on this channel
-        let channel_info = get_links(target, Some(ChannelInfoTag::tag()))?;
+        let channel_info = get_links(
+            target,
+            LinkTypeRange::from(LinkType::try_from(chat_integrity::LinkTypes::Channel)?),
+            Some(ChannelInfoTag::tag()),
+        )?;
 
         // Find the latest
         let latest_info = channel_info
@@ -119,7 +133,7 @@ pub(crate) fn list_channels(list_channels_input: ChannelListInput) -> ChatResult
 
 // Note: This function can get very heavy
 pub(crate) fn channel_stats(list_channels_input: ChannelListInput) -> ChatResult<(usize, usize)> {
-    let channel_path = category_path(list_channels_input.category);
+    let channel_path = category_path(list_channels_input.category)?;
 
     let channel_links = channel_path.children()?;
     Ok((channel_links.len(), 0))

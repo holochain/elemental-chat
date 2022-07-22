@@ -1,1 +1,1 @@
-extern crate profile;
+extern crate hc_cz_profile;

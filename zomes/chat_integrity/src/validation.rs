@@ -1,5 +1,5 @@
-use crate::message::Message;
-use hdk::prelude::*;
+use super::*;
+use holochain_deterministic_integrity::prelude::*;
 
 pub fn __validate_create_entry(entry: Entry) -> ExternResult<ValidateCallbackResult> {
     match entry {
@@ -18,3 +18,11 @@ pub fn __validate_create_entry(entry: Entry) -> ExternResult<ValidateCallbackRes
         _ => Ok(ValidateCallbackResult::Valid),
     }
 }
+
+// #[hdk_extern]
+// fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
+//     match op {
+//         Op::StoreEntry { entry, .. } => validation::__validate_create_entry(entry),
+//         _ => Ok(ValidateCallbackResult::Valid),
+//     }
+// }

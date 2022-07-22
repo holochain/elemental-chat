@@ -4,7 +4,10 @@
 //!
 use crate::{error::ChatResult, ChatError};
 use chrono::{DateTime, Datelike, NaiveDateTime, Timelike, Utc};
-use hdk::{hash_path::path::Component, prelude::*};
+use hdk::{
+    hash_path::path::{Component, TypedPath},
+    prelude::*,
+};
 use std::cmp;
 
 pub fn get_previous_hour(time: Timestamp) -> Result<Timestamp, TimestampError> {
@@ -38,6 +41,7 @@ pub fn get_message_links(
     if newest_included_hour_path.exists()? {
         links.append(&mut get_links(
             newest_included_hour_path.path_entry_hash()?,
+            LinkTypeRange::from(LinkType::try_from(chat_integrity::LinkTypes::Message)?),
             None,
         )?);
     }
@@ -91,10 +95,18 @@ fn append_message_links_recursive(
     children.sort_unstable_by_key(|(segment, _)| cmp::Reverse(*segment));
     for (_, link) in children {
         if depth == 0 {
-            let mut message_links = get_links(link.target, None)?;
+            let mut message_links = get_links(
+                link.target,
+                LinkTypeRange::from(LinkType::try_from(chat_integrity::LinkTypes::Message)?),
+                None,
+            )?;
             links.append(&mut message_links);
         } else {
-            let grandchildren = get_links(link.target, None)?;
+            let grandchildren = get_links(
+                link.target,
+                LinkTypeRange::from(LinkType::try_from(chat_integrity::LinkTypes::Message)?),
+                None,
+            )?;
             let grandchildren = grandchildren
                 .into_iter()
                 .filter_map(|l| path_component_from_link(&l).ok().map(|c| (c, l))) // filter out non-path links
@@ -128,7 +140,7 @@ pub fn last_segment_from_path(path: &Path) -> ChatResult<i32> {
 }
 
 /// Add the message from the Date type to this path
-pub fn timestamp_into_path(path: Path, time: Timestamp) -> ChatResult<Path> {
+pub fn timestamp_into_path(path: Path, time: Timestamp) -> ChatResult<TypedPath> {
     let (ms, ns) = time.as_seconds_and_nanos();
     let time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(ms, ns), Utc);
     let mut components: Vec<_> = path.into();
@@ -138,5 +150,9 @@ pub fn timestamp_into_path(path: Path, time: Timestamp) -> ChatResult<Path> {
     components.push((time.day() as i32).to_be_bytes().to_vec().into());
     // DEV_MODE: This can be updated to sec() for testing
     components.push((time.hour() as i32).to_be_bytes().to_vec().into());
-    Ok(components.into())
+
+    Ok(TypedPath::new(
+        LinkType::try_from(chat_integrity::LinkTypes::Message)?,
+        components.into(),
+    ))
 }

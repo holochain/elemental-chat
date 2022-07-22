@@ -2,14 +2,11 @@
 name = "profile"
 version = "0.1.0"
 authors = ["zo-el <joel.ulahanna@holo.host>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "profile"
 crate-type = [ "cdylib", "rlib" ]
-doctest = false
 
 [dependencies]
-hdk = { version = "=0.0.132", features = ["encoding"] }
-hc_utils = "=0.0.132"
-profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.132", package = "profile"}
+hc_cz_profile = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.138", package = "hc_cz_profile"}

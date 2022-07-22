@@ -10,14 +10,17 @@ DNANAME		= elemental-chat
 DNA			= $(DNANAME).dna
 HAPP		= $(DNANAME).happ
 WASM		= target/wasm32-unknown-unknown/release/chat.wasm
-WASM2		= target/wasm32-unknown-unknown/release/profile.wasm
+CHAT_INTEGRITY_WASM	= target/wasm32-unknown-unknown/release/chat_integrity.wasm
+PROFILE_WASM = target/wasm32-unknown-unknown/release/profile.wasm
+PROFILE_INTEGRITY_WASM = target/wasm32-unknown-unknown/release/profile_integrity.wasm
+MEM_MANAGER_WASM = target/wasm32-unknown-unknown/release/membrane_manager_integrity.wasm
 
 .PHONY: DNAs
 
 dnas:
 	mkdir -p ./dnas
 dnas/joining-code-factory.dna:	dnas
-	curl 'https://holo-host.github.io/joining-code-happ/releases/downloads/0_2_2/joining-code-factory.0_2_2.dna' -o $@
+	curl 'https://holo-host.github.io/joining-code-happ/releases/downloads/0_3_0/joining-code-factory.0_3_0.dna' -o $@
 
 DNAs: dnas/joining-code-factory.dna
 
@@ -55,7 +58,10 @@ $(WASM): FORCE
 	    --release --target wasm32-unknown-unknown
 	@echo "Optimizing wasms:"
 	@wasm-opt -Oz $(WASM) --output $(WASM)
-	@wasm-opt -Oz $(WASM2) --output $(WASM2)
+	@wasm-opt -Oz $(CHAT_INTEGRITY_WASM) --output $(CHAT_INTEGRITY_WASM)
+	@wasm-opt -Oz $(PROFILE_WASM) --output $(PROFILE_WASM)
+	@wasm-opt -Oz $(PROFILE_INTEGRITY_WASM) --output $(PROFILE_INTEGRITY_WASM)
+	@wasm-opt -Oz $(MEM_MANAGER_WASM) --output $(MEM_MANAGER_WASM)
 
 .PHONY: test test-all test-unit test-e2e test-dna test-dna-debug test-stress test-sim2h test-node
 test-all: test
