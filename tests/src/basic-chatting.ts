@@ -1,124 +1,156 @@
 import * as _ from 'lodash'
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid'
 import { localConductorConfig, delay, awaitIntegration } from './common'
 import { installAgents } from './installAgents'
 
 module.exports = async (orchestrator) => {
+	orchestrator.registerScenario('chat away', async (s, t) => {
+		// Declare two players using the previously specified config, nicknaming them "alice" and "bob"
+		// note that the first argument to players is just an array conductor configs that that will
+		// be used to spin up the conductor processes which are returned in a matching array.
+		const [a_and_b_conductor] = await s.players([localConductorConfig])
 
-  orchestrator.registerScenario('chat away', async (s, t) => {
-    // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
-    // note that the first argument to players is just an array conductor configs that that will
-    // be used to spin up the conductor processes which are returned in a matching array.
-    const [a_and_b_conductor] = await s.players([localConductorConfig])
+		// install your happs into the coductors and destructuring the returned happ data using the same
+		// array structure as you created in your installation array.
+		let [alice_chat_happ, bobbo_chat_happ] = await installAgents(
+			a_and_b_conductor,
+			['alice', 'bobbo']
+		)
+		const [alice_chat] = alice_chat_happ.cells
+		const [bobbo_chat] = bobbo_chat_happ.cells
 
-    // install your happs into the coductors and destructuring the returned happ data using the same
-    // array structure as you created in your installation array.
-    let [alice_chat_happ, bobbo_chat_happ] = await installAgents(a_and_b_conductor, ["alice", 'bobbo'])
-    const [alice_chat] = alice_chat_happ.cells
-    const [bobbo_chat] = bobbo_chat_happ.cells
+		// Create a channel
+		const channel_uuid = uuidv4()
+		const channel = await alice_chat.call('chat', 'create_channel', {
+			name: 'Test Channel',
+			entry: { category: 'General', uuid: channel_uuid },
+		})
+		console.log(channel)
 
+		var sends: any[] = []
+		var recvs: any[] = []
+		function messageEntry(m) {
+			return m.entry
+		}
 
-    // Create a channel
-    const channel_uuid = uuidv4();
-    const channel = await alice_chat.call('chat', 'create_channel', { name: "Test Channel", entry: { category: "General", uuid: channel_uuid } });
-    console.log(channel);
+		let first_message = {
+			last_seen: { First: null },
+			channel: channel.entry,
+			entry: {
+				uuid: uuidv4(),
+				content: 'x'.repeat(1025),
+			},
+		}
 
-    var sends: any[] = [];
-    var recvs: any[] = [];
-    function messageEntry(m) { return m.entry }
+		//Send a messages that's too long
+		console.log('>>>>>')
 
-    let first_message = {
-      last_seen: { First: null },
-      channel: channel.entry,
-      entry: {
-        uuid: uuidv4(),
-        content: 'x'.repeat(1025),
-      }
-    };
+		try {
+			console.log('>>>>>')
+			let a = await alice_chat.call('chat', 'create_message', first_message)
+			console.log('>>>>>', a)
+			t.fail()
+		} catch (e) {
+			t.deepEqual(e, {
+				type: 'error',
+				data: {
+					type: 'internal_error',
+					data: 'Source chain error: InvalidCommit error: Message too long',
+				},
+			})
+		}
 
-    //Send a messages that's too long
-    try {
-      await alice_chat.call('chat', 'create_message', first_message);
-      t.fail()
-    } catch (e) {
-      t.deepEqual(e, { type: 'error', data: { type: 'internal_error', data: 'Source chain error: InvalidCommit error: Message too long' } })
-    }
+		first_message.entry.content = 'Hello from alice :)'
+		// Alice send a message
+		sends.push(first_message)
+		console.log(sends[0])
 
-    first_message.entry.content = "Hello from alice :)";
-    // Alice send a message
-    sends.push(first_message);
-    console.log(sends[0]);
+		recvs.push(await alice_chat.call('chat', 'create_message', sends[0]))
+		console.log(recvs[0])
+		t.deepEqual(sends[0].entry, recvs[0].entry)
 
-    recvs.push(await alice_chat.call('chat', 'create_message', sends[0]));
-    console.log(recvs[0]);
-    t.deepEqual(sends[0].entry, recvs[0].entry);
+		// Alice sends another message
+		sends.push({
+			last_seen: { Message: recvs[0].entryHash },
+			channel: channel.entry,
+			entry: {
+				uuid: uuidv4(),
+				content: 'Is anybody out there?',
+			},
+		})
+		console.log(sends[1])
+		recvs.push(await alice_chat.call('chat', 'create_message', sends[1]))
+		console.log(recvs[1])
+		t.deepEqual(sends[1].entry, recvs[1].entry)
 
-    // Alice sends another message
-    sends.push({
-      last_seen: { Message: recvs[0].entryHash },
-      channel: channel.entry,
-      entry: {
-        uuid: uuidv4(),
-        content: "Is anybody out there?",
-      }
-    });
-    console.log(sends[1]);
-    recvs.push(await alice_chat.call('chat', 'create_message', sends[1]));
-    console.log(recvs[1]);
-    t.deepEqual(sends[1].entry, recvs[1].entry);
+		const channel_list = await alice_chat.call('chat', 'list_channels', {
+			category: 'General',
+		})
+		console.log(channel_list)
 
-    const channel_list = await alice_chat.call('chat', 'list_channels', { category: "General" });
-    console.log(channel_list);
+		// Alice lists the messages
+		var msgs: any[] = []
+		let batch_payload = {
+			channel: channel.entry,
+			active_chatter: false,
+			target_message_count: 2,
+		}
+		msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload))
+		console.log(_.map(msgs[0].messages, messageEntry))
+		t.deepEqual(
+			[sends[0].entry, sends[1].entry],
+			_.map(msgs[0].messages, messageEntry)
+		)
+		// Bobbo lists the messages
 
-    // Alice lists the messages
-    var msgs: any[] = [];
-    let batch_payload = { channel: channel.entry, active_chatter: false, target_message_count: 2 }
-    msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
-    console.log(_.map(msgs[0].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[0].messages, messageEntry));
-    // Bobbo lists the messages
+		await awaitIntegration(bobbo_chat)
 
-    await awaitIntegration(bobbo_chat)
+		msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload))
+		console.log('bobbo.list_messages: ' + _.map(msgs[1].messages, messageEntry))
+		t.deepEqual(
+			[sends[0].entry, sends[1].entry],
+			_.map(msgs[1].messages, messageEntry)
+		)
 
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
-    console.log('bobbo.list_messages: ' + _.map(msgs[1].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry], _.map(msgs[1].messages, messageEntry));
+		// Bobbo and Alice both reply to the same message
+		sends.push({
+			last_seen: { Message: recvs[1].entryHash },
+			channel: channel.entry,
+			entry: {
+				uuid: uuidv4(),
+				content: "I'm here",
+			},
+		})
+		sends.push({
+			last_seen: { Message: recvs[1].entryHash },
+			channel: channel.entry,
+			entry: {
+				uuid: uuidv4(),
+				content: 'Anybody?',
+			},
+		})
+		recvs.push(await bobbo_chat.call('chat', 'create_message', sends[2]))
+		console.log(recvs[2])
+		t.deepEqual(sends[2].entry, recvs[2].entry)
+		recvs.push(await alice_chat.call('chat', 'create_message', sends[3]))
+		console.log(recvs[3])
+		t.deepEqual(sends[3].entry, recvs[3].entry)
+		await awaitIntegration(bobbo_chat)
+		await awaitIntegration(alice_chat)
 
-    // Bobbo and Alice both reply to the same message
-    sends.push({
-      last_seen: { Message: recvs[1].entryHash },
-      channel: channel.entry,
-      entry: {
-        uuid: uuidv4(),
-        content: "I'm here",
-      }
-    });
-    sends.push({
-      last_seen: { Message: recvs[1].entryHash },
-      channel: channel.entry,
-      entry: {
-        uuid: uuidv4(),
-        content: "Anybody?",
-      }
-    });
-    recvs.push(await bobbo_chat.call('chat', 'create_message', sends[2]));
-    console.log(recvs[2]);
-    t.deepEqual(sends[2].entry, recvs[2].entry);
-    recvs.push(await alice_chat.call('chat', 'create_message', sends[3]));
-    console.log(recvs[3]);
-    t.deepEqual(sends[3].entry, recvs[3].entry);
-    await awaitIntegration(bobbo_chat)
-    await awaitIntegration(alice_chat)
-
-    // Alice lists the messages
-    msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload));
-    console.log(_.map(msgs[2].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[2].messages, messageEntry));
-    // Bobbo lists the messages
-    msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload));
-    console.log(_.map(msgs[3].messages, messageEntry));
-    t.deepEqual([sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry], _.map(msgs[3].messages, messageEntry));
-
-  })
-
+		// Alice lists the messages
+		msgs.push(await alice_chat.call('chat', 'list_messages', batch_payload))
+		console.log(_.map(msgs[2].messages, messageEntry))
+		t.deepEqual(
+			[sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry],
+			_.map(msgs[2].messages, messageEntry)
+		)
+		// Bobbo lists the messages
+		msgs.push(await bobbo_chat.call('chat', 'list_messages', batch_payload))
+		console.log(_.map(msgs[3].messages, messageEntry))
+		t.deepEqual(
+			[sends[0].entry, sends[1].entry, sends[2].entry, sends[3].entry],
+			_.map(msgs[3].messages, messageEntry)
+		)
+	})
 }

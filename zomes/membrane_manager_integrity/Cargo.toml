@@ -1,0 +1,12 @@
+[package]
+name = "membrane_manager_integrity"
+version = "0.1.0"
+authors = ["zo-el <joel.ulahanna@holo.host>"]
+edition = "2021"
+
+[lib]
+name = "membrane_manager_integrity"
+crate-type = [ "cdylib", "rlib" ]
+
+[dependencies]
+hc_iz_membrane_manager = {git = "https://github.com/holochain/hc-zome-lib", branch = "v0.0.138", package = "hc_iz_membrane_manager"}

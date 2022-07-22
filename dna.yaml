@@ -1,13 +1,24 @@
 ---
-manifest_version: "1"
+manifest_version: '1'
 name: elemental-chat
 uid: 9a28aac8-337c-11eb-adc1-0Z02acw20115
-properties:
-  skip_proof: true
-zomes:
-  - name: chat
-    bundled: "target/wasm32-unknown-unknown/release/chat.wasm"
-  - name: membrane_manager
-    bundled: "target/wasm32-unknown-unknown/release/membrane_manager.wasm"
-  - name: profile
-    bundled: "target/wasm32-unknown-unknown/release/profile.wasm"
+integrity:
+  zomes:
+    - name: chat_integrity
+      bundled: './target/wasm32-unknown-unknown/release/chat_integrity.wasm'
+    - name: membrane_manager_integrity
+      bundled: './target/wasm32-unknown-unknown/release/membrane_manager_integrity.wasm'
+    - name: profile_integrity
+      bundled: './target/wasm32-unknown-unknown/release/profile_integrity.wasm'
+  properties:
+    skip_proof: true
+coordinator:
+  zomes:
+    - name: profile
+      bundled: './target/wasm32-unknown-unknown/release/profile.wasm'
+      dependencies:
+        - name: profile_integrity
+    - name: chat
+      bundled: './target/wasm32-unknown-unknown/release/chat.wasm'
+      dependencies:
+        - name: chat_integrity
