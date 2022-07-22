@@ -188,20 +188,47 @@ fn agent_stats(_: ()) -> ExternResult<AgentStats> {
     Ok(AgentStats { agents, active })
 }
 
-/// check if the instance that is making the call is eligible
-pub fn is_read_only_instance() -> bool {
-    // if skip_proof() {
-    //     return false;
-    // }
-    // if let Ok(entries) = &query(ChainQueryFilter::new().action_type(ActionType::AgentValidationPkg))
-    // {
-    //     if let Action::AgentValidationPkg(h) = entries[0].action() {
-    //         if let Some(mem_proof) = &h.membrane_proof {
-    //             if is_read_only_proof(&mem_proof) {
-    //                 return true;
-    //             }
-    //         }
-    //     }
-    // };
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
+pub struct Props {
+    pub skip_proof: bool,
+}
+
+/// Checking properties for `not_editable_profile` flag
+pub fn is_skipped() -> bool {
+    if let Ok(info) = dna_info() {
+        return is_skipped_sb(&info.properties);
+    }
     false
+}
+
+/// Deserialize properties into the Props expected by this zome
+pub fn is_skipped_sb(encoded_props: &SerializedBytes) -> bool {
+    let maybe_props = Props::try_from(encoded_props.to_owned());
+    if let Ok(props) = maybe_props {
+        return props.skip_proof;
+    }
+    false
+}
+
+pub fn is_read_only_instance() -> bool {
+    if is_skipped() {
+        return false;
+    }
+    if let Ok(entries) = &query(ChainQueryFilter::new().action_type(ActionType::AgentValidationPkg))
+    {
+        if let Action::AgentValidationPkg(h) = entries[0].action() {
+            if let Some(mem_proof) = &h.membrane_proof {
+                if is_read_only_proof(&mem_proof) {
+                    return true;
+                }
+            }
+        }
+    };
+    false
+}
+
+/// check to see if this is the valid read_only membrane proof
+pub fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
+    let b = mem_proof.bytes();
+    b == &[0]
 }
