@@ -12,7 +12,7 @@ const installedAppId = (agentName) => `${agentName}_chat`
 
 export type Memproof = {
 	signed_action: {
-		header: any
+		action: any
 		signature: Buffer
 	}
 	entry: any
