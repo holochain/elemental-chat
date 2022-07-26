@@ -17,7 +17,7 @@ WASM2		= target/wasm32-unknown-unknown/release/profile.wasm
 dnas:
 	mkdir -p ./dnas
 dnas/joining-code-factory.dna:	dnas
-	curl 'https://holo-host.github.io/joining-code-happ/releases/downloads/0_2_2/joining-code-factory.0_2_2.dna' -o $@
+	curl 'https://holo-host.github.io/joining-code-happ/releases/downloads/0_3_0/joining-code-factory.0_3_0.dna' -o $@
 
 DNAs: dnas/joining-code-factory.dna
 
@@ -54,8 +54,6 @@ $(WASM): FORCE
 	@RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown
 	@echo "Optimizing wasms:"
-	@wasm-opt -Oz $(WASM) --output $(WASM)
-	@wasm-opt -Oz $(WASM2) --output $(WASM2)
 
 .PHONY: test test-all test-unit test-e2e test-dna test-dna-debug test-stress test-sim2h test-node
 test-all: test

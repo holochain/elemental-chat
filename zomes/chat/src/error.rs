@@ -17,10 +17,10 @@ pub enum ChatError {
     Timestamp(#[from] TimestampError),
     // #[error(transparent)]
     // WasmError(#[from] WasmError),
-    #[error("Header that was just committed is missing. This means something went really wrong")]
-    MissingLocalHeader,
-    #[error("Tried to use a header without an entry as for where it only makes sense to use a new entry header")]
-    WrongHeaderType,
+    #[error("Action that was just committed is missing. This means something went really wrong")]
+    MissingLocalAction,
+    #[error("Tried to use a action without an entry as for where it only makes sense to use a new entry action")]
+    WrongActionType,
     #[error("Channel at path {0} doesn't exist")]
     MissingChannel(String),
     #[error("Something is fatally wrong with this app\n Please post a bug report on the repo\n Error: {0}")]
@@ -39,6 +39,6 @@ pub type ChatResult<T> = Result<T, ChatError>;
 
 impl From<ChatError> for WasmError {
     fn from(c: ChatError) -> Self {
-        WasmError::Guest(c.to_string())
+        wasm_error!(WasmErrorInner::Guest(c.to_string()))
     }
 }

@@ -1,21 +1,8 @@
-use crate::timestamp::Timestamp;
 use hdk::{hash_path::path::Component, prelude::*};
 use uuid::Uuid;
 pub mod handlers;
+pub use chat_integrity::{ChannelInfo, Message};
 use std;
-
-/// The actual channel data that is saved into the DHT
-/// This is the actual name of the channel that
-/// can change.
-#[hdk_entry(id = "channel_info")]
-#[derive(Clone, PartialEq, Eq)]
-pub struct ChannelInfo {
-    pub category: String,
-    pub uuid: String,
-    pub name: String,
-    pub created_by: AgentPubKey,
-    pub created_at: Timestamp,
-}
 
 /// Input to the create channel call
 #[derive(Debug, Serialize, Deserialize, SerializedBytes)]

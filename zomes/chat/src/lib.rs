@@ -1,18 +1,17 @@
-pub use channel::{Channel, ChannelData, ChannelInfo, ChannelInput, ChannelList, ChannelListInput};
+pub use channel::{Channel, ChannelData, ChannelInput, ChannelList, ChannelListInput};
 pub use entries::{channel, message};
 pub use error::{ChatError, ChatResult};
-pub use hc_joining_code;
 pub use hdk::prelude::Path;
 pub use hdk::prelude::*;
 pub use message::{
-    ActiveChatters, ListMessages, ListMessagesInput, Message, MessageData, MessageInput,
-    SigResults, SignalMessageData, SignalSpecificInput,
+    ActiveChatters, ListMessages, ListMessagesInput, MessageData, MessageInput, SigResults,
+    SignalMessageData, SignalSpecificInput,
 };
 pub mod batching_helper;
 pub mod entries;
 pub mod error;
 pub mod utils;
-pub mod validation;
+pub use chat_integrity::{ChannelInfo, Message};
 
 // signals:
 pub const NEW_MESSAGE_SIGNAL_TYPE: &str = "new_message";
@@ -41,17 +40,10 @@ pub enum SignalPayload {
 
 #[hdk_extern]
 fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
-    let sig: SignalPayload = signal.decode()?;
+    let sig: SignalPayload = signal.decode().unwrap();
     trace!("Received remote signal {:?}", sig);
     Ok(emit_signal(&sig)?)
 }
-
-entry_defs![
-    Path::entry_def(),
-    PathEntry::entry_def(),
-    Message::entry_def(),
-    ChannelInfo::entry_def()
-];
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
@@ -80,19 +72,10 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 
 #[hdk_extern]
 fn create_channel(channel_input: ChannelInput) -> ExternResult<ChannelData> {
-    if hc_joining_code::is_read_only_instance() {
+    if is_read_only_instance() {
         return Err(ChatError::ReadOnly.into());
     }
     Ok(channel::handlers::create_channel(channel_input)?)
-}
-
-#[hdk_extern]
-fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
-    // validation::common_validatation(data)
-    match op {
-        Op::StoreEntry { entry, .. } => validation::__validate_create_entry(entry),
-        _ => Ok(ValidateCallbackResult::Valid),
-    }
 }
 
 #[hdk_extern]
@@ -103,7 +86,7 @@ fn insert_fake_messages(input: message::handlers::InsertFakeMessagesPayload) -> 
 
 #[hdk_extern]
 fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
-    if hc_joining_code::is_read_only_instance() {
+    if is_read_only_instance() {
         return Err(ChatError::ReadOnly.into());
     }
     Ok(message::handlers::create_message(
@@ -116,7 +99,6 @@ fn create_message(message_input: MessageInput) -> ExternResult<MessageData> {
 fn signal_users_on_channel(message_data SignalMessageData) -> ChatResult<()> {
     message::handlers::signal_users_on_channel(message_data)
 }*/
-
 #[hdk_extern]
 fn get_active_chatters(_: ()) -> ExternResult<ActiveChatters> {
     Ok(message::handlers::get_active_chatters()?)
@@ -124,7 +106,7 @@ fn get_active_chatters(_: ()) -> ExternResult<ActiveChatters> {
 
 #[hdk_extern]
 fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
-    if hc_joining_code::is_read_only_instance() {
+    if is_read_only_instance() {
         return Err(ChatError::ReadOnly.into());
     }
     Ok(message::handlers::signal_specific_chatters(input)?)
@@ -132,7 +114,7 @@ fn signal_specific_chatters(input: SignalSpecificInput) -> ExternResult<()> {
 
 #[hdk_extern]
 fn signal_chatters(message_data: SignalMessageData) -> ExternResult<SigResults> {
-    if hc_joining_code::is_read_only_instance() {
+    if is_read_only_instance() {
         return Err(ChatError::ReadOnly.into());
     }
     Ok(message::handlers::signal_chatters(message_data)?)
@@ -204,4 +186,49 @@ pub struct AgentStats {
 fn agent_stats(_: ()) -> ExternResult<AgentStats> {
     let (agents, active) = message::handlers::agent_stats()?;
     Ok(AgentStats { agents, active })
+}
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone)]
+pub struct Props {
+    pub skip_proof: bool,
+}
+
+/// Checking properties for `not_editable_profile` flag
+pub fn is_skipped() -> bool {
+    if let Ok(info) = dna_info() {
+        return is_skipped_sb(&info.properties);
+    }
+    false
+}
+
+/// Deserialize properties into the Props expected by this zome
+pub fn is_skipped_sb(encoded_props: &SerializedBytes) -> bool {
+    let maybe_props = Props::try_from(encoded_props.to_owned());
+    if let Ok(props) = maybe_props {
+        return props.skip_proof;
+    }
+    false
+}
+
+pub fn is_read_only_instance() -> bool {
+    if is_skipped() {
+        return false;
+    }
+    if let Ok(entries) = &query(ChainQueryFilter::new().action_type(ActionType::AgentValidationPkg))
+    {
+        if let Action::AgentValidationPkg(h) = entries[0].action() {
+            if let Some(mem_proof) = &h.membrane_proof {
+                if is_read_only_proof(&mem_proof) {
+                    return true;
+                }
+            }
+        }
+    };
+    false
+}
+
+/// check to see if this is the valid read_only membrane proof
+pub fn is_read_only_proof(mem_proof: &MembraneProof) -> bool {
+    let b = mem_proof.bytes();
+    b == &[0]
 }

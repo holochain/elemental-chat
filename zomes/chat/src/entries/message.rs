@@ -1,16 +1,8 @@
-use crate::{error::ChatError, error::ChatResult, timestamp::Timestamp};
-use hdk::prelude::*;
-
 use super::channel::{Channel, ChannelData};
+use crate::{error::ChatError, error::ChatResult, timestamp::Timestamp};
+pub use chat_integrity::{ChannelInfo, Message};
+use hdk::prelude::*;
 pub mod handlers;
-
-/// The actual message data that is saved into the DHT
-#[hdk_entry(id = "message")]
-#[derive(Clone, PartialEq)]
-pub struct Message {
-    pub uuid: String,
-    pub content: String,
-}
 
 /// This allows the app to properly order messages.
 /// This message is either the first message of the time block
@@ -81,16 +73,16 @@ pub struct ListMessages {
 }
 
 impl MessageData {
-    pub fn new(header: Header, message: Message) -> ChatResult<Self> {
-        let entry_hash = header
+    pub fn new(action: Action, message: Message) -> ChatResult<Self> {
+        let entry_hash = action
             .entry_hash()
-            .ok_or(ChatError::WrongHeaderType)?
+            .ok_or(ChatError::WrongActionType)?
             .clone();
         Ok(Self {
             entry: message,
             entry_hash,
-            created_by: header.author().to_owned(),
-            created_at: header.timestamp().to_owned(),
+            created_by: action.author().to_owned(),
+            created_at: action.timestamp().to_owned(),
         })
     }
 }
